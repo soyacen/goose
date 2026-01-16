@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-leo/goose/client"
+	"github.com/soyacen/goose/client"
 )
 
 // LoggerFactory is a function type that creates a logger instance from a context

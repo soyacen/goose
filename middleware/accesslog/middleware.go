@@ -11,7 +11,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/go-leo/goose/server"
+	"github.com/soyacen/goose/server"
 )
 
 // LoggerFactory is a function type that creates a logger instance from a context

@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/go-leo/goose/client"
-	"github.com/go-leo/goose/server"
+	"github.com/soyacen/goose/client"
+	"github.com/soyacen/goose/server"
 )
 
 type ContextFunc func(ctx context.Context) context.Context

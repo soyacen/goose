@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/go-leo/goose"
+	"github.com/soyacen/goose"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 	rpchttp "google.golang.org/genproto/googleapis/rpc/http"
 	"google.golang.org/protobuf/encoding/protojson"

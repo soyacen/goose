@@ -1,11 +1,11 @@
-module github.com/go-leo/goose/middleware/jwtauth
+module github.com/soyacen/goose/middleware/jwtauth
 
 go 1.23.0
 
 toolchain go1.23.12
 
 require (
-	github.com/go-leo/goose v1.6.11
+	github.com/soyacen/goose v1.6.11
 	github.com/golang-jwt/jwt/v5 v5.2.2
 )
 
@@ -16,4 +16,4 @@ require (
 	google.golang.org/protobuf v1.36.10 // indirect
 )
 
-replace github.com/go-leo/goose => ../../
+replace github.com/soyacen/goose => ../../

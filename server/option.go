@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/go-leo/goose"
+	"github.com/soyacen/goose"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

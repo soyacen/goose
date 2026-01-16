@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/go-leo/goose/cmd/protoc-gen-goose/constant"
-	"github.com/go-leo/goose/cmd/protoc-gen-goose/parser"
+	"github.com/soyacen/goose/cmd/protoc-gen-goose/constant"
+	"github.com/soyacen/goose/cmd/protoc-gen-goose/parser"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 

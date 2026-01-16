@@ -1,6 +1,6 @@
 syntax = "proto3";
 package leo.goose.example.query.v1;
-option go_package = "github.com/go-leo/goose/example/query/v1;query";
+option go_package = "github.com/soyacen/goose/example/query/v1;query";
 
 import "google/api/httpbody.proto";
 import "google/api/annotations.proto";

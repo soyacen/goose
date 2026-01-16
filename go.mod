@@ -1,4 +1,4 @@
-module github.com/go-leo/goose
+module github.com/soyacen/goose
 
 go 1.23.0
 

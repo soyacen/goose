@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/go-leo/goose"
-	"github.com/go-leo/goose/client/resolver"
+	"github.com/soyacen/goose"
+	"github.com/soyacen/goose/client/resolver"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

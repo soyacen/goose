@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-leo/goose/client"
-	"github.com/go-leo/goose/server"
+	"github.com/soyacen/goose/client"
+	"github.com/soyacen/goose/server"
 	"github.com/golang-jwt/jwt/v5"
 )
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/go-leo/goose/server"
+	"github.com/soyacen/goose/server"
 )
 
 type options struct {

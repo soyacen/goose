@@ -63,7 +63,7 @@ var (
 )
 
 var (
-	GoosePackage = protogen.GoImportPath("github.com/go-leo/goose")
+	GoosePackage = protogen.GoImportPath("github.com/soyacen/goose")
 
 	ValidateRequestIdent = GoosePackage.Ident("ValidateRequest")
 	OnErrCallbackIdent   = GoosePackage.Ident("OnValidationErrCallback")
@@ -150,7 +150,7 @@ func GetEnumSliceIdent(g *protogen.GeneratedFile, ident protogen.GoIdent) protog
 }
 
 var (
-	GooseServerPackage       = protogen.GoImportPath("github.com/go-leo/goose/server")
+	GooseServerPackage       = protogen.GoImportPath("github.com/soyacen/goose/server")
 	EncodeResponseIdent      = GooseServerPackage.Ident("EncodeResponse")
 	EncodeHttpBodyIdent      = GooseServerPackage.Ident("EncodeHttpBody")
 	EncodeHttpResponseIdent  = GooseServerPackage.Ident("EncodeHttpResponse")
@@ -168,7 +168,7 @@ var (
 )
 
 var (
-	GooseClientPackage = protogen.GoImportPath("github.com/go-leo/goose/client")
+	GooseClientPackage = protogen.GoImportPath("github.com/soyacen/goose/client")
 
 	DecodeMessageIdent              = GooseClientPackage.Ident("DecodeMessage")
 	DecodeHttpBodyFromResponseIdent = GooseClientPackage.Ident("DecodeHttpBody")
@@ -186,7 +186,7 @@ var (
 )
 
 var (
-	GooseClientResolverPackage = protogen.GoImportPath("github.com/go-leo/goose/client/resolver")
+	GooseClientResolverPackage = protogen.GoImportPath("github.com/soyacen/goose/client/resolver")
 
 	ResolverIdent = GooseClientResolverPackage.Ident("Resolver")
 	ResolveIdent  = GooseClientResolverPackage.Ident("Resolve")

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-leo/goose/client"
-	"github.com/go-leo/goose/server"
+	"github.com/soyacen/goose/client"
+	"github.com/soyacen/goose/server"
 )
 
 // Key is the HTTP header key used to pass timeout settings

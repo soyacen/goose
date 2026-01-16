@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/go-leo/goose/cmd/protoc-gen-goose/client"
-	"github.com/go-leo/goose/cmd/protoc-gen-goose/parser"
-	"github.com/go-leo/goose/cmd/protoc-gen-goose/server"
+	"github.com/soyacen/goose/cmd/protoc-gen-goose/client"
+	"github.com/soyacen/goose/cmd/protoc-gen-goose/parser"
+	"github.com/soyacen/goose/cmd/protoc-gen-goose/server"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 )

@@ -37,7 +37,7 @@ Goose 是一个面向 Go 的 Protobuf + HTTP/REST 代码生成与运行时支持
 推荐使用 go install 来安装插件（在支持 Go Modules 的环境下）：
 
 ```bash
-go install github.com/go-leo/goose/cmd/protoc-gen-goose@latest
+go install github.com/soyacen/goose/cmd/protoc-gen-goose@latest
 ```
 
 这会在 `$GOBIN` 或 `$GOPATH/bin` 下生成 `protoc-gen-goose` 可执行文件，protoc 能自动找到并使用它。

@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/go-leo/goose/client"
-	"github.com/go-leo/goose/server"
+	"github.com/soyacen/goose/client"
+	"github.com/soyacen/goose/server"
 )
 
 type ctxKey struct{}
