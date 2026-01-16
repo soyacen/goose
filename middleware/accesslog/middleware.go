@@ -94,7 +94,8 @@ func Server(opts ...Option) server.Middleware {
 	// Create a sync.Pool to reuse slog.Attr slices for better performance
 	pool := sync.Pool{
 		New: func() interface{} {
-			return make([]slog.Attr, 0, 10)
+			fields := make([]slog.Attr, 0, 20)
+			return &fields
 		},
 	}
 
@@ -133,36 +134,38 @@ func Server(opts ...Option) server.Middleware {
 		route := getRoute(request)
 
 		// Get a reusable slice of slog.Attr from the pool
-		fields := pool.Get().([]slog.Attr)
-
-		// Add system identifier
-		fields = append(fields, slog.String("system", "server"))
-
-		// Add timestamp when the request started
-		fields = append(fields, slog.String("timestamp", startTime.Format(time.RFC3339Nano)))
-
-		// Add deadline information if context has a deadline
+		fields := *pool.Get().(*[]slog.Attr)
+		fields = append(fields,
+			slog.String("system", "server"),
+			slog.String("timestamp", startTime.Format(time.RFC3339)),
+			slog.String("latency", latency.String()),
+			slog.String("method", request.Method),
+			slog.String("uri", request.RequestURI),
+			slog.String("path", request.URL.Path),
+			slog.String("proto", request.Proto),
+			slog.String("host", request.Host),
+			slog.String("remote_address", request.RemoteAddr),
+			slog.Int("status", statusCodeResponse.statusCode),
+			slog.String("x_forwarded_for", request.Header.Get("X-Forwarded-For")),
+			slog.String("authorization", request.Header.Get("Authorization")),
+			slog.String("referrer", request.Header.Get("Referer")),
+			slog.String("user_agent", request.Header.Get("User-Agent")),
+			slog.String("range", request.Header.Get("Range")),
+			slog.String("x_request_id", request.Header.Get("X-Request-Id")),
+			slog.String("x_region", request.Header.Get("X-Region")),
+			slog.String("x_country", request.Header.Get("X-Country")),
+			slog.String("x_city", request.Header.Get("X-City")),
+		)
 		if d, ok := ctx.Deadline(); ok {
-			fields = append(fields, slog.String("deadline", d.Format(time.RFC3339Nano)))
+			fields = append(fields, slog.String("deadline", d.Format(time.RFC3339)))
 		}
-
-		// Add request and response information
-		fields = append(fields, slog.String("latency", latency.String()))
-		fields = append(fields, slog.String("method", request.Method))
-		fields = append(fields, slog.String("uri", request.RequestURI))
-		fields = append(fields, slog.String("proto", request.Proto))
-		fields = append(fields, slog.String("host", request.Host))
-		fields = append(fields, slog.String("remote_address", request.RemoteAddr))
-		fields = append(fields, slog.Int("response_status", statusCodeResponse.statusCode))
-
-		// Log the access information
 		logger.LogAttrs(ctx, opt.level, route, fields...)
 
 		// Reset the slice length to 0 to reuse the underlying array
 		fields = fields[:0]
 
 		// Put the slice back into the pool for reuse
-		pool.Put(fields)
+		pool.Put(&fields)
 	}
 }
 
