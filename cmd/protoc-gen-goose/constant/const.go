@@ -168,28 +168,28 @@ var (
 )
 
 var (
-	GooseClientPackage = protogen.GoImportPath("github.com/soyacen/goose/client")
+	ClientPackage = protogen.GoImportPath("github.com/soyacen/goose/client")
 
-	DecodeMessageIdent              = GooseClientPackage.Ident("DecodeMessage")
-	DecodeHttpBodyFromResponseIdent = GooseClientPackage.Ident("DecodeHttpBody")
-	DecodeHttpResponseIdent         = GooseClientPackage.Ident("DecodeHttpResponse")
-	EncodeHttpBodyToRequestIdent    = GooseClientPackage.Ident("EncodeHttpBody")
-	EncodeHttpRequestIdent          = GooseClientPackage.Ident("EncodeHttpRequest")
-	EncodeMessageIdent              = GooseClientPackage.Ident("EncodeMessage")
+	DecodeMessageIdent              = ClientPackage.Ident("DecodeMessage")
+	DecodeHttpBodyFromResponseIdent = ClientPackage.Ident("DecodeHttpBody")
+	DecodeHttpResponseIdent         = ClientPackage.Ident("DecodeHttpResponse")
+	EncodeHttpBodyToRequestIdent    = ClientPackage.Ident("EncodeHttpBody")
+	EncodeHttpRequestIdent          = ClientPackage.Ident("EncodeHttpRequest")
+	EncodeMessageIdent              = ClientPackage.Ident("EncodeMessage")
 
-	ClientOptionIdent     = GooseClientPackage.Ident("Option")
-	ClientNewOptionsIdent = GooseClientPackage.Ident("NewOptions")
+	ClientOptionIdent     = ClientPackage.Ident("Option")
+	ClientNewOptionsIdent = ClientPackage.Ident("NewOptions")
 
-	ClientChainIdent      = GooseClientPackage.Ident("Chain")
-	ClientMiddlewareIdent = GooseClientPackage.Ident("Middleware")
-	ClientInvokeIdent     = GooseClientPackage.Ident("Invoke")
+	ClientChainIdent      = ClientPackage.Ident("Chain")
+	ClientMiddlewareIdent = ClientPackage.Ident("Middleware")
+	ClientInvokeIdent     = ClientPackage.Ident("Invoke")
 )
 
 var (
-	GooseClientResolverPackage = protogen.GoImportPath("github.com/soyacen/goose/client/resolver")
+	ClientResolverPackage = protogen.GoImportPath("github.com/soyacen/goose/client/resolver")
 
-	ResolverIdent = GooseClientResolverPackage.Ident("Resolver")
-	ResolveIdent  = GooseClientResolverPackage.Ident("Resolve")
+	ResolverIdent = ClientResolverPackage.Ident("Resolver")
+	ResolveIdent  = ClientResolverPackage.Ident("Resolve")
 )
 
 var (

@@ -46,7 +46,7 @@ func (m *MockUserService) ListUser(ctx context.Context, req *ListUserRequest) (*
 
 func runServer(server *http.Server, port int) {
 	router := http.NewServeMux()
-	router = AppendUserGooseRoute(router, &MockUserService{})
+	router = AppendUserRoute(router, &MockUserService{})
 	server.Addr = fmt.Sprintf(":%d", port)
 	server.Handler = router
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -54,8 +54,8 @@ func runServer(server *http.Server, port int) {
 	}
 }
 
-func newClient(port int) UserGooseService {
-	return NewUserGooseClient(fmt.Sprintf("http://localhost:%d", port))
+func newClient(port int) UserService {
+	return NewUserClient(fmt.Sprintf("http://localhost:%d", port))
 }
 
 // ---- Test Cases ----

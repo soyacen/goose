@@ -15,7 +15,7 @@ import (
 	url "net/url"
 )
 
-type UserGooseService interface {
+type UserService interface {
 	CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error)
 	DeleteUser(ctx context.Context, req *DeleteUserRequest) (*DeleteUserResponse, error)
 	ModifyUser(ctx context.Context, req *ModifyUserRequest) (*ModifyUserResponse, error)
@@ -24,14 +24,14 @@ type UserGooseService interface {
 	ListUser(ctx context.Context, req *ListUserRequest) (*ListUserResponse, error)
 }
 
-func AppendUserGooseRoute(router *http.ServeMux, service UserGooseService, opts ...server.Option) *http.ServeMux {
+func AppendUserRoute(router *http.ServeMux, service UserService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
-	handler := userGooseHandler{
+	handler := userHandler{
 		service: service,
-		decoder: userGooseRequestDecoder{
+		decoder: userRequestDecoder{
 			unmarshalOptions: options.UnmarshalOptions(),
 		},
-		encoder: userGooseResponseEncoder{
+		encoder: userResponseEncoder{
 			marshalOptions:   options.MarshalOptions(),
 			unmarshalOptions: options.UnmarshalOptions(),
 		},
@@ -49,17 +49,17 @@ func AppendUserGooseRoute(router *http.ServeMux, service UserGooseService, opts 
 	return router
 }
 
-type userGooseHandler struct {
-	service                 UserGooseService
-	decoder                 userGooseRequestDecoder
-	encoder                 userGooseResponseEncoder
+type userHandler struct {
+	service                 UserService
+	decoder                 userRequestDecoder
+	encoder                 userResponseEncoder
 	errorEncoder            goose.ErrorEncoder
 	shouldFailFast          bool
 	onValidationErrCallback goose.OnValidationErrCallback
 	middleware              server.Middleware
 }
 
-func (h userGooseHandler) CreateUser(response http.ResponseWriter, request *http.Request) {
+func (h userHandler) CreateUser(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx := request.Context()
 		req, err := h.decoder.CreateUser(ctx, request)
@@ -84,7 +84,7 @@ func (h userGooseHandler) CreateUser(response http.ResponseWriter, request *http
 	server.Invoke(h.middleware, response, request, invoke)
 }
 
-func (h userGooseHandler) DeleteUser(response http.ResponseWriter, request *http.Request) {
+func (h userHandler) DeleteUser(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx := request.Context()
 		req, err := h.decoder.DeleteUser(ctx, request)
@@ -109,7 +109,7 @@ func (h userGooseHandler) DeleteUser(response http.ResponseWriter, request *http
 	server.Invoke(h.middleware, response, request, invoke)
 }
 
-func (h userGooseHandler) ModifyUser(response http.ResponseWriter, request *http.Request) {
+func (h userHandler) ModifyUser(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx := request.Context()
 		req, err := h.decoder.ModifyUser(ctx, request)
@@ -134,7 +134,7 @@ func (h userGooseHandler) ModifyUser(response http.ResponseWriter, request *http
 	server.Invoke(h.middleware, response, request, invoke)
 }
 
-func (h userGooseHandler) UpdateUser(response http.ResponseWriter, request *http.Request) {
+func (h userHandler) UpdateUser(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx := request.Context()
 		req, err := h.decoder.UpdateUser(ctx, request)
@@ -159,7 +159,7 @@ func (h userGooseHandler) UpdateUser(response http.ResponseWriter, request *http
 	server.Invoke(h.middleware, response, request, invoke)
 }
 
-func (h userGooseHandler) GetUser(response http.ResponseWriter, request *http.Request) {
+func (h userHandler) GetUser(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx := request.Context()
 		req, err := h.decoder.GetUser(ctx, request)
@@ -184,7 +184,7 @@ func (h userGooseHandler) GetUser(response http.ResponseWriter, request *http.Re
 	server.Invoke(h.middleware, response, request, invoke)
 }
 
-func (h userGooseHandler) ListUser(response http.ResponseWriter, request *http.Request) {
+func (h userHandler) ListUser(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx := request.Context()
 		req, err := h.decoder.ListUser(ctx, request)
@@ -209,11 +209,11 @@ func (h userGooseHandler) ListUser(response http.ResponseWriter, request *http.R
 	server.Invoke(h.middleware, response, request, invoke)
 }
 
-type userGooseRequestDecoder struct {
+type userRequestDecoder struct {
 	unmarshalOptions protojson.UnmarshalOptions
 }
 
-func (decoder userGooseRequestDecoder) CreateUser(ctx context.Context, request *http.Request) (*CreateUserRequest, error) {
+func (decoder userRequestDecoder) CreateUser(ctx context.Context, request *http.Request) (*CreateUserRequest, error) {
 	req := &CreateUserRequest{}
 	ok, err := server.CustomDecodeRequest(ctx, request, req)
 	if err != nil {
@@ -227,7 +227,7 @@ func (decoder userGooseRequestDecoder) CreateUser(ctx context.Context, request *
 	}
 	return req, nil
 }
-func (decoder userGooseRequestDecoder) DeleteUser(ctx context.Context, request *http.Request) (*DeleteUserRequest, error) {
+func (decoder userRequestDecoder) DeleteUser(ctx context.Context, request *http.Request) (*DeleteUserRequest, error) {
 	req := &DeleteUserRequest{}
 	ok, err := server.CustomDecodeRequest(ctx, request, req)
 	if err != nil {
@@ -244,7 +244,7 @@ func (decoder userGooseRequestDecoder) DeleteUser(ctx context.Context, request *
 	}
 	return req, nil
 }
-func (decoder userGooseRequestDecoder) ModifyUser(ctx context.Context, request *http.Request) (*ModifyUserRequest, error) {
+func (decoder userRequestDecoder) ModifyUser(ctx context.Context, request *http.Request) (*ModifyUserRequest, error) {
 	req := &ModifyUserRequest{}
 	ok, err := server.CustomDecodeRequest(ctx, request, req)
 	if err != nil {
@@ -264,7 +264,7 @@ func (decoder userGooseRequestDecoder) ModifyUser(ctx context.Context, request *
 	}
 	return req, nil
 }
-func (decoder userGooseRequestDecoder) UpdateUser(ctx context.Context, request *http.Request) (*UpdateUserRequest, error) {
+func (decoder userRequestDecoder) UpdateUser(ctx context.Context, request *http.Request) (*UpdateUserRequest, error) {
 	req := &UpdateUserRequest{}
 	ok, err := server.CustomDecodeRequest(ctx, request, req)
 	if err != nil {
@@ -287,7 +287,7 @@ func (decoder userGooseRequestDecoder) UpdateUser(ctx context.Context, request *
 	}
 	return req, nil
 }
-func (decoder userGooseRequestDecoder) GetUser(ctx context.Context, request *http.Request) (*GetUserRequest, error) {
+func (decoder userRequestDecoder) GetUser(ctx context.Context, request *http.Request) (*GetUserRequest, error) {
 	req := &GetUserRequest{}
 	ok, err := server.CustomDecodeRequest(ctx, request, req)
 	if err != nil {
@@ -304,7 +304,7 @@ func (decoder userGooseRequestDecoder) GetUser(ctx context.Context, request *htt
 	}
 	return req, nil
 }
-func (decoder userGooseRequestDecoder) ListUser(ctx context.Context, request *http.Request) (*ListUserRequest, error) {
+func (decoder userRequestDecoder) ListUser(ctx context.Context, request *http.Request) (*ListUserRequest, error) {
 	req := &ListUserRequest{}
 	ok, err := server.CustomDecodeRequest(ctx, request, req)
 	if err != nil {
@@ -323,40 +323,40 @@ func (decoder userGooseRequestDecoder) ListUser(ctx context.Context, request *ht
 	return req, nil
 }
 
-type userGooseResponseEncoder struct {
+type userResponseEncoder struct {
 	marshalOptions   protojson.MarshalOptions
 	unmarshalOptions protojson.UnmarshalOptions
 }
 
-func (encoder userGooseResponseEncoder) CreateUser(ctx context.Context, w http.ResponseWriter, resp *CreateUserResponse) error {
+func (encoder userResponseEncoder) CreateUser(ctx context.Context, w http.ResponseWriter, resp *CreateUserResponse) error {
 	return server.EncodeResponse(ctx, w, resp, encoder.marshalOptions)
 }
-func (encoder userGooseResponseEncoder) DeleteUser(ctx context.Context, w http.ResponseWriter, resp *DeleteUserResponse) error {
+func (encoder userResponseEncoder) DeleteUser(ctx context.Context, w http.ResponseWriter, resp *DeleteUserResponse) error {
 	return server.EncodeResponse(ctx, w, resp, encoder.marshalOptions)
 }
-func (encoder userGooseResponseEncoder) ModifyUser(ctx context.Context, w http.ResponseWriter, resp *ModifyUserResponse) error {
+func (encoder userResponseEncoder) ModifyUser(ctx context.Context, w http.ResponseWriter, resp *ModifyUserResponse) error {
 	return server.EncodeResponse(ctx, w, resp, encoder.marshalOptions)
 }
-func (encoder userGooseResponseEncoder) UpdateUser(ctx context.Context, w http.ResponseWriter, resp *UpdateUserResponse) error {
+func (encoder userResponseEncoder) UpdateUser(ctx context.Context, w http.ResponseWriter, resp *UpdateUserResponse) error {
 	return server.EncodeResponse(ctx, w, resp, encoder.marshalOptions)
 }
-func (encoder userGooseResponseEncoder) GetUser(ctx context.Context, w http.ResponseWriter, resp *GetUserResponse) error {
+func (encoder userResponseEncoder) GetUser(ctx context.Context, w http.ResponseWriter, resp *GetUserResponse) error {
 	return server.EncodeResponse(ctx, w, resp, encoder.marshalOptions)
 }
-func (encoder userGooseResponseEncoder) ListUser(ctx context.Context, w http.ResponseWriter, resp *ListUserResponse) error {
+func (encoder userResponseEncoder) ListUser(ctx context.Context, w http.ResponseWriter, resp *ListUserResponse) error {
 	return server.EncodeResponse(ctx, w, resp, encoder.marshalOptions)
 }
 
-func NewUserGooseClient(target string, opts ...client.Option) UserGooseService {
+func NewUserClient(target string, opts ...client.Option) UserService {
 	options := client.NewOptions(opts...)
-	client := &userGooseClient{
+	client := &userClient{
 		client: options.Client(),
-		encoder: userGooseRequestEncoder{
+		encoder: userRequestEncoder{
 			target:         target,
 			marshalOptions: options.MarshalOptions(),
 			resolver:       options.Resolver(),
 		},
-		decoder: userGooseResponseDecoder{
+		decoder: userResponseDecoder{
 			unmarshalOptions: options.UnmarshalOptions(),
 			errorDecoder:     options.ErrorDecoder(),
 			errorFactory:     options.ErrorFactory(),
@@ -368,16 +368,16 @@ func NewUserGooseClient(target string, opts ...client.Option) UserGooseService {
 	return client
 }
 
-type userGooseClient struct {
+type userClient struct {
 	client                  *http.Client
-	encoder                 userGooseRequestEncoder
-	decoder                 userGooseResponseDecoder
+	encoder                 userRequestEncoder
+	decoder                 userResponseDecoder
 	shouldFailFast          bool
 	onValidationErrCallback goose.OnValidationErrCallback
 	middleware              client.Middleware
 }
 
-func (c *userGooseClient) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
+func (c *userClient) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -396,7 +396,7 @@ func (c *userGooseClient) CreateUser(ctx context.Context, req *CreateUserRequest
 	return resp, nil
 }
 
-func (c *userGooseClient) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*DeleteUserResponse, error) {
+func (c *userClient) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*DeleteUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -415,7 +415,7 @@ func (c *userGooseClient) DeleteUser(ctx context.Context, req *DeleteUserRequest
 	return resp, nil
 }
 
-func (c *userGooseClient) ModifyUser(ctx context.Context, req *ModifyUserRequest) (*ModifyUserResponse, error) {
+func (c *userClient) ModifyUser(ctx context.Context, req *ModifyUserRequest) (*ModifyUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -434,7 +434,7 @@ func (c *userGooseClient) ModifyUser(ctx context.Context, req *ModifyUserRequest
 	return resp, nil
 }
 
-func (c *userGooseClient) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*UpdateUserResponse, error) {
+func (c *userClient) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*UpdateUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -453,7 +453,7 @@ func (c *userGooseClient) UpdateUser(ctx context.Context, req *UpdateUserRequest
 	return resp, nil
 }
 
-func (c *userGooseClient) GetUser(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
+func (c *userClient) GetUser(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -472,7 +472,7 @@ func (c *userGooseClient) GetUser(ctx context.Context, req *GetUserRequest) (*Ge
 	return resp, nil
 }
 
-func (c *userGooseClient) ListUser(ctx context.Context, req *ListUserRequest) (*ListUserResponse, error) {
+func (c *userClient) ListUser(ctx context.Context, req *ListUserRequest) (*ListUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -491,13 +491,13 @@ func (c *userGooseClient) ListUser(ctx context.Context, req *ListUserRequest) (*
 	return resp, nil
 }
 
-type userGooseRequestEncoder struct {
+type userRequestEncoder struct {
 	target         string
 	marshalOptions protojson.MarshalOptions
 	resolver       resolver.Resolver
 }
 
-func (encoder *userGooseRequestEncoder) CreateUser(ctx context.Context, req *CreateUserRequest) (*http.Request, error) {
+func (encoder *userRequestEncoder) CreateUser(ctx context.Context, req *CreateUserRequest) (*http.Request, error) {
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}
@@ -521,7 +521,7 @@ func (encoder *userGooseRequestEncoder) CreateUser(ctx context.Context, req *Cre
 	return request, nil
 }
 
-func (encoder *userGooseRequestEncoder) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*http.Request, error) {
+func (encoder *userRequestEncoder) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*http.Request, error) {
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}
@@ -550,7 +550,7 @@ func (encoder *userGooseRequestEncoder) DeleteUser(ctx context.Context, req *Del
 	return request, nil
 }
 
-func (encoder *userGooseRequestEncoder) ModifyUser(ctx context.Context, req *ModifyUserRequest) (*http.Request, error) {
+func (encoder *userRequestEncoder) ModifyUser(ctx context.Context, req *ModifyUserRequest) (*http.Request, error) {
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}
@@ -582,7 +582,7 @@ func (encoder *userGooseRequestEncoder) ModifyUser(ctx context.Context, req *Mod
 	return request, nil
 }
 
-func (encoder *userGooseRequestEncoder) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*http.Request, error) {
+func (encoder *userRequestEncoder) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*http.Request, error) {
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}
@@ -614,7 +614,7 @@ func (encoder *userGooseRequestEncoder) UpdateUser(ctx context.Context, req *Upd
 	return request, nil
 }
 
-func (encoder *userGooseRequestEncoder) GetUser(ctx context.Context, req *GetUserRequest) (*http.Request, error) {
+func (encoder *userRequestEncoder) GetUser(ctx context.Context, req *GetUserRequest) (*http.Request, error) {
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}
@@ -643,7 +643,7 @@ func (encoder *userGooseRequestEncoder) GetUser(ctx context.Context, req *GetUse
 	return request, nil
 }
 
-func (encoder *userGooseRequestEncoder) ListUser(ctx context.Context, req *ListUserRequest) (*http.Request, error) {
+func (encoder *userRequestEncoder) ListUser(ctx context.Context, req *ListUserRequest) (*http.Request, error) {
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}
@@ -668,13 +668,13 @@ func (encoder *userGooseRequestEncoder) ListUser(ctx context.Context, req *ListU
 	return request, nil
 }
 
-type userGooseResponseDecoder struct {
+type userResponseDecoder struct {
 	unmarshalOptions protojson.UnmarshalOptions
 	errorDecoder     goose.ErrorDecoder
 	errorFactory     goose.ErrorFactory
 }
 
-func (decoder *userGooseResponseDecoder) CreateUser(ctx context.Context, response *http.Response) (*CreateUserResponse, error) {
+func (decoder *userResponseDecoder) CreateUser(ctx context.Context, response *http.Response) (*CreateUserResponse, error) {
 	if respErr, ok := decoder.errorDecoder(ctx, response, decoder.errorFactory); ok {
 		return nil, respErr
 	}
@@ -685,7 +685,7 @@ func (decoder *userGooseResponseDecoder) CreateUser(ctx context.Context, respons
 	return resp, nil
 }
 
-func (decoder *userGooseResponseDecoder) DeleteUser(ctx context.Context, response *http.Response) (*DeleteUserResponse, error) {
+func (decoder *userResponseDecoder) DeleteUser(ctx context.Context, response *http.Response) (*DeleteUserResponse, error) {
 	if respErr, ok := decoder.errorDecoder(ctx, response, decoder.errorFactory); ok {
 		return nil, respErr
 	}
@@ -696,7 +696,7 @@ func (decoder *userGooseResponseDecoder) DeleteUser(ctx context.Context, respons
 	return resp, nil
 }
 
-func (decoder *userGooseResponseDecoder) ModifyUser(ctx context.Context, response *http.Response) (*ModifyUserResponse, error) {
+func (decoder *userResponseDecoder) ModifyUser(ctx context.Context, response *http.Response) (*ModifyUserResponse, error) {
 	if respErr, ok := decoder.errorDecoder(ctx, response, decoder.errorFactory); ok {
 		return nil, respErr
 	}
@@ -707,7 +707,7 @@ func (decoder *userGooseResponseDecoder) ModifyUser(ctx context.Context, respons
 	return resp, nil
 }
 
-func (decoder *userGooseResponseDecoder) UpdateUser(ctx context.Context, response *http.Response) (*UpdateUserResponse, error) {
+func (decoder *userResponseDecoder) UpdateUser(ctx context.Context, response *http.Response) (*UpdateUserResponse, error) {
 	if respErr, ok := decoder.errorDecoder(ctx, response, decoder.errorFactory); ok {
 		return nil, respErr
 	}
@@ -718,7 +718,7 @@ func (decoder *userGooseResponseDecoder) UpdateUser(ctx context.Context, respons
 	return resp, nil
 }
 
-func (decoder *userGooseResponseDecoder) GetUser(ctx context.Context, response *http.Response) (*GetUserResponse, error) {
+func (decoder *userResponseDecoder) GetUser(ctx context.Context, response *http.Response) (*GetUserResponse, error) {
 	if respErr, ok := decoder.errorDecoder(ctx, response, decoder.errorFactory); ok {
 		return nil, respErr
 	}
@@ -729,7 +729,7 @@ func (decoder *userGooseResponseDecoder) GetUser(ctx context.Context, response *
 	return resp, nil
 }
 
-func (decoder *userGooseResponseDecoder) ListUser(ctx context.Context, response *http.Response) (*ListUserResponse, error) {
+func (decoder *userResponseDecoder) ListUser(ctx context.Context, response *http.Response) (*ListUserResponse, error) {
 	if respErr, ok := decoder.errorDecoder(ctx, response, decoder.errorFactory); ok {
 		return nil, respErr
 	}

@@ -112,7 +112,7 @@ func TestBoolPath(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendBoolQueryGooseRoute(router, &MockBoolQueryService{})
+		router = AppendBoolQueryRoute(router, &MockBoolQueryService{})
 		server.Addr = ":28081"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -121,7 +121,7 @@ func TestBoolPath(t *testing.T) {
 	}()
 	defer server.Close()
 	time.Sleep(time.Second)
-	cli := NewBoolQueryGooseClient("http://localhost:28081")
+	cli := NewBoolQueryClient("http://localhost:28081")
 	resp, err := cli.BoolQuery(context.Background(), &BoolQueryRequest{
 		Bool:         true,
 		OptBool:      proto.Bool(true),
@@ -142,7 +142,7 @@ func TestInt32Path(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendInt32QueryGooseRoute(router, &MockInt32QueryService{})
+		router = AppendInt32QueryRoute(router, &MockInt32QueryService{})
 		server.Addr = ":28082"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -151,7 +151,7 @@ func TestInt32Path(t *testing.T) {
 	}()
 	defer server.Close()
 	time.Sleep(time.Second)
-	cli := NewInt32QueryGooseClient("http://localhost:28082")
+	cli := NewInt32QueryClient("http://localhost:28082")
 	resp, err := cli.Int32Query(context.Background(), &Int32QueryRequest{
 		Int32:         1,
 		Sint32:        2,
@@ -178,7 +178,7 @@ func TestInt64Path(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendInt64QueryGooseRoute(router, &MockInt64QueryService{})
+		router = AppendInt64QueryRoute(router, &MockInt64QueryService{})
 		server.Addr = ":28083"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -187,7 +187,7 @@ func TestInt64Path(t *testing.T) {
 	}()
 	defer server.Close()
 	time.Sleep(time.Second)
-	cli := NewInt64QueryGooseClient("http://localhost:28083")
+	cli := NewInt64QueryClient("http://localhost:28083")
 	resp, err := cli.Int64Query(context.Background(), &Int64QueryRequest{
 		Int64:         10,
 		Sint64:        20,
@@ -214,7 +214,7 @@ func TestUint32Path(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendUint32QueryGooseRoute(router, &MockUint32QueryService{})
+		router = AppendUint32QueryRoute(router, &MockUint32QueryService{})
 		server.Addr = ":28084"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -223,7 +223,7 @@ func TestUint32Path(t *testing.T) {
 	}()
 	defer server.Close()
 	time.Sleep(time.Second)
-	cli := NewUint32QueryGooseClient("http://localhost:28084")
+	cli := NewUint32QueryClient("http://localhost:28084")
 	resp, err := cli.Uint32Query(context.Background(), &Uint32QueryRequest{
 		Uint32:         1,
 		Fixed32:        2,
@@ -247,7 +247,7 @@ func TestUint64Path(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendUint64QueryGooseRoute(router, &MockUint64QueryService{})
+		router = AppendUint64QueryRoute(router, &MockUint64QueryService{})
 		server.Addr = ":28085"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -256,7 +256,7 @@ func TestUint64Path(t *testing.T) {
 	}()
 	defer server.Close()
 	time.Sleep(time.Second)
-	cli := NewUint64QueryGooseClient("http://localhost:28085")
+	cli := NewUint64QueryClient("http://localhost:28085")
 	resp, err := cli.Uint64Query(context.Background(), &Uint64QueryRequest{
 		Uint64:         10,
 		Fixed64:        20,
@@ -280,7 +280,7 @@ func TestFloatPath(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendFloatQueryGooseRoute(router, &MockFloatQueryService{})
+		router = AppendFloatQueryRoute(router, &MockFloatQueryService{})
 		server.Addr = ":28086"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -289,7 +289,7 @@ func TestFloatPath(t *testing.T) {
 	}()
 	defer server.Close()
 	time.Sleep(time.Second)
-	cli := NewFloatQueryGooseClient("http://localhost:28086")
+	cli := NewFloatQueryClient("http://localhost:28086")
 	resp, err := cli.FloatQuery(context.Background(), &FloatQueryRequest{
 		Float:         1.23,
 		OptFloat:      proto.Float32(4.56),
@@ -310,7 +310,7 @@ func TestDoublePath(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendDoubleQueryGooseRoute(router, &MockDoubleQueryService{})
+		router = AppendDoubleQueryRoute(router, &MockDoubleQueryService{})
 		server.Addr = ":28087"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -319,7 +319,7 @@ func TestDoublePath(t *testing.T) {
 	}()
 	defer server.Close()
 	time.Sleep(time.Second)
-	cli := NewDoubleQueryGooseClient("http://localhost:28087")
+	cli := NewDoubleQueryClient("http://localhost:28087")
 	resp, err := cli.DoubleQuery(context.Background(), &DoubleQueryRequest{
 		Double:         1.23,
 		OptDouble:      proto.Float64(4.56),
@@ -340,7 +340,7 @@ func TestStringPath(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendStringQueryGooseRoute(router, &MockStringQueryService{})
+		router = AppendStringQueryRoute(router, &MockStringQueryService{})
 		server.Addr = ":28088"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -349,7 +349,7 @@ func TestStringPath(t *testing.T) {
 	}()
 	defer server.Close()
 	time.Sleep(time.Second)
-	cli := NewStringQueryGooseClient("http://localhost:28088")
+	cli := NewStringQueryClient("http://localhost:28088")
 	resp, err := cli.StringQuery(context.Background(), &StringQueryRequest{
 		String_:        "abc",
 		OptString:      proto.String("def"),
@@ -370,7 +370,7 @@ func TestEnumPath(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendEnumQueryGooseRoute(router, &MockEnumQueryService{})
+		router = AppendEnumQueryRoute(router, &MockEnumQueryService{})
 		server.Addr = ":28089"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -379,7 +379,7 @@ func TestEnumPath(t *testing.T) {
 	}()
 	defer server.Close()
 	time.Sleep(time.Second)
-	cli := NewEnumQueryGooseClient("http://localhost:28089")
+	cli := NewEnumQueryClient("http://localhost:28089")
 	canceled := EnumQueryRequest_CANCELLED
 	resp, err := cli.EnumQuery(context.Background(), &EnumQueryRequest{
 		Status:     EnumQueryRequest_OK,

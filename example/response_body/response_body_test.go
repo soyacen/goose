@@ -55,7 +55,7 @@ func (m *MockResponseBodyService) HttpResponse(ctx context.Context, req *Request
 
 func runServer(server *http.Server, port int) {
 	router := http.NewServeMux()
-	router = AppendResponseBodyGooseRoute(router, &MockResponseBodyService{})
+	router = AppendResponseBodyRoute(router, &MockResponseBodyService{})
 	server.Addr = fmt.Sprintf(":%d", port)
 	server.Handler = router
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -63,8 +63,8 @@ func runServer(server *http.Server, port int) {
 	}
 }
 
-func newClient(port int) ResponseBodyGooseService {
-	return NewResponseBodyGooseClient(fmt.Sprintf("http://localhost:%d", port))
+func newClient(port int) ResponseBodyService {
+	return NewResponseBodyClient(fmt.Sprintf("http://localhost:%d", port))
 }
 
 // ---- Test Cases ----
