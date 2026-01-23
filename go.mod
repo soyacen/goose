@@ -3,6 +3,7 @@ module github.com/soyacen/goose
 go 1.23.0
 
 require (
+	github.com/google/go-querystring v1.2.0
 	golang.org/x/exp v0.0.0-20250811191247-51f88131bc50
 	golang.org/x/net v0.43.0
 	golang.org/x/text v0.28.0
