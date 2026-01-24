@@ -523,67 +523,6 @@ func TestReceiverObjectBody(t *testing.T) {
 	}
 }
 
-// TestChainMiddlewares tests middleware chaining
-func TestChainMiddlewares(t *testing.T) {
-	tests := []struct {
-		name        string
-		middlewares []Middleware
-		expectedNil bool
-	}{
-		{
-			name:        "no middlewares",
-			middlewares: []Middleware{},
-			expectedNil: true,
-		},
-		{
-			name: "single middleware",
-			middlewares: []Middleware{
-				func(ctx context.Context, req *http.Request, cli *http.Client, invoker Invoker) (*http.Response, error) {
-					return invoker(ctx, req, cli)
-				},
-			},
-			expectedNil: false,
-		},
-		{
-			name: "multiple middlewares",
-			middlewares: []Middleware{
-				func(ctx context.Context, req *http.Request, cli *http.Client, invoker Invoker) (*http.Response, error) {
-					return invoker(ctx, req, cli)
-				},
-				func(ctx context.Context, req *http.Request, cli *http.Client, invoker Invoker) (*http.Response, error) {
-					return invoker(ctx, req, cli)
-				},
-			},
-			expectedNil: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := chainMiddlewares(tt.middlewares...)
-			if (result == nil) != tt.expectedNil {
-				t.Errorf("chainMiddlewares() nil mismatch")
-			}
-		})
-	}
-}
-
-// TestInvoke tests middleware invocation with nil middleware
-func TestInvoke(t *testing.T) {
-	ctx := context.Background()
-	req, _ := http.NewRequest(http.MethodGet, "https://example.com", nil)
-	cli := &http.Client{}
-
-	// Test with nil middleware (should call invoke directly)
-	resp, err := Invoke(ctx, nil, cli, req)
-
-	// We expect an error since we can't actually reach the URL
-	// But this tests that invoke was called
-	if resp == nil && err != nil {
-		// This is expected
-	}
-}
-
 // TestOptionsWithError tests option behavior when error is set
 func TestOptionsWithError(t *testing.T) {
 	opts := &options{

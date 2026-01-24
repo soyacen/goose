@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/google/go-querystring/query"
+	"github.com/soyacen/goose/client"
 	"github.com/soyacen/goose/internal/iox"
 	"github.com/soyacen/goose/internal/strconvx"
 	"google.golang.org/protobuf/proto"
@@ -97,7 +98,7 @@ func (e UnmarshalError) Unwrap() error {
 type options struct {
 	err         error
 	client      *http.Client
-	middlewares []Middleware
+	middlewares []client.Middleware
 	uri         *url.URL
 	queries     url.Values
 	headers     http.Header
@@ -107,7 +108,7 @@ type options struct {
 
 type (
 	MethodOptions interface {
-		Middleware(middlewares ...Middleware)
+		Middleware(middlewares ...client.Middleware)
 		Client(client *http.Client)
 	}
 	MethodOption func(MethodOptions)
@@ -116,7 +117,7 @@ type (
 	}
 )
 
-func Middlewares(middlewares ...Middleware) MethodOption {
+func Middlewares(middlewares ...client.Middleware) MethodOption {
 	return func(o MethodOptions) {
 		o.Middleware(middlewares...)
 	}
@@ -135,7 +136,7 @@ func (s *options) Client(client *http.Client) {
 	s.client = client
 }
 
-func (s *options) Middleware(middlewares ...Middleware) {
+func (s *options) Middleware(middlewares ...client.Middleware) {
 	if s.err != nil {
 		return
 	}
@@ -929,7 +930,7 @@ func (s *sender) Send(ctx context.Context) (Receiver, error) {
 			req.AddCookie(cookie)
 		}
 	}
-	resp, err := Invoke(ctx, chainMiddlewares(s.options.middlewares...), s.options.client, req)
+	resp, err := client.Invoke(client.Chain(s.options.middlewares...), s.options.client, req)
 	if err != nil {
 		return nil, err
 	}
@@ -1070,42 +1071,4 @@ type sender struct {
 type receiver struct {
 	req  *http.Request
 	resp *http.Response
-}
-
-type Invoker func(ctx context.Context, req *http.Request, cli *http.Client) (*http.Response, error)
-
-type Middleware func(ctx context.Context, req *http.Request, cli *http.Client, invoker Invoker) (*http.Response, error)
-
-func chainMiddlewares(middlewares ...Middleware) Middleware {
-	var chainedInt Middleware
-	if len(middlewares) == 0 {
-		chainedInt = nil
-	} else if len(middlewares) == 1 {
-		chainedInt = middlewares[0]
-	} else {
-		chainedInt = func(ctx context.Context, req *http.Request, cli *http.Client, invoker Invoker) (*http.Response, error) {
-			return middlewares[0](ctx, req, cli, getInvoker(middlewares, 0, invoker))
-		}
-	}
-	return chainedInt
-}
-
-func getInvoker(interceptors []Middleware, curr int, finalInvoker Invoker) Invoker {
-	if curr == len(interceptors)-1 {
-		return finalInvoker
-	}
-	return func(ctx context.Context, req *http.Request, cli *http.Client) (*http.Response, error) {
-		return interceptors[curr+1](ctx, req, cli, getInvoker(interceptors, curr+1, finalInvoker))
-	}
-}
-
-func Invoke(ctx context.Context, middleware Middleware, cli *http.Client, request *http.Request) (*http.Response, error) {
-	if middleware == nil {
-		return invoke(ctx, request, cli)
-	}
-	return middleware(ctx, request, cli, invoke)
-}
-
-func invoke(_ context.Context, req *http.Request, cli *http.Client) (*http.Response, error) {
-	return cli.Do(req)
 }

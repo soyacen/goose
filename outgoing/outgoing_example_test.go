@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/soyacen/goose/client"
 	"github.com/soyacen/goose/outgoing"
 )
 
@@ -137,11 +138,11 @@ func Example_multipartUpload() {
 
 func Example_withMiddleware() {
 	// 定义一个简单的中间件记录请求时间
-	loggingMiddleware := func(ctx context.Context, req *http.Request, cli *http.Client, invoker outgoing.Invoker) (*http.Response, error) {
+	loggingMiddleware := func(cli *http.Client, req *http.Request, invoker client.Invoker) (*http.Response, error) {
 		start := time.Now()
 		fmt.Printf("Making request to: %s %s\n", req.Method, req.URL.String())
 
-		resp, err := invoker(ctx, req, cli)
+		resp, err := invoker(cli, req)
 
 		fmt.Printf("Request completed in: %v\n", time.Since(start))
 		return resp, err
