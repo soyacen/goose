@@ -15,18 +15,11 @@ import (
 
 var flags flag.FlagSet
 
-var (
-	Version    = "No Version Provided"
-	buildstamp = "no timestamp set"
-	githash    = "no githash set"
-)
+var Version = "v0.0.1"
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
 		fmt.Fprintf(os.Stdout, "%v %v\n", filepath.Base(os.Args[0]), "v1.6.8")
-		// fmt.Fprintf(os.Stdout, "%v %v\n", filepath.Base(os.Args[0]), Version)
-		// fmt.Println("HelloWorld buildstamp is:", buildstamp)
-		// fmt.Println("HelloWorld buildgithash is:", githash)
 		os.Exit(0)
 	}
 	options := &protogen.Options{ParamFunc: flags.Set}

@@ -29,7 +29,7 @@ func (s *Service) ServiceName() string {
 }
 
 func (s *Service) AppendRouteName() string {
-	return "Append" + s.Name() + "Route"
+	return "Append" + s.Name() + "HttpRoute"
 }
 
 func (s *Service) HandlerName() string {
@@ -45,11 +45,11 @@ func (s *Service) ResponseEncoderName() string {
 }
 
 func (s *Service) NewClientName() string {
-	return "New" + s.Name() + "Client"
+	return "New" + s.Name() + "HttpClient"
 }
 
 func (s *Service) ClientName() string {
-	return s.Name() + "Client"
+	return s.Name() + "HttpClient"
 }
 
 func (s *Service) RequestEncoderName() string {
