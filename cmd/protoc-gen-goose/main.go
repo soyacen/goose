@@ -19,7 +19,7 @@ var Version = "v1.7.2"
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
-		fmt.Fprintf(os.Stdout, "%v %v\n", filepath.Base(os.Args[0]), "v1.6.8")
+		fmt.Fprintf(os.Stdout, "%v %v\n", filepath.Base(os.Args[0]), Version)
 		os.Exit(0)
 	}
 	options := &protogen.Options{ParamFunc: flags.Set}
