@@ -12,6 +12,7 @@ import (
 	"unsafe"
 
 	"github.com/soyacen/goose"
+	"github.com/soyacen/goose/client"
 	"github.com/soyacen/goose/server"
 )
 
@@ -157,11 +158,7 @@ func Server(opts ...Option) server.Middleware {
 			slog.String("authorization", request.Header.Get("Authorization")),
 			slog.String("referrer", request.Header.Get("Referer")),
 			slog.String("user_agent", request.Header.Get("User-Agent")),
-			slog.String("range", request.Header.Get("Range")),
-			slog.String("x_request_id", request.Header.Get("X-Request-Id")),
-			slog.String("x_region", request.Header.Get("X-Region")),
-			slog.String("x_country", request.Header.Get("X-Country")),
-			slog.String("x_city", request.Header.Get("X-City")),
+			slog.String("request_id", request.Header.Get("X-Request-Id")),
 		)
 		if d, ok := ctx.Deadline(); ok {
 			fields = append(fields, slog.String("deadline", d.Format(time.RFC3339)))
@@ -173,6 +170,91 @@ func Server(opts ...Option) server.Middleware {
 
 		// Put the slice back into the pool for reuse
 		pool.Put(&fields)
+	}
+}
+
+func Client(opts ...Option) client.Middleware {
+	opt := defaultOptions().apply(opts...)
+
+	// Create a sync.Pool to reuse slog.Attr slices for better performance
+	pool := sync.Pool{
+		New: func() interface{} {
+			return make([]slog.Attr, 0, 10)
+		},
+	}
+
+	return func(cli *http.Client, request *http.Request, invoker client.Invoker) (*http.Response, error) {
+		// Skip logging if no logger factory is configured
+		if opt.loggerFactory == nil {
+			return invoker(cli, request)
+		}
+
+		// Get context from the request
+		ctx := request.Context()
+
+		// Create a logger using the logger factory
+		logger, err := opt.loggerFactory(ctx)
+		if err != nil {
+			// Log error and continue with request processing if logger creation fails
+			slog.Error("accesslog: failed to get logger", slog.String("error", err.Error()))
+			return invoker(cli, request)
+		}
+
+		// Record the start time for latency calculation
+		startTime := time.Now()
+
+		// Invoke the next handler
+		response, err := invoker(cli, request)
+
+		// Calculate request processing latency
+		latency := time.Since(startTime)
+
+		var route string
+		if routeInfo, ok := goose.ExtractRouteInfo(ctx); ok {
+			route = routeInfo.Pattern
+		} else {
+			route = request.URL.Path
+		}
+
+		// Get a reusable slice of slog.Attr from the pool
+		fields := pool.Get().([]slog.Attr)
+
+		// Add system identifier
+		fields = append(fields,
+			slog.String("system", "client"),
+			slog.String("timestamp", startTime.Format(time.RFC3339Nano)),
+			slog.String("latency", latency.String()),
+			slog.String("method", request.Method),
+			slog.String("uri", request.RequestURI),
+			slog.String("proto", request.Proto),
+			slog.String("host", request.Host),
+			slog.String("path", request.URL.Path),
+			slog.String("request_id", request.Header.Get("X-Request-Id")),
+		)
+
+		// Add deadline information if context has a deadline
+		if d, ok := ctx.Deadline(); ok {
+			fields = append(fields, slog.String("deadline", d.Format(time.RFC3339Nano)))
+		}
+
+		// Add response information if available
+		if response != nil {
+			fields = append(fields, slog.Int("response_status", response.StatusCode))
+		}
+		if err != nil {
+			fields = append(fields, slog.String("error", err.Error()))
+		}
+
+		// Log the access information
+		logger.LogAttrs(ctx, opt.level, route, fields...)
+
+		// Reset the slice length to 0 to reuse the underlying array
+		fields = fields[:0]
+
+		// Put the slice back into the pool for reuse
+		pool.Put(fields)
+
+		return response, err
 	}
 }
 

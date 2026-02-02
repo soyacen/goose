@@ -2,8 +2,6 @@ module github.com/soyacen/goose/middleware/jwtauth
 
 go 1.23.0
 
-toolchain go1.23.12
-
 require (
 	github.com/soyacen/goose v1.6.11
 	github.com/golang-jwt/jwt/v5 v5.2.2
