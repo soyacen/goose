@@ -26,7 +26,7 @@ type ResponseBodyService interface {
 	HttpResponse(ctx context.Context, req *Request) (*http.HttpResponse, error)
 }
 
-func AppendResponseBodyRoute(router *http1.ServeMux, service ResponseBodyService, opts ...server.Option) *http1.ServeMux {
+func AppendResponseBodyHttpRoute(router *http1.ServeMux, service ResponseBodyService, opts ...server.Option) *http1.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := responseBodyHandler{
 		service: service,
@@ -83,7 +83,7 @@ func (h responseBodyHandler) OmittedResponse(response http1.ResponseWriter, requ
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_response_body_v1_ResponseBody_OmittedResponse_Desc.RouteInfo)
 }
 
 func (h responseBodyHandler) StarResponse(response http1.ResponseWriter, request *http1.Request) {
@@ -108,7 +108,7 @@ func (h responseBodyHandler) StarResponse(response http1.ResponseWriter, request
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_response_body_v1_ResponseBody_StarResponse_Desc.RouteInfo)
 }
 
 func (h responseBodyHandler) NamedResponse(response http1.ResponseWriter, request *http1.Request) {
@@ -133,7 +133,7 @@ func (h responseBodyHandler) NamedResponse(response http1.ResponseWriter, reques
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_response_body_v1_ResponseBody_NamedResponse_Desc.RouteInfo)
 }
 
 func (h responseBodyHandler) HttpBodyResponse(response http1.ResponseWriter, request *http1.Request) {
@@ -158,7 +158,7 @@ func (h responseBodyHandler) HttpBodyResponse(response http1.ResponseWriter, req
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_response_body_v1_ResponseBody_HttpBodyResponse_Desc.RouteInfo)
 }
 
 func (h responseBodyHandler) HttpBodyNamedResponse(response http1.ResponseWriter, request *http1.Request) {
@@ -183,7 +183,7 @@ func (h responseBodyHandler) HttpBodyNamedResponse(response http1.ResponseWriter
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_response_body_v1_ResponseBody_HttpBodyNamedResponse_Desc.RouteInfo)
 }
 
 func (h responseBodyHandler) HttpResponse(response http1.ResponseWriter, request *http1.Request) {
@@ -208,7 +208,7 @@ func (h responseBodyHandler) HttpResponse(response http1.ResponseWriter, request
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_response_body_v1_ResponseBody_HttpResponse_Desc.RouteInfo)
 }
 
 type responseBodyRequestDecoder struct {
@@ -342,9 +342,9 @@ func (encoder responseBodyResponseEncoder) HttpResponse(ctx context.Context, w h
 	return server.EncodeHttpResponse(ctx, w, resp)
 }
 
-func NewResponseBodyClient(target string, opts ...client.Option) ResponseBodyService {
+func NewResponseBodyHttpClient(target string, opts ...client.Option) ResponseBodyService {
 	options := client.NewOptions(opts...)
-	client := &responseBodyClient{
+	client := &responseBodyHttpClient{
 		client: options.Client(),
 		encoder: responseBodyRequestEncoder{
 			target:         target,
@@ -363,7 +363,7 @@ func NewResponseBodyClient(target string, opts ...client.Option) ResponseBodySer
 	return client
 }
 
-type responseBodyClient struct {
+type responseBodyHttpClient struct {
 	client                  *http1.Client
 	encoder                 responseBodyRequestEncoder
 	decoder                 responseBodyResponseDecoder
@@ -372,7 +372,7 @@ type responseBodyClient struct {
 	middleware              client.Middleware
 }
 
-func (c *responseBodyClient) OmittedResponse(ctx context.Context, req *Request) (*Response, error) {
+func (c *responseBodyHttpClient) OmittedResponse(ctx context.Context, req *Request) (*Response, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -380,7 +380,7 @@ func (c *responseBodyClient) OmittedResponse(ctx context.Context, req *Request) 
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_response_body_v1_ResponseBody_OmittedResponse_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +391,7 @@ func (c *responseBodyClient) OmittedResponse(ctx context.Context, req *Request) 
 	return resp, nil
 }
 
-func (c *responseBodyClient) StarResponse(ctx context.Context, req *Request) (*Response, error) {
+func (c *responseBodyHttpClient) StarResponse(ctx context.Context, req *Request) (*Response, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -399,7 +399,7 @@ func (c *responseBodyClient) StarResponse(ctx context.Context, req *Request) (*R
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_response_body_v1_ResponseBody_StarResponse_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +410,7 @@ func (c *responseBodyClient) StarResponse(ctx context.Context, req *Request) (*R
 	return resp, nil
 }
 
-func (c *responseBodyClient) NamedResponse(ctx context.Context, req *Request) (*NamedBodyResponse, error) {
+func (c *responseBodyHttpClient) NamedResponse(ctx context.Context, req *Request) (*NamedBodyResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -418,7 +418,7 @@ func (c *responseBodyClient) NamedResponse(ctx context.Context, req *Request) (*
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_response_body_v1_ResponseBody_NamedResponse_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -429,7 +429,7 @@ func (c *responseBodyClient) NamedResponse(ctx context.Context, req *Request) (*
 	return resp, nil
 }
 
-func (c *responseBodyClient) HttpBodyResponse(ctx context.Context, req *Request) (*httpbody.HttpBody, error) {
+func (c *responseBodyHttpClient) HttpBodyResponse(ctx context.Context, req *Request) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -437,7 +437,7 @@ func (c *responseBodyClient) HttpBodyResponse(ctx context.Context, req *Request)
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_response_body_v1_ResponseBody_HttpBodyResponse_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -448,7 +448,7 @@ func (c *responseBodyClient) HttpBodyResponse(ctx context.Context, req *Request)
 	return resp, nil
 }
 
-func (c *responseBodyClient) HttpBodyNamedResponse(ctx context.Context, req *Request) (*NamedHttpBodyResponse, error) {
+func (c *responseBodyHttpClient) HttpBodyNamedResponse(ctx context.Context, req *Request) (*NamedHttpBodyResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -456,7 +456,7 @@ func (c *responseBodyClient) HttpBodyNamedResponse(ctx context.Context, req *Req
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_response_body_v1_ResponseBody_HttpBodyNamedResponse_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -467,7 +467,7 @@ func (c *responseBodyClient) HttpBodyNamedResponse(ctx context.Context, req *Req
 	return resp, nil
 }
 
-func (c *responseBodyClient) HttpResponse(ctx context.Context, req *Request) (*http.HttpResponse, error) {
+func (c *responseBodyHttpClient) HttpResponse(ctx context.Context, req *Request) (*http.HttpResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -475,7 +475,7 @@ func (c *responseBodyClient) HttpResponse(ctx context.Context, req *Request) (*h
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_response_body_v1_ResponseBody_HttpResponse_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -712,4 +712,52 @@ func (decoder *responseBodyResponseDecoder) HttpResponse(ctx context.Context, re
 		return nil, err
 	}
 	return resp, nil
+}
+
+var _leo_goose_example_response_body_v1_ResponseBody_OmittedResponse_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/omitted/response",
+		FullMethod: "/leo.goose.example.response_body.v1.ResponseBody/OmittedResponse",
+	},
+}
+
+var _leo_goose_example_response_body_v1_ResponseBody_StarResponse_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/star/response",
+		FullMethod: "/leo.goose.example.response_body.v1.ResponseBody/StarResponse",
+	},
+}
+
+var _leo_goose_example_response_body_v1_ResponseBody_NamedResponse_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/named/response",
+		FullMethod: "/leo.goose.example.response_body.v1.ResponseBody/NamedResponse",
+	},
+}
+
+var _leo_goose_example_response_body_v1_ResponseBody_HttpBodyResponse_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/http/body/omitted/response",
+		FullMethod: "/leo.goose.example.response_body.v1.ResponseBody/HttpBodyResponse",
+	},
+}
+
+var _leo_goose_example_response_body_v1_ResponseBody_HttpBodyNamedResponse_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/http/body/named/response",
+		FullMethod: "/leo.goose.example.response_body.v1.ResponseBody/HttpBodyNamedResponse",
+	},
+}
+
+var _leo_goose_example_response_body_v1_ResponseBody_HttpResponse_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/http/response",
+		FullMethod: "/leo.goose.example.response_body.v1.ResponseBody/HttpResponse",
+	},
 }

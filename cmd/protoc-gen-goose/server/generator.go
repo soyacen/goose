@@ -10,15 +10,7 @@ import (
 
 type Generator struct{}
 
-func (generator *Generator) GenerateServices(service *parser.Service, g *protogen.GeneratedFile) error {
-	g.P("type ", service.ServiceName(), " interface {")
-	for _, endpoint := range service.Endpoints {
-		g.P(endpoint.Name(), "(ctx ", constant.ContextIdent, ", req *", endpoint.InputGoIdent(), ") (*", endpoint.OutputGoIdent(), ", error)")
-	}
-	g.P("}")
-	g.P()
-	return nil
-}
+
 
 func (generator *Generator) GenerateAppendServerFunc(service *parser.Service, g *protogen.GeneratedFile) error {
 	g.P("func ", service.AppendRouteName(), "(router *", constant.RouterIdent, ", service ", service.ServiceName(), ", opts ...", constant.ServerOptionIdent, ") ", "*", constant.RouterIdent, " {")
@@ -80,7 +72,7 @@ func (generator *Generator) GenerateHandlers(service *parser.Service, g *protoge
 		g.P("return")
 		g.P("}")
 		g.P("}")
-		g.P(constant.ServerInvokeIdent, "(h.middleware, response, request, invoke)")
+		g.P(constant.ServerInvokeIdent, "(h.middleware, response, request, invoke, ", endpoint.DescName(), ".RouteInfo)")
 		g.P("}")
 		g.P()
 	}

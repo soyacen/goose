@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/soyacen/goose/internal/strconvx"
 	"golang.org/x/exp/slices"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -28,6 +29,10 @@ func (e *Endpoint) Unexported(s string) string {
 
 func (e *Endpoint) FullName() string {
 	return fmt.Sprintf("/%s/%s", e.protoMethod.Parent.Desc.FullName(), e.protoMethod.Desc.Name())
+}
+
+func (e *Endpoint) DescName() string {
+	return fmt.Sprintf("_%s_%s_Desc", strconvx.GoSanitized(string(e.protoMethod.Parent.Desc.FullName())), e.protoMethod.Desc.Name())
 }
 
 func (e *Endpoint) IsStreaming() bool {

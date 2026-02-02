@@ -22,7 +22,7 @@ type BoolPathService interface {
 	BoolPath(ctx context.Context, req *BoolPathRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendBoolPathRoute(router *http.ServeMux, service BoolPathService, opts ...server.Option) *http.ServeMux {
+func AppendBoolPathHttpRoute(router *http.ServeMux, service BoolPathService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := boolPathHandler{
 		service: service,
@@ -74,7 +74,7 @@ func (h boolPathHandler) BoolPath(response http.ResponseWriter, request *http.Re
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_path_v1_BoolPath_BoolPath_Desc.RouteInfo)
 }
 
 type boolPathRequestDecoder struct {
@@ -110,9 +110,9 @@ func (encoder boolPathResponseEncoder) BoolPath(ctx context.Context, w http.Resp
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewBoolPathClient(target string, opts ...client.Option) BoolPathService {
+func NewBoolPathHttpClient(target string, opts ...client.Option) BoolPathService {
 	options := client.NewOptions(opts...)
-	client := &boolPathClient{
+	client := &boolPathHttpClient{
 		client: options.Client(),
 		encoder: boolPathRequestEncoder{
 			target:         target,
@@ -131,7 +131,7 @@ func NewBoolPathClient(target string, opts ...client.Option) BoolPathService {
 	return client
 }
 
-type boolPathClient struct {
+type boolPathHttpClient struct {
 	client                  *http.Client
 	encoder                 boolPathRequestEncoder
 	decoder                 boolPathResponseDecoder
@@ -140,7 +140,7 @@ type boolPathClient struct {
 	middleware              client.Middleware
 }
 
-func (c *boolPathClient) BoolPath(ctx context.Context, req *BoolPathRequest) (*httpbody.HttpBody, error) {
+func (c *boolPathHttpClient) BoolPath(ctx context.Context, req *BoolPathRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (c *boolPathClient) BoolPath(ctx context.Context, req *BoolPathRequest) (*h
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_path_v1_BoolPath_BoolPath_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -213,11 +213,19 @@ func (decoder *boolPathResponseDecoder) BoolPath(ctx context.Context, response *
 	return resp, nil
 }
 
+var _leo_goose_example_path_v1_BoolPath_BoolPath_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/{bool}/{opt_bool}/{wrap_bool}",
+		FullMethod: "/leo.goose.example.path.v1.BoolPath/BoolPath",
+	},
+}
+
 type Int32PathService interface {
 	Int32Path(ctx context.Context, req *Int32PathRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendInt32PathRoute(router *http.ServeMux, service Int32PathService, opts ...server.Option) *http.ServeMux {
+func AppendInt32PathHttpRoute(router *http.ServeMux, service Int32PathService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := int32PathHandler{
 		service: service,
@@ -269,7 +277,7 @@ func (h int32PathHandler) Int32Path(response http.ResponseWriter, request *http.
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_path_v1_Int32Path_Int32Path_Desc.RouteInfo)
 }
 
 type int32PathRequestDecoder struct {
@@ -309,9 +317,9 @@ func (encoder int32PathResponseEncoder) Int32Path(ctx context.Context, w http.Re
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewInt32PathClient(target string, opts ...client.Option) Int32PathService {
+func NewInt32PathHttpClient(target string, opts ...client.Option) Int32PathService {
 	options := client.NewOptions(opts...)
-	client := &int32PathClient{
+	client := &int32PathHttpClient{
 		client: options.Client(),
 		encoder: int32PathRequestEncoder{
 			target:         target,
@@ -330,7 +338,7 @@ func NewInt32PathClient(target string, opts ...client.Option) Int32PathService {
 	return client
 }
 
-type int32PathClient struct {
+type int32PathHttpClient struct {
 	client                  *http.Client
 	encoder                 int32PathRequestEncoder
 	decoder                 int32PathResponseDecoder
@@ -339,7 +347,7 @@ type int32PathClient struct {
 	middleware              client.Middleware
 }
 
-func (c *int32PathClient) Int32Path(ctx context.Context, req *Int32PathRequest) (*httpbody.HttpBody, error) {
+func (c *int32PathHttpClient) Int32Path(ctx context.Context, req *Int32PathRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -347,7 +355,7 @@ func (c *int32PathClient) Int32Path(ctx context.Context, req *Int32PathRequest) 
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_path_v1_Int32Path_Int32Path_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -416,11 +424,19 @@ func (decoder *int32PathResponseDecoder) Int32Path(ctx context.Context, response
 	return resp, nil
 }
 
+var _leo_goose_example_path_v1_Int32Path_Int32Path_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/{int32}/{sint32}/{sfixed32}/{opt_int32}/{opt_sint32}/{opt_sfixed32}/{wrap_int32}",
+		FullMethod: "/leo.goose.example.path.v1.Int32Path/Int32Path",
+	},
+}
+
 type Int64PathService interface {
 	Int64Path(ctx context.Context, req *Int64PathRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendInt64PathRoute(router *http.ServeMux, service Int64PathService, opts ...server.Option) *http.ServeMux {
+func AppendInt64PathHttpRoute(router *http.ServeMux, service Int64PathService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := int64PathHandler{
 		service: service,
@@ -472,7 +488,7 @@ func (h int64PathHandler) Int64Path(response http.ResponseWriter, request *http.
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_path_v1_Int64Path_Int64Path_Desc.RouteInfo)
 }
 
 type int64PathRequestDecoder struct {
@@ -512,9 +528,9 @@ func (encoder int64PathResponseEncoder) Int64Path(ctx context.Context, w http.Re
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewInt64PathClient(target string, opts ...client.Option) Int64PathService {
+func NewInt64PathHttpClient(target string, opts ...client.Option) Int64PathService {
 	options := client.NewOptions(opts...)
-	client := &int64PathClient{
+	client := &int64PathHttpClient{
 		client: options.Client(),
 		encoder: int64PathRequestEncoder{
 			target:         target,
@@ -533,7 +549,7 @@ func NewInt64PathClient(target string, opts ...client.Option) Int64PathService {
 	return client
 }
 
-type int64PathClient struct {
+type int64PathHttpClient struct {
 	client                  *http.Client
 	encoder                 int64PathRequestEncoder
 	decoder                 int64PathResponseDecoder
@@ -542,7 +558,7 @@ type int64PathClient struct {
 	middleware              client.Middleware
 }
 
-func (c *int64PathClient) Int64Path(ctx context.Context, req *Int64PathRequest) (*httpbody.HttpBody, error) {
+func (c *int64PathHttpClient) Int64Path(ctx context.Context, req *Int64PathRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -550,7 +566,7 @@ func (c *int64PathClient) Int64Path(ctx context.Context, req *Int64PathRequest) 
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_path_v1_Int64Path_Int64Path_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -619,11 +635,19 @@ func (decoder *int64PathResponseDecoder) Int64Path(ctx context.Context, response
 	return resp, nil
 }
 
+var _leo_goose_example_path_v1_Int64Path_Int64Path_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/{int64}/{sint64}/{sfixed64}/{opt_int64}/{opt_sint64}/{opt_sfixed64}/{wrap_int64}",
+		FullMethod: "/leo.goose.example.path.v1.Int64Path/Int64Path",
+	},
+}
+
 type Uint32PathService interface {
 	Uint32Path(ctx context.Context, req *Uint32PathRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendUint32PathRoute(router *http.ServeMux, service Uint32PathService, opts ...server.Option) *http.ServeMux {
+func AppendUint32PathHttpRoute(router *http.ServeMux, service Uint32PathService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := uint32PathHandler{
 		service: service,
@@ -675,7 +699,7 @@ func (h uint32PathHandler) Uint32Path(response http.ResponseWriter, request *htt
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_path_v1_Uint32Path_Uint32Path_Desc.RouteInfo)
 }
 
 type uint32PathRequestDecoder struct {
@@ -713,9 +737,9 @@ func (encoder uint32PathResponseEncoder) Uint32Path(ctx context.Context, w http.
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewUint32PathClient(target string, opts ...client.Option) Uint32PathService {
+func NewUint32PathHttpClient(target string, opts ...client.Option) Uint32PathService {
 	options := client.NewOptions(opts...)
-	client := &uint32PathClient{
+	client := &uint32PathHttpClient{
 		client: options.Client(),
 		encoder: uint32PathRequestEncoder{
 			target:         target,
@@ -734,7 +758,7 @@ func NewUint32PathClient(target string, opts ...client.Option) Uint32PathService
 	return client
 }
 
-type uint32PathClient struct {
+type uint32PathHttpClient struct {
 	client                  *http.Client
 	encoder                 uint32PathRequestEncoder
 	decoder                 uint32PathResponseDecoder
@@ -743,7 +767,7 @@ type uint32PathClient struct {
 	middleware              client.Middleware
 }
 
-func (c *uint32PathClient) Uint32Path(ctx context.Context, req *Uint32PathRequest) (*httpbody.HttpBody, error) {
+func (c *uint32PathHttpClient) Uint32Path(ctx context.Context, req *Uint32PathRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -751,7 +775,7 @@ func (c *uint32PathClient) Uint32Path(ctx context.Context, req *Uint32PathReques
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_path_v1_Uint32Path_Uint32Path_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -818,11 +842,19 @@ func (decoder *uint32PathResponseDecoder) Uint32Path(ctx context.Context, respon
 	return resp, nil
 }
 
+var _leo_goose_example_path_v1_Uint32Path_Uint32Path_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/{uint32}/{fixed32}/{opt_uint32}/{opt_fixed32}/{wrap_uint32}",
+		FullMethod: "/leo.goose.example.path.v1.Uint32Path/Uint32Path",
+	},
+}
+
 type Uint64PathService interface {
 	Uint64Path(ctx context.Context, req *Uint64PathRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendUint64PathRoute(router *http.ServeMux, service Uint64PathService, opts ...server.Option) *http.ServeMux {
+func AppendUint64PathHttpRoute(router *http.ServeMux, service Uint64PathService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := uint64PathHandler{
 		service: service,
@@ -874,7 +906,7 @@ func (h uint64PathHandler) Uint64Path(response http.ResponseWriter, request *htt
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_path_v1_Uint64Path_Uint64Path_Desc.RouteInfo)
 }
 
 type uint64PathRequestDecoder struct {
@@ -912,9 +944,9 @@ func (encoder uint64PathResponseEncoder) Uint64Path(ctx context.Context, w http.
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewUint64PathClient(target string, opts ...client.Option) Uint64PathService {
+func NewUint64PathHttpClient(target string, opts ...client.Option) Uint64PathService {
 	options := client.NewOptions(opts...)
-	client := &uint64PathClient{
+	client := &uint64PathHttpClient{
 		client: options.Client(),
 		encoder: uint64PathRequestEncoder{
 			target:         target,
@@ -933,7 +965,7 @@ func NewUint64PathClient(target string, opts ...client.Option) Uint64PathService
 	return client
 }
 
-type uint64PathClient struct {
+type uint64PathHttpClient struct {
 	client                  *http.Client
 	encoder                 uint64PathRequestEncoder
 	decoder                 uint64PathResponseDecoder
@@ -942,7 +974,7 @@ type uint64PathClient struct {
 	middleware              client.Middleware
 }
 
-func (c *uint64PathClient) Uint64Path(ctx context.Context, req *Uint64PathRequest) (*httpbody.HttpBody, error) {
+func (c *uint64PathHttpClient) Uint64Path(ctx context.Context, req *Uint64PathRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -950,7 +982,7 @@ func (c *uint64PathClient) Uint64Path(ctx context.Context, req *Uint64PathReques
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_path_v1_Uint64Path_Uint64Path_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -1017,11 +1049,19 @@ func (decoder *uint64PathResponseDecoder) Uint64Path(ctx context.Context, respon
 	return resp, nil
 }
 
+var _leo_goose_example_path_v1_Uint64Path_Uint64Path_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/{uint64}/{fixed64}/{opt_uint64}/{opt_fixed64}/{wrap_uint64}",
+		FullMethod: "/leo.goose.example.path.v1.Uint64Path/Uint64Path",
+	},
+}
+
 type FloatPathService interface {
 	FloatPath(ctx context.Context, req *FloatPathRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendFloatPathRoute(router *http.ServeMux, service FloatPathService, opts ...server.Option) *http.ServeMux {
+func AppendFloatPathHttpRoute(router *http.ServeMux, service FloatPathService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := floatPathHandler{
 		service: service,
@@ -1073,7 +1113,7 @@ func (h floatPathHandler) FloatPath(response http.ResponseWriter, request *http.
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_path_v1_FloatPath_FloatPath_Desc.RouteInfo)
 }
 
 type floatPathRequestDecoder struct {
@@ -1109,9 +1149,9 @@ func (encoder floatPathResponseEncoder) FloatPath(ctx context.Context, w http.Re
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewFloatPathClient(target string, opts ...client.Option) FloatPathService {
+func NewFloatPathHttpClient(target string, opts ...client.Option) FloatPathService {
 	options := client.NewOptions(opts...)
-	client := &floatPathClient{
+	client := &floatPathHttpClient{
 		client: options.Client(),
 		encoder: floatPathRequestEncoder{
 			target:         target,
@@ -1130,7 +1170,7 @@ func NewFloatPathClient(target string, opts ...client.Option) FloatPathService {
 	return client
 }
 
-type floatPathClient struct {
+type floatPathHttpClient struct {
 	client                  *http.Client
 	encoder                 floatPathRequestEncoder
 	decoder                 floatPathResponseDecoder
@@ -1139,7 +1179,7 @@ type floatPathClient struct {
 	middleware              client.Middleware
 }
 
-func (c *floatPathClient) FloatPath(ctx context.Context, req *FloatPathRequest) (*httpbody.HttpBody, error) {
+func (c *floatPathHttpClient) FloatPath(ctx context.Context, req *FloatPathRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -1147,7 +1187,7 @@ func (c *floatPathClient) FloatPath(ctx context.Context, req *FloatPathRequest) 
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_path_v1_FloatPath_FloatPath_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -1212,11 +1252,19 @@ func (decoder *floatPathResponseDecoder) FloatPath(ctx context.Context, response
 	return resp, nil
 }
 
+var _leo_goose_example_path_v1_FloatPath_FloatPath_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/{float}/{opt_float}/{wrap_float}",
+		FullMethod: "/leo.goose.example.path.v1.FloatPath/FloatPath",
+	},
+}
+
 type DoublePathService interface {
 	DoublePath(ctx context.Context, req *DoublePathRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendDoublePathRoute(router *http.ServeMux, service DoublePathService, opts ...server.Option) *http.ServeMux {
+func AppendDoublePathHttpRoute(router *http.ServeMux, service DoublePathService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := doublePathHandler{
 		service: service,
@@ -1268,7 +1316,7 @@ func (h doublePathHandler) DoublePath(response http.ResponseWriter, request *htt
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_path_v1_DoublePath_DoublePath_Desc.RouteInfo)
 }
 
 type doublePathRequestDecoder struct {
@@ -1304,9 +1352,9 @@ func (encoder doublePathResponseEncoder) DoublePath(ctx context.Context, w http.
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewDoublePathClient(target string, opts ...client.Option) DoublePathService {
+func NewDoublePathHttpClient(target string, opts ...client.Option) DoublePathService {
 	options := client.NewOptions(opts...)
-	client := &doublePathClient{
+	client := &doublePathHttpClient{
 		client: options.Client(),
 		encoder: doublePathRequestEncoder{
 			target:         target,
@@ -1325,7 +1373,7 @@ func NewDoublePathClient(target string, opts ...client.Option) DoublePathService
 	return client
 }
 
-type doublePathClient struct {
+type doublePathHttpClient struct {
 	client                  *http.Client
 	encoder                 doublePathRequestEncoder
 	decoder                 doublePathResponseDecoder
@@ -1334,7 +1382,7 @@ type doublePathClient struct {
 	middleware              client.Middleware
 }
 
-func (c *doublePathClient) DoublePath(ctx context.Context, req *DoublePathRequest) (*httpbody.HttpBody, error) {
+func (c *doublePathHttpClient) DoublePath(ctx context.Context, req *DoublePathRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -1342,7 +1390,7 @@ func (c *doublePathClient) DoublePath(ctx context.Context, req *DoublePathReques
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_path_v1_DoublePath_DoublePath_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -1407,11 +1455,19 @@ func (decoder *doublePathResponseDecoder) DoublePath(ctx context.Context, respon
 	return resp, nil
 }
 
+var _leo_goose_example_path_v1_DoublePath_DoublePath_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/{double}/{opt_double}/{wrap_double}",
+		FullMethod: "/leo.goose.example.path.v1.DoublePath/DoublePath",
+	},
+}
+
 type StringPathService interface {
 	StringPath(ctx context.Context, req *StringPathRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendStringPathRoute(router *http.ServeMux, service StringPathService, opts ...server.Option) *http.ServeMux {
+func AppendStringPathHttpRoute(router *http.ServeMux, service StringPathService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := stringPathHandler{
 		service: service,
@@ -1463,7 +1519,7 @@ func (h stringPathHandler) StringPath(response http.ResponseWriter, request *htt
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_path_v1_StringPath_StringPath_Desc.RouteInfo)
 }
 
 type stringPathRequestDecoder struct {
@@ -1500,9 +1556,9 @@ func (encoder stringPathResponseEncoder) StringPath(ctx context.Context, w http.
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewStringPathClient(target string, opts ...client.Option) StringPathService {
+func NewStringPathHttpClient(target string, opts ...client.Option) StringPathService {
 	options := client.NewOptions(opts...)
-	client := &stringPathClient{
+	client := &stringPathHttpClient{
 		client: options.Client(),
 		encoder: stringPathRequestEncoder{
 			target:         target,
@@ -1521,7 +1577,7 @@ func NewStringPathClient(target string, opts ...client.Option) StringPathService
 	return client
 }
 
-type stringPathClient struct {
+type stringPathHttpClient struct {
 	client                  *http.Client
 	encoder                 stringPathRequestEncoder
 	decoder                 stringPathResponseDecoder
@@ -1530,7 +1586,7 @@ type stringPathClient struct {
 	middleware              client.Middleware
 }
 
-func (c *stringPathClient) StringPath(ctx context.Context, req *StringPathRequest) (*httpbody.HttpBody, error) {
+func (c *stringPathHttpClient) StringPath(ctx context.Context, req *StringPathRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -1538,7 +1594,7 @@ func (c *stringPathClient) StringPath(ctx context.Context, req *StringPathReques
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_path_v1_StringPath_StringPath_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -1604,11 +1660,19 @@ func (decoder *stringPathResponseDecoder) StringPath(ctx context.Context, respon
 	return resp, nil
 }
 
+var _leo_goose_example_path_v1_StringPath_StringPath_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/{string}/{opt_string}/{wrap_string}/{multi_string...}",
+		FullMethod: "/leo.goose.example.path.v1.StringPath/StringPath",
+	},
+}
+
 type EnumPathService interface {
 	EnumPath(ctx context.Context, req *EnumPathRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendEnumPathRoute(router *http.ServeMux, service EnumPathService, opts ...server.Option) *http.ServeMux {
+func AppendEnumPathHttpRoute(router *http.ServeMux, service EnumPathService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := enumPathHandler{
 		service: service,
@@ -1660,7 +1724,7 @@ func (h enumPathHandler) EnumPath(response http.ResponseWriter, request *http.Re
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_path_v1_EnumPath_EnumPath_Desc.RouteInfo)
 }
 
 type enumPathRequestDecoder struct {
@@ -1695,9 +1759,9 @@ func (encoder enumPathResponseEncoder) EnumPath(ctx context.Context, w http.Resp
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewEnumPathClient(target string, opts ...client.Option) EnumPathService {
+func NewEnumPathHttpClient(target string, opts ...client.Option) EnumPathService {
 	options := client.NewOptions(opts...)
-	client := &enumPathClient{
+	client := &enumPathHttpClient{
 		client: options.Client(),
 		encoder: enumPathRequestEncoder{
 			target:         target,
@@ -1716,7 +1780,7 @@ func NewEnumPathClient(target string, opts ...client.Option) EnumPathService {
 	return client
 }
 
-type enumPathClient struct {
+type enumPathHttpClient struct {
 	client                  *http.Client
 	encoder                 enumPathRequestEncoder
 	decoder                 enumPathResponseDecoder
@@ -1725,7 +1789,7 @@ type enumPathClient struct {
 	middleware              client.Middleware
 }
 
-func (c *enumPathClient) EnumPath(ctx context.Context, req *EnumPathRequest) (*httpbody.HttpBody, error) {
+func (c *enumPathHttpClient) EnumPath(ctx context.Context, req *EnumPathRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -1733,7 +1797,7 @@ func (c *enumPathClient) EnumPath(ctx context.Context, req *EnumPathRequest) (*h
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_path_v1_EnumPath_EnumPath_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -1795,4 +1859,12 @@ func (decoder *enumPathResponseDecoder) EnumPath(ctx context.Context, response *
 		return nil, err
 	}
 	return resp, nil
+}
+
+var _leo_goose_example_path_v1_EnumPath_EnumPath_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/{status}/{opt_status}",
+		FullMethod: "/leo.goose.example.path.v1.EnumPath/EnumPath",
+	},
 }

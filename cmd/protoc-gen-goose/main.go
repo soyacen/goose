@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/client"
+	"github.com/soyacen/goose/cmd/protoc-gen-goose/constant"
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/parser"
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/server"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -49,10 +51,11 @@ func generate(plugin *protogen.Plugin) error {
 		g.P()
 
 		for _, service := range services {
-			srvGen := new(server.Generator)
-			if err := srvGen.GenerateServices(service, g); err != nil {
+			if err := GenerateServices(service, g); err != nil {
 				return err
 			}
+
+			srvGen := new(server.Generator)
 			if err := srvGen.GenerateAppendServerFunc(service, g); err != nil {
 				return err
 			}
@@ -79,8 +82,36 @@ func generate(plugin *protogen.Plugin) error {
 			if err := cliGen.GenerateResponseDecoder(service, g); err != nil {
 				return err
 			}
+
+			if err := GenerateDescs(service, g); err != nil {
+				return err
+			}
 		}
 
+	}
+	return nil
+}
+
+func GenerateServices(service *parser.Service, g *protogen.GeneratedFile) error {
+	g.P("type ", service.ServiceName(), " interface {")
+	for _, endpoint := range service.Endpoints {
+		g.P(endpoint.Name(), "(ctx ", constant.ContextIdent, ", req *", endpoint.InputGoIdent(), ") (*", endpoint.OutputGoIdent(), ", error)")
+	}
+	g.P("}")
+	g.P()
+	return nil
+}
+
+func GenerateDescs(service *parser.Service, g *protogen.GeneratedFile) error {
+	for _, endpoint := range service.Endpoints {
+		g.P("var ", endpoint.DescName(), " = &", constant.DescIdent, "{")
+		g.P("RouteInfo: &", constant.RouteInfoIdent, "{")
+		g.P("HttpMethod: ", strconv.Quote(endpoint.Method()), ",")
+		g.P("Pattern: ", strconv.Quote(endpoint.Path()), ",")
+		g.P("FullMethod: ", strconv.Quote(endpoint.FullName()), ",")
+		g.P("},")
+		g.P("}")
+		g.P()
 	}
 	return nil
 }

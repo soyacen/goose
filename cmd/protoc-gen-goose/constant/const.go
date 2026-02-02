@@ -135,6 +135,9 @@ var (
 	WrapStringSliceIdent = GoosePackage.Ident("WrapStringSlice")
 
 	GetFormIdent = GoosePackage.Ident("GetForm")
+
+	RouteInfoIdent = GoosePackage.Ident("RouteInfo")
+	DescIdent      = GoosePackage.Ident("Desc")
 )
 
 func GetEnumIdent(g *protogen.GeneratedFile, ident protogen.GoIdent) protogen.GoIdent {

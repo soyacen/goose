@@ -2,6 +2,8 @@ package server
 
 import (
 	"net/http"
+
+	"github.com/soyacen/goose"
 )
 
 // Middleware defines a function type for HTTP middleware.
@@ -70,7 +72,9 @@ func getInvoker(interceptors []Middleware, curr int, finalInvoker http.HandlerFu
 //	invoke - http.HandlerFunc representing the final handler
 //	response - http.ResponseWriter to write the HTTP response
 //	request - *http.Request representing the incoming HTTP request
-func Invoke(middleware Middleware, response http.ResponseWriter, request *http.Request, invoke http.HandlerFunc) {
+//	routeInfo - *goose.RouteInfo representing the route information
+func Invoke(middleware Middleware, response http.ResponseWriter, request *http.Request, invoke http.HandlerFunc, routeInfo *goose.RouteInfo) {
+	request = request.WithContext(goose.InjectRouteInfo(request.Context(), routeInfo))
 	if middleware == nil {
 		invoke(response, request)
 		return

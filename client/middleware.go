@@ -2,6 +2,8 @@ package client
 
 import (
 	"net/http"
+
+	"github.com/soyacen/goose"
 )
 
 // Invoker is a function type that defines how to invoke an HTTP request.
@@ -83,12 +85,14 @@ func getInvoker(interceptors []Middleware, curr int, finalInvoker Invoker) Invok
 // Returns:
 //   - *http.Response: The HTTP response from the request
 //   - error: Any error that occurred during the request, or nil if successful
-func Invoke(middleware Middleware, cli *http.Client, request *http.Request) (*http.Response, error) {
-	invoke := func(cli *http.Client, request *http.Request) (*http.Response, error) {
-		return cli.Do(request)
-	}
+func Invoke(middleware Middleware, cli *http.Client, request *http.Request, routeInfo *goose.RouteInfo) (*http.Response, error) {
+	request = request.WithContext(goose.InjectRouteInfo(request.Context(), routeInfo))
 	if middleware == nil {
 		return invoke(cli, request)
 	}
 	return middleware(cli, request, invoke)
+}
+
+func invoke(cli *http.Client, request *http.Request) (*http.Response, error) {
+	return cli.Do(request)
 }

@@ -1,7 +1,11 @@
 package strconvx
 
 import (
+	"go/token"
 	"strconv"
+	"strings"
+	"unicode"
+	"unicode/utf8"
 	"unsafe"
 
 	"golang.org/x/exp/constraints"
@@ -21,4 +25,24 @@ func BytesToString(b []byte) string {
 
 func FormatUint[Unsigned constraints.Unsigned](i Unsigned, base int) string {
 	return strconv.FormatUint(uint64(i), base)
+}
+
+// GoSanitized converts a string to a valid Go identifier.
+func GoSanitized(s string) string {
+	// Sanitize the input to the set of valid characters,
+	// which must be '_' or be in the Unicode L or N categories.
+	s = strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			return r
+		}
+		return '_'
+	}, s)
+
+	// Prepend '_' in the event of a Go keyword conflict or if
+	// the identifier is invalid (does not start in the Unicode L category).
+	r, _ := utf8.DecodeRuneInString(s)
+	if token.Lookup(s).IsKeyword() || !unicode.IsLetter(r) {
+		return "_" + s
+	}
+	return s
 }

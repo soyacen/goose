@@ -24,7 +24,7 @@ type UserService interface {
 	ListUser(ctx context.Context, req *ListUserRequest) (*ListUserResponse, error)
 }
 
-func AppendUserRoute(router *http.ServeMux, service UserService, opts ...server.Option) *http.ServeMux {
+func AppendUserHttpRoute(router *http.ServeMux, service UserService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := userHandler{
 		service: service,
@@ -81,7 +81,7 @@ func (h userHandler) CreateUser(response http.ResponseWriter, request *http.Requ
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_user_v1_User_CreateUser_Desc.RouteInfo)
 }
 
 func (h userHandler) DeleteUser(response http.ResponseWriter, request *http.Request) {
@@ -106,7 +106,7 @@ func (h userHandler) DeleteUser(response http.ResponseWriter, request *http.Requ
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_user_v1_User_DeleteUser_Desc.RouteInfo)
 }
 
 func (h userHandler) ModifyUser(response http.ResponseWriter, request *http.Request) {
@@ -131,7 +131,7 @@ func (h userHandler) ModifyUser(response http.ResponseWriter, request *http.Requ
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_user_v1_User_ModifyUser_Desc.RouteInfo)
 }
 
 func (h userHandler) UpdateUser(response http.ResponseWriter, request *http.Request) {
@@ -156,7 +156,7 @@ func (h userHandler) UpdateUser(response http.ResponseWriter, request *http.Requ
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_user_v1_User_UpdateUser_Desc.RouteInfo)
 }
 
 func (h userHandler) GetUser(response http.ResponseWriter, request *http.Request) {
@@ -181,7 +181,7 @@ func (h userHandler) GetUser(response http.ResponseWriter, request *http.Request
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_user_v1_User_GetUser_Desc.RouteInfo)
 }
 
 func (h userHandler) ListUser(response http.ResponseWriter, request *http.Request) {
@@ -206,7 +206,7 @@ func (h userHandler) ListUser(response http.ResponseWriter, request *http.Reques
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_user_v1_User_ListUser_Desc.RouteInfo)
 }
 
 type userRequestDecoder struct {
@@ -347,9 +347,9 @@ func (encoder userResponseEncoder) ListUser(ctx context.Context, w http.Response
 	return server.EncodeResponse(ctx, w, resp, encoder.marshalOptions)
 }
 
-func NewUserClient(target string, opts ...client.Option) UserService {
+func NewUserHttpClient(target string, opts ...client.Option) UserService {
 	options := client.NewOptions(opts...)
-	client := &userClient{
+	client := &userHttpClient{
 		client: options.Client(),
 		encoder: userRequestEncoder{
 			target:         target,
@@ -368,7 +368,7 @@ func NewUserClient(target string, opts ...client.Option) UserService {
 	return client
 }
 
-type userClient struct {
+type userHttpClient struct {
 	client                  *http.Client
 	encoder                 userRequestEncoder
 	decoder                 userResponseDecoder
@@ -377,7 +377,7 @@ type userClient struct {
 	middleware              client.Middleware
 }
 
-func (c *userClient) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
+func (c *userHttpClient) CreateUser(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -385,7 +385,7 @@ func (c *userClient) CreateUser(ctx context.Context, req *CreateUserRequest) (*C
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_user_v1_User_CreateUser_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +396,7 @@ func (c *userClient) CreateUser(ctx context.Context, req *CreateUserRequest) (*C
 	return resp, nil
 }
 
-func (c *userClient) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*DeleteUserResponse, error) {
+func (c *userHttpClient) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*DeleteUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -404,7 +404,7 @@ func (c *userClient) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*D
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_user_v1_User_DeleteUser_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -415,7 +415,7 @@ func (c *userClient) DeleteUser(ctx context.Context, req *DeleteUserRequest) (*D
 	return resp, nil
 }
 
-func (c *userClient) ModifyUser(ctx context.Context, req *ModifyUserRequest) (*ModifyUserResponse, error) {
+func (c *userHttpClient) ModifyUser(ctx context.Context, req *ModifyUserRequest) (*ModifyUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -423,7 +423,7 @@ func (c *userClient) ModifyUser(ctx context.Context, req *ModifyUserRequest) (*M
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_user_v1_User_ModifyUser_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -434,7 +434,7 @@ func (c *userClient) ModifyUser(ctx context.Context, req *ModifyUserRequest) (*M
 	return resp, nil
 }
 
-func (c *userClient) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*UpdateUserResponse, error) {
+func (c *userHttpClient) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*UpdateUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -442,7 +442,7 @@ func (c *userClient) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*U
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_user_v1_User_UpdateUser_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -453,7 +453,7 @@ func (c *userClient) UpdateUser(ctx context.Context, req *UpdateUserRequest) (*U
 	return resp, nil
 }
 
-func (c *userClient) GetUser(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
+func (c *userHttpClient) GetUser(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -461,7 +461,7 @@ func (c *userClient) GetUser(ctx context.Context, req *GetUserRequest) (*GetUser
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_user_v1_User_GetUser_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -472,7 +472,7 @@ func (c *userClient) GetUser(ctx context.Context, req *GetUserRequest) (*GetUser
 	return resp, nil
 }
 
-func (c *userClient) ListUser(ctx context.Context, req *ListUserRequest) (*ListUserResponse, error) {
+func (c *userHttpClient) ListUser(ctx context.Context, req *ListUserRequest) (*ListUserResponse, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -480,7 +480,7 @@ func (c *userClient) ListUser(ctx context.Context, req *ListUserRequest) (*ListU
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_user_v1_User_ListUser_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -738,4 +738,52 @@ func (decoder *userResponseDecoder) ListUser(ctx context.Context, response *http
 		return nil, err
 	}
 	return resp, nil
+}
+
+var _leo_goose_example_user_v1_User_CreateUser_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "POST",
+		Pattern:    "/v1/user",
+		FullMethod: "/leo.goose.example.user.v1.User/CreateUser",
+	},
+}
+
+var _leo_goose_example_user_v1_User_DeleteUser_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "DELETE",
+		Pattern:    "/v1/user/{id}",
+		FullMethod: "/leo.goose.example.user.v1.User/DeleteUser",
+	},
+}
+
+var _leo_goose_example_user_v1_User_ModifyUser_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "PUT",
+		Pattern:    "/v1/user/{id}",
+		FullMethod: "/leo.goose.example.user.v1.User/ModifyUser",
+	},
+}
+
+var _leo_goose_example_user_v1_User_UpdateUser_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "PATCH",
+		Pattern:    "/v1/user/{id}",
+		FullMethod: "/leo.goose.example.user.v1.User/UpdateUser",
+	},
+}
+
+var _leo_goose_example_user_v1_User_GetUser_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/user/{id}",
+		FullMethod: "/leo.goose.example.user.v1.User/GetUser",
+	},
+}
+
+var _leo_goose_example_user_v1_User_ListUser_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/users",
+		FullMethod: "/leo.goose.example.user.v1.User/ListUser",
+	},
 }

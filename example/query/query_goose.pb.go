@@ -22,7 +22,7 @@ type BoolQueryService interface {
 	BoolQuery(ctx context.Context, req *BoolQueryRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendBoolQueryRoute(router *http.ServeMux, service BoolQueryService, opts ...server.Option) *http.ServeMux {
+func AppendBoolQueryHttpRoute(router *http.ServeMux, service BoolQueryService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := boolQueryHandler{
 		service: service,
@@ -74,7 +74,7 @@ func (h boolQueryHandler) BoolQuery(response http.ResponseWriter, request *http.
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_query_v1_BoolQuery_BoolQuery_Desc.RouteInfo)
 }
 
 type boolQueryRequestDecoder struct {
@@ -112,9 +112,9 @@ func (encoder boolQueryResponseEncoder) BoolQuery(ctx context.Context, w http.Re
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewBoolQueryClient(target string, opts ...client.Option) BoolQueryService {
+func NewBoolQueryHttpClient(target string, opts ...client.Option) BoolQueryService {
 	options := client.NewOptions(opts...)
-	client := &boolQueryClient{
+	client := &boolQueryHttpClient{
 		client: options.Client(),
 		encoder: boolQueryRequestEncoder{
 			target:         target,
@@ -133,7 +133,7 @@ func NewBoolQueryClient(target string, opts ...client.Option) BoolQueryService {
 	return client
 }
 
-type boolQueryClient struct {
+type boolQueryHttpClient struct {
 	client                  *http.Client
 	encoder                 boolQueryRequestEncoder
 	decoder                 boolQueryResponseDecoder
@@ -142,7 +142,7 @@ type boolQueryClient struct {
 	middleware              client.Middleware
 }
 
-func (c *boolQueryClient) BoolQuery(ctx context.Context, req *BoolQueryRequest) (*httpbody.HttpBody, error) {
+func (c *boolQueryHttpClient) BoolQuery(ctx context.Context, req *BoolQueryRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (c *boolQueryClient) BoolQuery(ctx context.Context, req *BoolQueryRequest) 
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_query_v1_BoolQuery_BoolQuery_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -212,11 +212,19 @@ func (decoder *boolQueryResponseDecoder) BoolQuery(ctx context.Context, response
 	return resp, nil
 }
 
+var _leo_goose_example_query_v1_BoolQuery_BoolQuery_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/bool",
+		FullMethod: "/leo.goose.example.query.v1.BoolQuery/BoolQuery",
+	},
+}
+
 type Int32QueryService interface {
 	Int32Query(ctx context.Context, req *Int32QueryRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendInt32QueryRoute(router *http.ServeMux, service Int32QueryService, opts ...server.Option) *http.ServeMux {
+func AppendInt32QueryHttpRoute(router *http.ServeMux, service Int32QueryService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := int32QueryHandler{
 		service: service,
@@ -268,7 +276,7 @@ func (h int32QueryHandler) Int32Query(response http.ResponseWriter, request *htt
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_query_v1_Int32Query_Int32Query_Desc.RouteInfo)
 }
 
 type int32QueryRequestDecoder struct {
@@ -312,9 +320,9 @@ func (encoder int32QueryResponseEncoder) Int32Query(ctx context.Context, w http.
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewInt32QueryClient(target string, opts ...client.Option) Int32QueryService {
+func NewInt32QueryHttpClient(target string, opts ...client.Option) Int32QueryService {
 	options := client.NewOptions(opts...)
-	client := &int32QueryClient{
+	client := &int32QueryHttpClient{
 		client: options.Client(),
 		encoder: int32QueryRequestEncoder{
 			target:         target,
@@ -333,7 +341,7 @@ func NewInt32QueryClient(target string, opts ...client.Option) Int32QueryService
 	return client
 }
 
-type int32QueryClient struct {
+type int32QueryHttpClient struct {
 	client                  *http.Client
 	encoder                 int32QueryRequestEncoder
 	decoder                 int32QueryResponseDecoder
@@ -342,7 +350,7 @@ type int32QueryClient struct {
 	middleware              client.Middleware
 }
 
-func (c *int32QueryClient) Int32Query(ctx context.Context, req *Int32QueryRequest) (*httpbody.HttpBody, error) {
+func (c *int32QueryHttpClient) Int32Query(ctx context.Context, req *Int32QueryRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -350,7 +358,7 @@ func (c *int32QueryClient) Int32Query(ctx context.Context, req *Int32QueryReques
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_query_v1_Int32Query_Int32Query_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -418,11 +426,19 @@ func (decoder *int32QueryResponseDecoder) Int32Query(ctx context.Context, respon
 	return resp, nil
 }
 
+var _leo_goose_example_query_v1_Int32Query_Int32Query_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/int32",
+		FullMethod: "/leo.goose.example.query.v1.Int32Query/Int32Query",
+	},
+}
+
 type Int64QueryService interface {
 	Int64Query(ctx context.Context, req *Int64QueryRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendInt64QueryRoute(router *http.ServeMux, service Int64QueryService, opts ...server.Option) *http.ServeMux {
+func AppendInt64QueryHttpRoute(router *http.ServeMux, service Int64QueryService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := int64QueryHandler{
 		service: service,
@@ -474,7 +490,7 @@ func (h int64QueryHandler) Int64Query(response http.ResponseWriter, request *htt
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_query_v1_Int64Query_Int64Query_Desc.RouteInfo)
 }
 
 type int64QueryRequestDecoder struct {
@@ -518,9 +534,9 @@ func (encoder int64QueryResponseEncoder) Int64Query(ctx context.Context, w http.
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewInt64QueryClient(target string, opts ...client.Option) Int64QueryService {
+func NewInt64QueryHttpClient(target string, opts ...client.Option) Int64QueryService {
 	options := client.NewOptions(opts...)
-	client := &int64QueryClient{
+	client := &int64QueryHttpClient{
 		client: options.Client(),
 		encoder: int64QueryRequestEncoder{
 			target:         target,
@@ -539,7 +555,7 @@ func NewInt64QueryClient(target string, opts ...client.Option) Int64QueryService
 	return client
 }
 
-type int64QueryClient struct {
+type int64QueryHttpClient struct {
 	client                  *http.Client
 	encoder                 int64QueryRequestEncoder
 	decoder                 int64QueryResponseDecoder
@@ -548,7 +564,7 @@ type int64QueryClient struct {
 	middleware              client.Middleware
 }
 
-func (c *int64QueryClient) Int64Query(ctx context.Context, req *Int64QueryRequest) (*httpbody.HttpBody, error) {
+func (c *int64QueryHttpClient) Int64Query(ctx context.Context, req *Int64QueryRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -556,7 +572,7 @@ func (c *int64QueryClient) Int64Query(ctx context.Context, req *Int64QueryReques
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_query_v1_Int64Query_Int64Query_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -624,11 +640,19 @@ func (decoder *int64QueryResponseDecoder) Int64Query(ctx context.Context, respon
 	return resp, nil
 }
 
+var _leo_goose_example_query_v1_Int64Query_Int64Query_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/int64",
+		FullMethod: "/leo.goose.example.query.v1.Int64Query/Int64Query",
+	},
+}
+
 type Uint32QueryService interface {
 	Uint32Query(ctx context.Context, req *Uint32QueryRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendUint32QueryRoute(router *http.ServeMux, service Uint32QueryService, opts ...server.Option) *http.ServeMux {
+func AppendUint32QueryHttpRoute(router *http.ServeMux, service Uint32QueryService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := uint32QueryHandler{
 		service: service,
@@ -680,7 +704,7 @@ func (h uint32QueryHandler) Uint32Query(response http.ResponseWriter, request *h
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_query_v1_Uint32Query_Uint32Query_Desc.RouteInfo)
 }
 
 type uint32QueryRequestDecoder struct {
@@ -721,9 +745,9 @@ func (encoder uint32QueryResponseEncoder) Uint32Query(ctx context.Context, w htt
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewUint32QueryClient(target string, opts ...client.Option) Uint32QueryService {
+func NewUint32QueryHttpClient(target string, opts ...client.Option) Uint32QueryService {
 	options := client.NewOptions(opts...)
-	client := &uint32QueryClient{
+	client := &uint32QueryHttpClient{
 		client: options.Client(),
 		encoder: uint32QueryRequestEncoder{
 			target:         target,
@@ -742,7 +766,7 @@ func NewUint32QueryClient(target string, opts ...client.Option) Uint32QueryServi
 	return client
 }
 
-type uint32QueryClient struct {
+type uint32QueryHttpClient struct {
 	client                  *http.Client
 	encoder                 uint32QueryRequestEncoder
 	decoder                 uint32QueryResponseDecoder
@@ -751,7 +775,7 @@ type uint32QueryClient struct {
 	middleware              client.Middleware
 }
 
-func (c *uint32QueryClient) Uint32Query(ctx context.Context, req *Uint32QueryRequest) (*httpbody.HttpBody, error) {
+func (c *uint32QueryHttpClient) Uint32Query(ctx context.Context, req *Uint32QueryRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -759,7 +783,7 @@ func (c *uint32QueryClient) Uint32Query(ctx context.Context, req *Uint32QueryReq
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_query_v1_Uint32Query_Uint32Query_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -824,11 +848,19 @@ func (decoder *uint32QueryResponseDecoder) Uint32Query(ctx context.Context, resp
 	return resp, nil
 }
 
+var _leo_goose_example_query_v1_Uint32Query_Uint32Query_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/uint32",
+		FullMethod: "/leo.goose.example.query.v1.Uint32Query/Uint32Query",
+	},
+}
+
 type Uint64QueryService interface {
 	Uint64Query(ctx context.Context, req *Uint64QueryRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendUint64QueryRoute(router *http.ServeMux, service Uint64QueryService, opts ...server.Option) *http.ServeMux {
+func AppendUint64QueryHttpRoute(router *http.ServeMux, service Uint64QueryService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := uint64QueryHandler{
 		service: service,
@@ -880,7 +912,7 @@ func (h uint64QueryHandler) Uint64Query(response http.ResponseWriter, request *h
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_query_v1_Uint64Query_Uint64Query_Desc.RouteInfo)
 }
 
 type uint64QueryRequestDecoder struct {
@@ -921,9 +953,9 @@ func (encoder uint64QueryResponseEncoder) Uint64Query(ctx context.Context, w htt
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewUint64QueryClient(target string, opts ...client.Option) Uint64QueryService {
+func NewUint64QueryHttpClient(target string, opts ...client.Option) Uint64QueryService {
 	options := client.NewOptions(opts...)
-	client := &uint64QueryClient{
+	client := &uint64QueryHttpClient{
 		client: options.Client(),
 		encoder: uint64QueryRequestEncoder{
 			target:         target,
@@ -942,7 +974,7 @@ func NewUint64QueryClient(target string, opts ...client.Option) Uint64QueryServi
 	return client
 }
 
-type uint64QueryClient struct {
+type uint64QueryHttpClient struct {
 	client                  *http.Client
 	encoder                 uint64QueryRequestEncoder
 	decoder                 uint64QueryResponseDecoder
@@ -951,7 +983,7 @@ type uint64QueryClient struct {
 	middleware              client.Middleware
 }
 
-func (c *uint64QueryClient) Uint64Query(ctx context.Context, req *Uint64QueryRequest) (*httpbody.HttpBody, error) {
+func (c *uint64QueryHttpClient) Uint64Query(ctx context.Context, req *Uint64QueryRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -959,7 +991,7 @@ func (c *uint64QueryClient) Uint64Query(ctx context.Context, req *Uint64QueryReq
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_query_v1_Uint64Query_Uint64Query_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -1024,11 +1056,19 @@ func (decoder *uint64QueryResponseDecoder) Uint64Query(ctx context.Context, resp
 	return resp, nil
 }
 
+var _leo_goose_example_query_v1_Uint64Query_Uint64Query_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/uint64",
+		FullMethod: "/leo.goose.example.query.v1.Uint64Query/Uint64Query",
+	},
+}
+
 type FloatQueryService interface {
 	FloatQuery(ctx context.Context, req *FloatQueryRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendFloatQueryRoute(router *http.ServeMux, service FloatQueryService, opts ...server.Option) *http.ServeMux {
+func AppendFloatQueryHttpRoute(router *http.ServeMux, service FloatQueryService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := floatQueryHandler{
 		service: service,
@@ -1080,7 +1120,7 @@ func (h floatQueryHandler) FloatQuery(response http.ResponseWriter, request *htt
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_query_v1_FloatQuery_FloatQuery_Desc.RouteInfo)
 }
 
 type floatQueryRequestDecoder struct {
@@ -1118,9 +1158,9 @@ func (encoder floatQueryResponseEncoder) FloatQuery(ctx context.Context, w http.
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewFloatQueryClient(target string, opts ...client.Option) FloatQueryService {
+func NewFloatQueryHttpClient(target string, opts ...client.Option) FloatQueryService {
 	options := client.NewOptions(opts...)
-	client := &floatQueryClient{
+	client := &floatQueryHttpClient{
 		client: options.Client(),
 		encoder: floatQueryRequestEncoder{
 			target:         target,
@@ -1139,7 +1179,7 @@ func NewFloatQueryClient(target string, opts ...client.Option) FloatQueryService
 	return client
 }
 
-type floatQueryClient struct {
+type floatQueryHttpClient struct {
 	client                  *http.Client
 	encoder                 floatQueryRequestEncoder
 	decoder                 floatQueryResponseDecoder
@@ -1148,7 +1188,7 @@ type floatQueryClient struct {
 	middleware              client.Middleware
 }
 
-func (c *floatQueryClient) FloatQuery(ctx context.Context, req *FloatQueryRequest) (*httpbody.HttpBody, error) {
+func (c *floatQueryHttpClient) FloatQuery(ctx context.Context, req *FloatQueryRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -1156,7 +1196,7 @@ func (c *floatQueryClient) FloatQuery(ctx context.Context, req *FloatQueryReques
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_query_v1_FloatQuery_FloatQuery_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -1218,11 +1258,19 @@ func (decoder *floatQueryResponseDecoder) FloatQuery(ctx context.Context, respon
 	return resp, nil
 }
 
+var _leo_goose_example_query_v1_FloatQuery_FloatQuery_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/float",
+		FullMethod: "/leo.goose.example.query.v1.FloatQuery/FloatQuery",
+	},
+}
+
 type DoubleQueryService interface {
 	DoubleQuery(ctx context.Context, req *DoubleQueryRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendDoubleQueryRoute(router *http.ServeMux, service DoubleQueryService, opts ...server.Option) *http.ServeMux {
+func AppendDoubleQueryHttpRoute(router *http.ServeMux, service DoubleQueryService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := doubleQueryHandler{
 		service: service,
@@ -1274,7 +1322,7 @@ func (h doubleQueryHandler) DoubleQuery(response http.ResponseWriter, request *h
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_query_v1_DoubleQuery_DoubleQuery_Desc.RouteInfo)
 }
 
 type doubleQueryRequestDecoder struct {
@@ -1312,9 +1360,9 @@ func (encoder doubleQueryResponseEncoder) DoubleQuery(ctx context.Context, w htt
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewDoubleQueryClient(target string, opts ...client.Option) DoubleQueryService {
+func NewDoubleQueryHttpClient(target string, opts ...client.Option) DoubleQueryService {
 	options := client.NewOptions(opts...)
-	client := &doubleQueryClient{
+	client := &doubleQueryHttpClient{
 		client: options.Client(),
 		encoder: doubleQueryRequestEncoder{
 			target:         target,
@@ -1333,7 +1381,7 @@ func NewDoubleQueryClient(target string, opts ...client.Option) DoubleQueryServi
 	return client
 }
 
-type doubleQueryClient struct {
+type doubleQueryHttpClient struct {
 	client                  *http.Client
 	encoder                 doubleQueryRequestEncoder
 	decoder                 doubleQueryResponseDecoder
@@ -1342,7 +1390,7 @@ type doubleQueryClient struct {
 	middleware              client.Middleware
 }
 
-func (c *doubleQueryClient) DoubleQuery(ctx context.Context, req *DoubleQueryRequest) (*httpbody.HttpBody, error) {
+func (c *doubleQueryHttpClient) DoubleQuery(ctx context.Context, req *DoubleQueryRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -1350,7 +1398,7 @@ func (c *doubleQueryClient) DoubleQuery(ctx context.Context, req *DoubleQueryReq
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_query_v1_DoubleQuery_DoubleQuery_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -1412,11 +1460,19 @@ func (decoder *doubleQueryResponseDecoder) DoubleQuery(ctx context.Context, resp
 	return resp, nil
 }
 
+var _leo_goose_example_query_v1_DoubleQuery_DoubleQuery_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/double",
+		FullMethod: "/leo.goose.example.query.v1.DoubleQuery/DoubleQuery",
+	},
+}
+
 type StringQueryService interface {
 	StringQuery(ctx context.Context, req *StringQueryRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendStringQueryRoute(router *http.ServeMux, service StringQueryService, opts ...server.Option) *http.ServeMux {
+func AppendStringQueryHttpRoute(router *http.ServeMux, service StringQueryService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := stringQueryHandler{
 		service: service,
@@ -1468,7 +1524,7 @@ func (h stringQueryHandler) StringQuery(response http.ResponseWriter, request *h
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_query_v1_StringQuery_StringQuery_Desc.RouteInfo)
 }
 
 type stringQueryRequestDecoder struct {
@@ -1506,9 +1562,9 @@ func (encoder stringQueryResponseEncoder) StringQuery(ctx context.Context, w htt
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewStringQueryClient(target string, opts ...client.Option) StringQueryService {
+func NewStringQueryHttpClient(target string, opts ...client.Option) StringQueryService {
 	options := client.NewOptions(opts...)
-	client := &stringQueryClient{
+	client := &stringQueryHttpClient{
 		client: options.Client(),
 		encoder: stringQueryRequestEncoder{
 			target:         target,
@@ -1527,7 +1583,7 @@ func NewStringQueryClient(target string, opts ...client.Option) StringQueryServi
 	return client
 }
 
-type stringQueryClient struct {
+type stringQueryHttpClient struct {
 	client                  *http.Client
 	encoder                 stringQueryRequestEncoder
 	decoder                 stringQueryResponseDecoder
@@ -1536,7 +1592,7 @@ type stringQueryClient struct {
 	middleware              client.Middleware
 }
 
-func (c *stringQueryClient) StringQuery(ctx context.Context, req *StringQueryRequest) (*httpbody.HttpBody, error) {
+func (c *stringQueryHttpClient) StringQuery(ctx context.Context, req *StringQueryRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -1544,7 +1600,7 @@ func (c *stringQueryClient) StringQuery(ctx context.Context, req *StringQueryReq
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_query_v1_StringQuery_StringQuery_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -1606,11 +1662,19 @@ func (decoder *stringQueryResponseDecoder) StringQuery(ctx context.Context, resp
 	return resp, nil
 }
 
+var _leo_goose_example_query_v1_StringQuery_StringQuery_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/string",
+		FullMethod: "/leo.goose.example.query.v1.StringQuery/StringQuery",
+	},
+}
+
 type EnumQueryService interface {
 	EnumQuery(ctx context.Context, req *EnumQueryRequest) (*httpbody.HttpBody, error)
 }
 
-func AppendEnumQueryRoute(router *http.ServeMux, service EnumQueryService, opts ...server.Option) *http.ServeMux {
+func AppendEnumQueryHttpRoute(router *http.ServeMux, service EnumQueryService, opts ...server.Option) *http.ServeMux {
 	options := server.NewOptions(opts...)
 	handler := enumQueryHandler{
 		service: service,
@@ -1662,7 +1726,7 @@ func (h enumQueryHandler) EnumQuery(response http.ResponseWriter, request *http.
 			return
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_query_v1_EnumQuery_EnumQuery_Desc.RouteInfo)
 }
 
 type enumQueryRequestDecoder struct {
@@ -1698,9 +1762,9 @@ func (encoder enumQueryResponseEncoder) EnumQuery(ctx context.Context, w http.Re
 	return server.EncodeHttpBody(ctx, w, resp)
 }
 
-func NewEnumQueryClient(target string, opts ...client.Option) EnumQueryService {
+func NewEnumQueryHttpClient(target string, opts ...client.Option) EnumQueryService {
 	options := client.NewOptions(opts...)
-	client := &enumQueryClient{
+	client := &enumQueryHttpClient{
 		client: options.Client(),
 		encoder: enumQueryRequestEncoder{
 			target:         target,
@@ -1719,7 +1783,7 @@ func NewEnumQueryClient(target string, opts ...client.Option) EnumQueryService {
 	return client
 }
 
-type enumQueryClient struct {
+type enumQueryHttpClient struct {
 	client                  *http.Client
 	encoder                 enumQueryRequestEncoder
 	decoder                 enumQueryResponseDecoder
@@ -1728,7 +1792,7 @@ type enumQueryClient struct {
 	middleware              client.Middleware
 }
 
-func (c *enumQueryClient) EnumQuery(ctx context.Context, req *EnumQueryRequest) (*httpbody.HttpBody, error) {
+func (c *enumQueryHttpClient) EnumQuery(ctx context.Context, req *EnumQueryRequest) (*httpbody.HttpBody, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -1736,7 +1800,7 @@ func (c *enumQueryClient) EnumQuery(ctx context.Context, req *EnumQueryRequest) 
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.Invoke(c.middleware, c.client, request)
+	response, err := client.Invoke(c.middleware, c.client, request, _leo_goose_example_query_v1_EnumQuery_EnumQuery_Desc.RouteInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -1794,4 +1858,12 @@ func (decoder *enumQueryResponseDecoder) EnumQuery(ctx context.Context, response
 		return nil, err
 	}
 	return resp, nil
+}
+
+var _leo_goose_example_query_v1_EnumQuery_EnumQuery_Desc = &goose.Desc{
+	RouteInfo: &goose.RouteInfo{
+		HttpMethod: "GET",
+		Pattern:    "/v1/enum",
+		FullMethod: "/leo.goose.example.query.v1.EnumQuery/EnumQuery",
+	},
 }

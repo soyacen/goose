@@ -52,7 +52,7 @@ func (f *Generator) GenerateClient(service *parser.Service, g *protogen.Generate
 		g.P("if err != nil {")
 		g.P("return nil, err")
 		g.P("}")
-		g.P("response, err := ", constant.ClientInvokeIdent, "(c.middleware, c.client, request)")
+		g.P("response, err := ", constant.ClientInvokeIdent, "(c.middleware, c.client, request, ", endpoint.DescName(), ".RouteInfo)")
 		g.P("if err != nil {")
 		g.P("return nil, err")
 		g.P("}")

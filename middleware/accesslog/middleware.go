@@ -11,6 +11,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/soyacen/goose"
 	"github.com/soyacen/goose/server"
 )
 
@@ -130,8 +131,14 @@ func Server(opts ...Option) server.Middleware {
 		// Calculate request processing latency
 		latency := time.Since(startTime)
 
-		// Get the route information (uses unsafe reflection)
-		route := getRoute(request)
+		var route string
+		if routeInfo, ok := goose.ExtractRouteInfo(ctx); ok {
+			// Get the route information from the context
+			route = routeInfo.Pattern
+		} else {
+			// Get the route information (uses unsafe reflection)
+			route = getRoute(request)
+		}
 
 		// Get a reusable slice of slog.Attr from the pool
 		fields := *pool.Get().(*[]slog.Attr)
