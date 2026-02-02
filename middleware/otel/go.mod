@@ -3,7 +3,7 @@ module github.com/soyacen/goose/middleware/otel
 go 1.23.0
 
 require (
-	github.com/soyacen/goose v1.6.11
+	github.com/soyacen/goose v1.7.5
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.60.0
 )
 
