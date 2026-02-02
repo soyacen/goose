@@ -79,7 +79,7 @@ func TestInvoke(t *testing.T) {
 	}
 
 	// Test with nil middleware
-	response, err := Invoke(nil, cli, request)
+	response, err := Invoke(nil, cli, request, nil)
 	if err != nil {
 		t.Errorf("Invoke with nil middleware returned error: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestInvoke(t *testing.T) {
 	key1 = true
 	key2 = false
 	mdw1 := mockMiddleware("Test-Key-1", "Test-Value-1")
-	response, err = Invoke(mdw1, cli, request)
+	response, err = Invoke(mdw1, cli, request, nil)
 	if err != nil {
 		t.Errorf("Invoke with one middleware returned error: %v", err)
 	}
@@ -106,7 +106,7 @@ func TestInvoke(t *testing.T) {
 	key2 = true
 	mdw2 := mockMiddleware("Test-Key-2", "Test-Value-2")
 	chain := Chain(mdw1, mdw2)
-	response, err = Invoke(chain, cli, request)
+	response, err = Invoke(chain, cli, request, nil)
 	if err != nil {
 		t.Errorf("Invoke with chained middleware returned error: %v", err)
 	}
@@ -117,7 +117,7 @@ func TestInvoke(t *testing.T) {
 
 	// Test with error middleware
 	errorMdw := errorMiddleware("test error")
-	response, err = Invoke(errorMdw, cli, request)
+	response, err = Invoke(errorMdw, cli, request, nil)
 	if err == nil {
 		t.Error("Invoke with error middleware should return an error")
 	}
@@ -193,7 +193,7 @@ func TestMiddlewareChainExecution(t *testing.T) {
 
 	// Execute the request
 	executionOrder = []int{} // Reset execution order
-	_, err = Invoke(chain, cli, request)
+	_, err = Invoke(chain, cli, request, nil)
 	if err != nil {
 		t.Errorf("Invoke returned error: %v", err)
 	}

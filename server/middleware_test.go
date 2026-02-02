@@ -23,7 +23,7 @@ func TestInvokeWithNilMiddlewareCallsFinal(t *testing.T) {
 		_, _ = w.Write([]byte("final"))
 	})
 
-	Invoke(nil, rec, req, final)
+	Invoke(nil, rec, req, final, nil)
 
 	if rec.Body.String() != "final" {
 		t.Fatalf("expected body %q, got %q", "final", rec.Body.String())
@@ -40,7 +40,7 @@ func TestChainSingleMiddleware(t *testing.T) {
 	})
 
 	chained := Chain(m)
-	Invoke(chained, rec, req, final)
+	Invoke(chained, rec, req, final, nil)
 
 	if got := rec.Body.String(); got != "AZ" {
 		t.Fatalf("expected body %q, got %q", "AZ", got)
@@ -60,7 +60,7 @@ func TestChainMultipleMiddlewaresOrder(t *testing.T) {
 	})
 
 	chained := Chain(m1, m2, m3)
-	Invoke(chained, rec, req, final)
+	Invoke(chained, rec, req, final, nil)
 
 	if got := rec.Body.String(); got != "123F" {
 		t.Fatalf("expected body %q, got %q", "123F", got)

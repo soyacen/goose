@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/google/go-querystring/query"
+	"github.com/soyacen/goose"
 	"github.com/soyacen/goose/client"
 	"github.com/soyacen/goose/internal/iox"
 	"github.com/soyacen/goose/internal/strconvx"
@@ -930,7 +931,7 @@ func (s *sender) Send(ctx context.Context) (Receiver, error) {
 			req.AddCookie(cookie)
 		}
 	}
-	resp, err := client.Invoke(client.Chain(s.options.middlewares...), s.options.client, req)
+	resp, err := client.Invoke(client.Chain(s.options.middlewares...), s.options.client, req, &goose.RouteInfo{HttpMethod: s.method, Pattern: s.options.uri.Path})
 	if err != nil {
 		return nil, err
 	}

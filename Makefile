@@ -1,6 +1,6 @@
 .PHONY: build
 build:
-go build -ldflags -X main.buildstamp `date '+%Y-%m-%d_%I:%M:%S'` -X main.githash `git rev-parse HEAD` cmd/protoc-gen-goose/main.go
+	go build -ldflags -X main.buildstamp `date '+%Y-%m-%d_%I:%M:%S'` -X main.githash `git rev-parse HEAD` cmd/protoc-gen-goose/main.go
 
 
 .PHONY: install

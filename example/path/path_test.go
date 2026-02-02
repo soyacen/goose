@@ -111,7 +111,7 @@ func TestBoolPath(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendBoolPathRoute(router, &MockBoolPathService{})
+		router = AppendBoolPathHttpRoute(router, &MockBoolPathService{})
 		server.Addr = ":48081"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -119,7 +119,7 @@ func TestBoolPath(t *testing.T) {
 		}
 	}()
 	defer server.Close()
-	cli := NewBoolPathClient("http://localhost:48081")
+	cli := NewBoolPathHttpClient("http://localhost:48081")
 	resp, err := cli.BoolPath(context.Background(), &BoolPathRequest{
 		Bool:     true,
 		OptBool:  proto.Bool(true),
@@ -138,7 +138,7 @@ func TestInt32Path(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendInt32PathRoute(router, &MockInt32PathService{})
+		router = AppendInt32PathHttpRoute(router, &MockInt32PathService{})
 		server.Addr = ":48082"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -146,7 +146,7 @@ func TestInt32Path(t *testing.T) {
 		}
 	}()
 	defer server.Close()
-	cli := NewInt32PathClient("http://localhost:48082")
+	cli := NewInt32PathHttpClient("http://localhost:48082")
 	resp, err := cli.Int32Path(context.Background(), &Int32PathRequest{
 		Int32:       1,
 		Sint32:      2,
@@ -169,7 +169,7 @@ func TestInt64Path(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendInt64PathRoute(router, &MockInt64PathService{})
+		router = AppendInt64PathHttpRoute(router, &MockInt64PathService{})
 		server.Addr = ":48083"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -177,7 +177,7 @@ func TestInt64Path(t *testing.T) {
 		}
 	}()
 	defer server.Close()
-	cli := NewInt64PathClient("http://localhost:48083")
+	cli := NewInt64PathHttpClient("http://localhost:48083")
 	resp, err := cli.Int64Path(context.Background(), &Int64PathRequest{
 		Int64:       10,
 		Sint64:      20,
@@ -200,7 +200,7 @@ func TestUint32Path(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendUint32PathRoute(router, &MockUint32PathService{})
+		router = AppendUint32PathHttpRoute(router, &MockUint32PathService{})
 		server.Addr = ":48084"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -208,7 +208,7 @@ func TestUint32Path(t *testing.T) {
 		}
 	}()
 	defer server.Close()
-	cli := NewUint32PathClient("http://localhost:48084")
+	cli := NewUint32PathHttpClient("http://localhost:48084")
 	resp, err := cli.Uint32Path(context.Background(), &Uint32PathRequest{
 		Uint32:     1,
 		Fixed32:    2,
@@ -229,7 +229,7 @@ func TestUint64Path(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendUint64PathRoute(router, &MockUint64PathService{})
+		router = AppendUint64PathHttpRoute(router, &MockUint64PathService{})
 		server.Addr = ":48085"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -237,7 +237,7 @@ func TestUint64Path(t *testing.T) {
 		}
 	}()
 	defer server.Close()
-	cli := NewUint64PathClient("http://localhost:48085")
+	cli := NewUint64PathHttpClient("http://localhost:48085")
 	resp, err := cli.Uint64Path(context.Background(), &Uint64PathRequest{
 		Uint64:     10,
 		Fixed64:    20,
@@ -258,7 +258,7 @@ func TestFloatPath(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendFloatPathRoute(router, &MockFloatPathService{})
+		router = AppendFloatPathHttpRoute(router, &MockFloatPathService{})
 		server.Addr = ":48086"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -266,7 +266,7 @@ func TestFloatPath(t *testing.T) {
 		}
 	}()
 	defer server.Close()
-	cli := NewFloatPathClient("http://localhost:48086")
+	cli := NewFloatPathHttpClient("http://localhost:48086")
 	resp, err := cli.FloatPath(context.Background(), &FloatPathRequest{
 		Float:     1.23,
 		OptFloat:  proto.Float32(4.56),
@@ -285,7 +285,7 @@ func TestDoublePath(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendDoublePathRoute(router, &MockDoublePathService{})
+		router = AppendDoublePathHttpRoute(router, &MockDoublePathService{})
 		server.Addr = ":48087"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -293,7 +293,7 @@ func TestDoublePath(t *testing.T) {
 		}
 	}()
 	defer server.Close()
-	cli := NewDoublePathClient("http://localhost:48087")
+	cli := NewDoublePathHttpClient("http://localhost:48087")
 	resp, err := cli.DoublePath(context.Background(), &DoublePathRequest{
 		Double:     1.23,
 		OptDouble:  proto.Float64(4.56),
@@ -312,7 +312,7 @@ func TestStringPath(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendStringPathRoute(router, &MockStringPathService{})
+		router = AppendStringPathHttpRoute(router, &MockStringPathService{})
 		server.Addr = ":48088"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -320,7 +320,7 @@ func TestStringPath(t *testing.T) {
 		}
 	}()
 	defer server.Close()
-	cli := NewStringPathClient("http://localhost:48088")
+	cli := NewStringPathHttpClient("http://localhost:48088")
 	resp, err := cli.StringPath(context.Background(), &StringPathRequest{
 		String_:     "abc",
 		OptString:   proto.String("def"),
@@ -340,7 +340,7 @@ func TestEnumPath(t *testing.T) {
 	server := &http.Server{}
 	go func() {
 		router := http.NewServeMux()
-		router = AppendEnumPathRoute(router, &MockEnumPathService{})
+		router = AppendEnumPathHttpRoute(router, &MockEnumPathService{})
 		server.Addr = ":48089"
 		server.Handler = router
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -348,7 +348,7 @@ func TestEnumPath(t *testing.T) {
 		}
 	}()
 	defer server.Close()
-	cli := NewEnumPathClient("http://localhost:48089")
+	cli := NewEnumPathHttpClient("http://localhost:48089")
 	canceled := EnumPathRequest_CANCELLED
 	resp, err := cli.EnumPath(context.Background(), &EnumPathRequest{
 		Status:    EnumPathRequest_OK,

@@ -55,7 +55,7 @@ func (m *MockBodyService) StarBody(ctx context.Context, request *BodyRequest) (*
 
 func runServer(server *http.Server, port int) {
 	router := http.NewServeMux()
-	router = AppendBodyRoute(router, &MockBodyService{})
+	router = AppendBodyHttpRoute(router, &MockBodyService{})
 	server.Addr = fmt.Sprintf(":%d", port)
 	server.Handler = router
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -64,7 +64,7 @@ func runServer(server *http.Server, port int) {
 }
 
 func newClient(port int) BodyService {
-	return NewBodyClient(fmt.Sprintf("http://localhost:%d", port))
+	return NewBodyHttpClient(fmt.Sprintf("http://localhost:%d", port))
 }
 
 func TestStarBody(t *testing.T) {
