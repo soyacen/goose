@@ -1,6 +1,7 @@
 package otelgoose
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/soyacen/goose"
@@ -8,7 +9,15 @@ import (
 	"github.com/soyacen/goose/server"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/trace"
 )
+
+func ExtractTraceId(ctx context.Context) (string, bool) {
+	if span := trace.SpanFromContext(ctx); span.SpanContext().IsValid() {
+		return span.SpanContext().TraceID().String(), true
+	}
+	return "", false
+}
 
 func Server() server.Middleware {
 	return func(response http.ResponseWriter, request *http.Request, invoker http.HandlerFunc) {
