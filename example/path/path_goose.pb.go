@@ -23,6 +23,9 @@ type BoolPathService interface {
 }
 
 func AppendBoolPathHttpRoute(router *http.ServeMux, service BoolPathService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := boolPathHandler{
 		service: service,
@@ -226,6 +229,9 @@ type Int32PathService interface {
 }
 
 func AppendInt32PathHttpRoute(router *http.ServeMux, service Int32PathService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := int32PathHandler{
 		service: service,
@@ -437,6 +443,9 @@ type Int64PathService interface {
 }
 
 func AppendInt64PathHttpRoute(router *http.ServeMux, service Int64PathService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := int64PathHandler{
 		service: service,
@@ -648,6 +657,9 @@ type Uint32PathService interface {
 }
 
 func AppendUint32PathHttpRoute(router *http.ServeMux, service Uint32PathService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := uint32PathHandler{
 		service: service,
@@ -855,6 +867,9 @@ type Uint64PathService interface {
 }
 
 func AppendUint64PathHttpRoute(router *http.ServeMux, service Uint64PathService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := uint64PathHandler{
 		service: service,
@@ -1062,6 +1077,9 @@ type FloatPathService interface {
 }
 
 func AppendFloatPathHttpRoute(router *http.ServeMux, service FloatPathService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := floatPathHandler{
 		service: service,
@@ -1265,6 +1283,9 @@ type DoublePathService interface {
 }
 
 func AppendDoublePathHttpRoute(router *http.ServeMux, service DoublePathService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := doublePathHandler{
 		service: service,
@@ -1468,6 +1489,9 @@ type StringPathService interface {
 }
 
 func AppendStringPathHttpRoute(router *http.ServeMux, service StringPathService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := stringPathHandler{
 		service: service,
@@ -1673,6 +1697,9 @@ type EnumPathService interface {
 }
 
 func AppendEnumPathHttpRoute(router *http.ServeMux, service EnumPathService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := enumPathHandler{
 		service: service,

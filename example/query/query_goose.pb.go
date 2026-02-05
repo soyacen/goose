@@ -23,6 +23,9 @@ type BoolQueryService interface {
 }
 
 func AppendBoolQueryHttpRoute(router *http.ServeMux, service BoolQueryService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := boolQueryHandler{
 		service: service,
@@ -225,6 +228,9 @@ type Int32QueryService interface {
 }
 
 func AppendInt32QueryHttpRoute(router *http.ServeMux, service Int32QueryService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := int32QueryHandler{
 		service: service,
@@ -439,6 +445,9 @@ type Int64QueryService interface {
 }
 
 func AppendInt64QueryHttpRoute(router *http.ServeMux, service Int64QueryService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := int64QueryHandler{
 		service: service,
@@ -653,6 +662,9 @@ type Uint32QueryService interface {
 }
 
 func AppendUint32QueryHttpRoute(router *http.ServeMux, service Uint32QueryService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := uint32QueryHandler{
 		service: service,
@@ -861,6 +873,9 @@ type Uint64QueryService interface {
 }
 
 func AppendUint64QueryHttpRoute(router *http.ServeMux, service Uint64QueryService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := uint64QueryHandler{
 		service: service,
@@ -1069,6 +1084,9 @@ type FloatQueryService interface {
 }
 
 func AppendFloatQueryHttpRoute(router *http.ServeMux, service FloatQueryService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := floatQueryHandler{
 		service: service,
@@ -1271,6 +1289,9 @@ type DoubleQueryService interface {
 }
 
 func AppendDoubleQueryHttpRoute(router *http.ServeMux, service DoubleQueryService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := doubleQueryHandler{
 		service: service,
@@ -1473,6 +1494,9 @@ type StringQueryService interface {
 }
 
 func AppendStringQueryHttpRoute(router *http.ServeMux, service StringQueryService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := stringQueryHandler{
 		service: service,
@@ -1675,6 +1699,9 @@ type EnumQueryService interface {
 }
 
 func AppendEnumQueryHttpRoute(router *http.ServeMux, service EnumQueryService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := enumQueryHandler{
 		service: service,

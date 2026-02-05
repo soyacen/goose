@@ -10,10 +10,11 @@ import (
 
 type Generator struct{}
 
-
-
 func (generator *Generator) GenerateAppendServerFunc(service *parser.Service, g *protogen.GeneratedFile) error {
 	g.P("func ", service.AppendRouteName(), "(router *", constant.RouterIdent, ", service ", service.ServiceName(), ", opts ...", constant.ServerOptionIdent, ") ", "*", constant.RouterIdent, " {")
+	g.P("if router == nil {")
+	g.P("router = ", constant.NewServeMuxIndent, "()")
+	g.P("}")
 	g.P("options := ", constant.ServerNewOptionsIdent, "(opts...)")
 	g.P("handler :=  ", service.Unexported(service.HandlerName()), "{")
 	g.P("service: service,")

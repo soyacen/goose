@@ -27,6 +27,9 @@ type BodyService interface {
 }
 
 func AppendBodyHttpRoute(router *http1.ServeMux, service BodyService, opts ...server.Option) *http1.ServeMux {
+	if router == nil {
+		router = http1.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := bodyHandler{
 		service: service,

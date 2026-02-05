@@ -40,6 +40,7 @@ var (
 
 var (
 	HttpPackage                 = protogen.GoImportPath("net/http")
+	NewServeMuxIndent           = HttpPackage.Ident("NewServeMux")
 	RouterIdent                 = HttpPackage.Ident("ServeMux")
 	ClientIdent                 = HttpPackage.Ident("Client")
 	HttpHandlerIdent            = HttpPackage.Ident("Handler")

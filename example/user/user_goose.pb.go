@@ -25,6 +25,9 @@ type UserService interface {
 }
 
 func AppendUserHttpRoute(router *http.ServeMux, service UserService, opts ...server.Option) *http.ServeMux {
+	if router == nil {
+		router = http.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := userHandler{
 		service: service,

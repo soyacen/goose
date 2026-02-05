@@ -27,8 +27,9 @@ type LoggerFactory func(ctx context.Context) (*slog.Logger, error)
 
 // options holds configuration options for the access log middleware
 type options struct {
-	loggerFactory LoggerFactory // Factory function to create loggers
-	level         slog.Level    // Log level for access log entries
+	loggerFactory LoggerFactory           // Factory function to create loggers
+	level         slog.Level              // Log level for access log entries
+	skip          func(route string) bool // Function to determine if logging should be skipped for a given route
 }
 
 // apply applies the given options to the options struct
@@ -51,7 +52,15 @@ type Option func(o *options)
 // Returns:
 //   - *options: Default options with nil logger factory and zero log level
 func defaultOptions() *options {
-	return &options{}
+	return &options{
+		loggerFactory: func(ctx context.Context) (*slog.Logger, error) {
+			return slog.Default(), nil
+		},
+		level: slog.LevelInfo,
+		skip: func(fullMethodName string) bool {
+			return false
+		},
+	}
 }
 
 // WithLoggerFactory sets the logger factory function
@@ -75,6 +84,18 @@ func WithLoggerFactory(loggerFactory LoggerFactory) Option {
 func WithLevel(level slog.Level) Option {
 	return func(o *options) {
 		o.level = level
+	}
+}
+
+// WithSkip sets the function to determine if logging should be skipped for a given route
+// Parameters:
+//   - skip: Function to determine if logging should be skipped for a given route
+//
+// Returns:
+//   - Option: Function to set the skip function option
+func WithSkip(skip func(route string) bool) Option {
+	return func(o *options) {
+		o.skip = skip
 	}
 }
 
@@ -111,6 +132,21 @@ func Server(opts ...Option) server.Middleware {
 		// Get the context from the request
 		ctx := request.Context()
 
+		var route string
+		if routeInfo, ok := goose.ExtractRouteInfo(ctx); ok {
+			// Get the route information from the context
+			route = routeInfo.Pattern
+		} else {
+			// Get the route information (uses unsafe reflection)
+			route = getRoute(request)
+		}
+
+		// Skip logging if the route is in the skip list
+		if opt.skip(route) {
+			invoker(response, request)
+			return
+		}
+
 		// Create a logger using the logger factory
 		logger, err := opt.loggerFactory(ctx)
 		if err != nil {
@@ -132,19 +168,10 @@ func Server(opts ...Option) server.Middleware {
 		// Calculate request processing latency
 		latency := time.Since(startTime)
 
-		var route string
-		if routeInfo, ok := goose.ExtractRouteInfo(ctx); ok {
-			// Get the route information from the context
-			route = routeInfo.Pattern
-		} else {
-			// Get the route information (uses unsafe reflection)
-			route = getRoute(request)
-		}
-
 		// Get a reusable slice of slog.Attr from the pool
 		fields := *pool.Get().(*[]slog.Attr)
 		fields = append(fields,
-			slog.String("system", "server"),
+			slog.String("system", "http.server"),
 			slog.String("timestamp", startTime.Format(time.RFC3339)),
 			slog.String("latency", latency.String()),
 			slog.String("method", request.Method),

@@ -27,6 +27,9 @@ type ResponseBodyService interface {
 }
 
 func AppendResponseBodyHttpRoute(router *http1.ServeMux, service ResponseBodyService, opts ...server.Option) *http1.ServeMux {
+	if router == nil {
+		router = http1.NewServeMux()
+	}
 	options := server.NewOptions(opts...)
 	handler := responseBodyHandler{
 		service: service,
