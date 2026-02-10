@@ -3,8 +3,8 @@ module github.com/soyacen/goose/middleware/jwtauth
 go 1.23.0
 
 require (
-	github.com/soyacen/goose v1.7.11
 	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/soyacen/goose v1.7.11
 )
 
 require (
