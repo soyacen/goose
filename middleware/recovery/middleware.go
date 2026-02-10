@@ -1,4 +1,4 @@
-package recoverygoose
+package recovery
 
 import (
 	"log/slog"

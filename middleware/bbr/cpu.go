@@ -10,7 +10,7 @@ import (
 // 全局变量定义
 var (
 	// cpuUsage 存储CPU使用率的原子值
-	// 存储范围：0.0-100.0 (百分比格式)
+	// 存储范围：0.0-1.0 (小数格式)
 	cpuUsage atomic.Value
 
 	// cpuInterval CPU采样间隔时间
@@ -30,7 +30,7 @@ func init() {
 }
 
 // defaultCPU 获取当前CPU使用率
-// 返回值范围：0.0-100.0 (百分比)
+// 返回值范围：0.0-1.0 (小数)
 // 线程安全，可并发调用
 func defaultCPU() float64 {
 	return cpuUsage.Load().(float64)
@@ -57,9 +57,8 @@ func collectCPU() {
 		percentages, err := cpu.Percent(interval, false)
 
 		if err == nil && len(percentages) > 0 {
-			// Percent返回0-100范围的值
-			// 存储第一个CPU核心的使用率数据
-			cpuUsage.Store(percentages[0])
+			// Percent返回0-100范围的值，转换为0-1
+			cpuUsage.Store(percentages[0] / 100.0)
 		} else {
 			// 如果出现错误，等待后再重试
 			// 避免紧密循环消耗过多CPU资源

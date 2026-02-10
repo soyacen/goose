@@ -47,22 +47,26 @@ jobs:
           sed -i "s|github.com/soyacen/goose v[0-9]\+\.[0-9]\+\.[0-9]\+|github.com/soyacen/goose $VERSION|g" middleware/jwtauth/go.mod
           echo "Updated version in middleware/jwtauth/go.mod to $VERSION"
 
-          sed -i "s|github.com/soyacen/goose v[0-9]\+\.[0-9]\+\.[0-9]\+|github.com/soyacen/goose $VERSION|g" middleware/otelgoose/go.mod
-          echo "Updated version in middleware/otelgoose/go.mod to $VERSION"
+          sed -i "s|github.com/soyacen/goose v[0-9]\+\.[0-9]\+\.[0-9]\+|github.com/soyacen/goose $VERSION|g" middleware/otel/go.mod
+          echo "Updated version in middleware/otel/go.mod to $VERSION"
+
+          sed -i "s|github.com/soyacen/goose v[0-9]\+\.[0-9]\+\.[0-9]\+|github.com/soyacen/goose $VERSION|g" middleware/bbr/go.mod
+          echo "Updated version in middleware/bbr/go.mod to $VERSION"
       - name: Commit and push changes directly
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add cmd/protoc-gen-goose/main.go
           git add middleware/jwtauth/go.mod
-          git add middleware/otelgoose/go.mod
+          git add middleware/otel/go.mod
+          git add middleware/bbr/go.mod
           git commit -m "chore: update version to $VERSION"
           git push
 
       - name: Create and push tag
         run: |
-          git tag middleware/otelgoose/$VERSION
-          git push origin middleware/otelgoose/$VERSION
+          git tag middleware/otel/$VERSION
+          git push origin middleware/otel/$VERSION
           git tag middleware/jwtauth/$VERSION
           git push origin middleware/jwtauth/$VERSION
           git tag $VERSION

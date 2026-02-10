@@ -25,14 +25,15 @@ type options struct {
 	// 将时间窗口分割成多个桶进行精细化统计
 	Buckets int
 
-	// CPUThreshold CPU触发阈值 (0.0-100.0)
+	// CPUThreshold CPU触发阈值 (0.0-1.0)
 	// 当CPU使用率超过此阈值时开始限流
-	// 单位为百分比，例如80.0表示80%
+	// 单位为小数，例如0.8表示80%
 	CPUThreshold float64
 
 	// CPU 获取当前CPU使用率的函数
-	// 返回值范围0.0-100.0
+	// 返回值范围0.0-1.0
 	CPU func() float64
+
 	// CPUInterval CPU采样间隔
 	CPUInterval time.Duration
 }
@@ -57,7 +58,7 @@ func WithBuckets(buckets int) Option {
 	}
 }
 
-// WithCPUThreshold 设置CPU触发阈值 (0.0-100.0)
+// WithCPUThreshold 设置CPU触发阈值 (0.0-1.0)
 // 参数 threshold: CPU使用率阈值，超过此值开始限流
 func WithCPUThreshold(threshold float64) Option {
 	return func(o *options) {
@@ -85,13 +86,13 @@ func WithCPUInterval(interval time.Duration) Option {
 // 默认值：
 // - Window: 10秒
 // - Buckets: 100个
-// - CPUThreshold: 80.0%
+// - CPUThreshold: 0.8 (80%)
 // - CPU: defaultCPU函数
 func defaultOptions() *options {
 	return &options{
 		Window:       time.Second * 10,
 		Buckets:      100,
-		CPUThreshold: 80.0,
+		CPUThreshold: 0.8,
 		CPU:          defaultCPU,
 		CPUInterval:  time.Millisecond * 500,
 	}
@@ -107,7 +108,7 @@ func (o *options) init() *options {
 		o.Buckets = 100
 	}
 	if o.CPUThreshold <= 0 {
-		o.CPUThreshold = 80.0
+		o.CPUThreshold = 0.8
 	}
 	if o.CPUInterval <= 0 {
 		o.CPUInterval = time.Millisecond * 500
@@ -133,16 +134,16 @@ func (o *options) apply(opts ...Option) *options {
 func (o *options) newLimiter() Limiter {
 	return &bbrLimiter{
 		conf:     o,
-		passStat: newRollingCounter(o.Window, o.Buckets),
-		rtStat:   newRollingCounter(o.Window, o.Buckets),
+		passStat: newRollingCounter(o.Window, o.Buckets, false),
+		rtStat:   newRollingCounter(o.Window, o.Buckets, true),
 		cpu:      o.CPU,
 	}
 }
 
 // DoneInfo 包含请求执行完成的信息
 type DoneInfo struct {
-	// Err 是请求处理器返回的错误
-	Err error
+	// Status 是响应状态码
+	Status int
 }
 
 // Limiter 定义限流器接口
@@ -174,7 +175,7 @@ type bbrLimiter struct {
 	lastDrop atomic.Pointer[time.Time]
 
 	// cpu 获取当前CPU使用率的函数
-	// 返回值范围0.0-100.0
+	// 返回值范围0.0-1.0
 	cpu func() float64
 }
 
@@ -192,14 +193,14 @@ func (l *bbrLimiter) Allow() (func(DoneInfo), error) {
 
 	// 返回完成回调函数
 	return func(info DoneInfo) {
+		// 确保减少并发请求数，即使发生了异常
+		defer atomic.AddInt64(&l.inflight, -1)
+
 		// 计算请求处理时间(毫秒)
 		rt := int64(time.Since(startTime) / time.Millisecond)
 
-		// 减少并发请求数
-		atomic.AddInt64(&l.inflight, -1)
-
 		// 如果请求成功，更新统计信息
-		if info.Err == nil {
+		if info.Status >= 200 && info.Status <= 299 {
 			l.passStat.Add(1) // 增加成功请求数
 			l.rtStat.Add(rt)  // 记录响应时间
 		}
@@ -282,19 +283,30 @@ type rollingCounter struct {
 
 	// lastUpdate 上次更新时间
 	lastUpdate time.Time
+
+	// isMin 是否跟踪最小值（否则跟踪总和）
+	isMin bool
 }
 
 // newRollingCounter 创建新的滚动计数器实例
 // 参数:
 //   - window: 总时间窗口
 //   - buckets: 桶数量
-func newRollingCounter(window time.Duration, buckets int) *rollingCounter {
-	return &rollingCounter{
+//   - isMin: 是否记录每个桶的最小值
+func newRollingCounter(window time.Duration, buckets int, isMin bool) *rollingCounter {
+	rc := &rollingCounter{
 		buckets:    make([]int64, buckets),
 		window:     window,
 		bucketDur:  window / time.Duration(buckets),
 		lastUpdate: time.Now(),
+		isMin:      isMin,
 	}
+	if isMin {
+		for i := range rc.buckets {
+			rc.buckets[i] = math.MaxInt64
+		}
+	}
+	return rc
 }
 
 // Add 向统计器中添加数值
@@ -308,7 +320,13 @@ func (c *rollingCounter) Add(val int64) {
 
 	// 计算当前桶索引并添加数值
 	idx := (time.Now().UnixNano() / int64(c.bucketDur)) % int64(len(c.buckets))
-	c.buckets[idx] += val
+	if c.isMin {
+		if val < c.buckets[idx] {
+			c.buckets[idx] = val
+		}
+	} else {
+		c.buckets[idx] += val
+	}
 }
 
 // rotate 执行桶轮转操作
@@ -336,7 +354,11 @@ func (c *rollingCounter) rotate() {
 	// 清空相应数量的旧桶
 	for i := 1; i <= numToClear; i++ {
 		idx := (lastIdx + int64(i)) % int64(len(c.buckets))
-		c.buckets[idx] = 0
+		if c.isMin {
+			c.buckets[idx] = math.MaxInt64
+		} else {
+			c.buckets[idx] = 0
+		}
 	}
 
 	// 更新最后更新时间
@@ -351,8 +373,14 @@ func (c *rollingCounter) Max() int64 {
 
 	var max int64
 	for _, v := range c.buckets {
-		if v > max {
-			max = v
+		if !c.isMin {
+			if v > max {
+				max = v
+			}
+		} else {
+			if v != math.MaxInt64 && v > max {
+				max = v
+			}
 		}
 	}
 	return max
@@ -367,7 +395,7 @@ func (c *rollingCounter) Min() int64 {
 	var min int64 = math.MaxInt64
 	var found bool
 	for _, v := range c.buckets {
-		if v > 0 {
+		if v > 0 && v != math.MaxInt64 {
 			if v < min {
 				min = v
 			}

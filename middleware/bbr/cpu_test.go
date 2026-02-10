@@ -10,7 +10,7 @@ import (
 func TestGetCPUUsage(t *testing.T) {
 	usage := defaultCPU()
 	assert.GreaterOrEqual(t, usage, 0.0)
-	assert.LessOrEqual(t, usage, 100.0)
+	assert.LessOrEqual(t, usage, 1.0)
 }
 
 func TestDefaultCPU(t *testing.T) {

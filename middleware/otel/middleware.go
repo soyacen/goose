@@ -1,4 +1,4 @@
-package otelgoose
+package otel
 
 import (
 	"context"

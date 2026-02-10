@@ -1,4 +1,4 @@
-module github.com/soyacen/goose/middleware/otelgoose
+module github.com/soyacen/goose/middleware/otel
 
 go 1.23.0
 
