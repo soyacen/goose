@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "skill_name": "go-goose",
+    "skill_path": "/Users/soyacen/Workspace/github.com/soyacen/goose/skills/go-goose",
+    "executor_model": "claude-haiku-4-5",
+    "analyzer_model": "claude-haiku-4-5",
+    "timestamp": "2026-02-27T12:57:32Z",
+    "evals_run": [
+      {"id": 0, "name": "create-user-service-with-proto"},
+      {"id": 1, "name": "query-parameters-pagination"},
+      {"id": 2, "name": "jwt-authentication-middleware"}
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "configuration": "with_skill",
+      "eval_id": 0,
+      "eval_name": "create-user-service-with-proto",
+      "pass_rate": "100%",
+      "time_seconds": 225.1,
+      "tokens": 41454
+    },
+    {
+      "configuration": "without_skill",
+      "eval_id": 0,
+      "eval_name": "create-user-service-with-proto",
+      "pass_rate": "100%",
+      "time_seconds": 93.7,
+      "tokens": 21154
+    },
+    {
+      "configuration": "with_skill",
+      "eval_id": 1,
+      "eval_name": "query-parameters-pagination",
+      "pass_rate": "100%",
+      "time_seconds": 36.9,
+      "tokens": 17995
+    },
+    {
+      "configuration": "without_skill",
+      "eval_id": 1,
+      "eval_name": "query-parameters-pagination",
+      "pass_rate": "100%",
+      "time_seconds": 52.1,
+      "tokens": 19757
+    },
+    {
+      "configuration": "with_skill",
+      "eval_id": 2,
+      "eval_name": "jwt-authentication-middleware",
+      "pass_rate": "100%",
+      "time_seconds": 67.4,
+      "tokens": 24763
+    },
+    {
+      "configuration": "without_skill",
+      "eval_id": 2,
+      "eval_name": "jwt-authentication-middleware",
+      "pass_rate": "100%",
+      "time_seconds": 87.2,
+      "tokens": 26253
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "mean_pass_rate": "100%",
+      "mean_time_seconds": 329.4,
+      "mean_tokens": 84212
+    },
+    "without_skill": {
+      "mean_pass_rate": "100%",
+      "mean_time_seconds": 233.0,
+      "mean_tokens": 67164
+    },
+    "delta": {
+      "pass_rate": "+0.00",
+      "time_seconds": "+96.4",
+      "tokens": "+17048"
+    }
+  },
+  "notes": [
+    "With skill uses goose-specific code generation, without skill uses basic gRPC",
+    "Skill provides more complete HTTP/REST focused solution"
+  ]
+}

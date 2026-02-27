@@ -1,0 +1,22 @@
+{
+  "eval_id": 0,
+  "eval_name": "create-user-service-with-proto",
+  "prompt": "Create a simple user service with proto file that has CreateUser (POST /v1/users), GetUser (GET /v1/users/{id}), and DeleteUser (DELETE /v1/users/{id}) methods. Then generate the code and write a simple server that implements the service.",
+  "assertions": [
+    {
+      "text": "Proto file contains CreateUser, GetUser, DeleteUser methods",
+      "passed": true,
+      "evidence": "Proto file defines all three methods"
+    },
+    {
+      "text": "Generated gRPC code is present",
+      "passed": true,
+      "evidence": "user_grpc.pb.go was generated"
+    },
+    {
+      "text": "Server implementation is present",
+      "passed": true,
+      "evidence": "server.go implements the service"
+    }
+  ]
+}

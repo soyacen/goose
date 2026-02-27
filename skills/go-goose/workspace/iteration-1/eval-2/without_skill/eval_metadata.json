@@ -1,0 +1,17 @@
+{
+  "eval_id": 1,
+  "eval_name": "query-parameters-pagination",
+  "prompt": "I need to build an API that accepts query parameters like page_num and page_size for pagination. Show me how to define this in proto and how the client would call it.",
+  "assertions": [
+    {
+      "text": "Proto file shows query parameter pattern",
+      "passed": true,
+      "evidence": "Proto defines request message with page_num and page_size fields"
+    },
+    {
+      "text": "Client usage example shows pagination call",
+      "passed": true,
+      "evidence": "Client code shows how to call with pagination parameters"
+    }
+  ]
+}

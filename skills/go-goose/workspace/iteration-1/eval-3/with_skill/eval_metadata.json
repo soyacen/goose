@@ -1,0 +1,17 @@
+{
+  "eval_id": 2,
+  "eval_name": "jwt-authentication-middleware",
+  "prompt": "Add JWT authentication middleware to my goose service. How do I configure it and what's the flow?",
+  "assertions": [
+    {
+      "text": "JWT middleware configuration is explained",
+      "passed": true,
+      "evidence": "Documentation explains jwtauth.Server() and jwtauth.Client() usage"
+    },
+    {
+      "text": "Server and client usage examples provided",
+      "passed": true,
+      "evidence": "Code examples show both server and client middleware setup"
+    }
+  ]
+}

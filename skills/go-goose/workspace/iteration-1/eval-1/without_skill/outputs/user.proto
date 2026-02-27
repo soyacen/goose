@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "github.com/soyacen/goose/skills/go-goose/workspace/iteration-1/eval-1/without_skill/outputs/genproto/v1";
+
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+message CreateUserRequest {
+  string name = 1;
+  string email = 2;
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message DeleteUserRequest {
+  string id = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+}

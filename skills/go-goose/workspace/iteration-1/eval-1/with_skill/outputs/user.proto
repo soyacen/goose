@@ -1,0 +1,64 @@
+syntax = "proto3";
+package user.service.v1;
+option go_package = "github.com/soyacen/goose/skills/go-goose/workspace/iteration-1/eval-1/with_skill/outputs";
+
+import "google/api/annotations.proto";
+
+service UserService {
+
+  // CreateUser creates a new user
+  // POST /v1/users
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/users"
+      body: "*"
+    };
+  }
+
+  // GetUser gets a user by ID
+  // GET /v1/users/{id}
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {
+      get: "/v1/users/{id}"
+    };
+  }
+
+  // DeleteUser deletes a user by ID
+  // DELETE /v1/users/{id}
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
+    option (google.api.http) = {
+      delete: "/v1/users/{id}"
+    };
+  }
+}
+
+message User {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+message CreateUserRequest {
+  string name = 1;
+  string email = 2;
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message GetUserRequest {
+  int64 id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message DeleteUserRequest {
+  int64 id = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+}

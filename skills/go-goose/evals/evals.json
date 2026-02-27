@@ -1,0 +1,23 @@
+{
+  "skill_name": "go-goose",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a simple user service with proto file that has CreateUser (POST /v1/users), GetUser (GET /v1/users/{id}), and DeleteUser (DELETE /v1/users/{id}) methods. Then generate the code and write a simple server that implements the service.",
+      "expected_output": "A complete proto file with service definition, generated Go files, and a working server implementation",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I need to build an API that accepts query parameters like page_num and page_size for pagination. Show me how to define this in proto and how the client would call it.",
+      "expected_output": "Proto definition with query string parameters and client usage example",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Add JWT authentication middleware to my goose service. How do I configure it and what's the flow?",
+      "expected_output": "Explanation and code example for jwtauth middleware usage",
+      "files": []
+    }
+  ]
+}

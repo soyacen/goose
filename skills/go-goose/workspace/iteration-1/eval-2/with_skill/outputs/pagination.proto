@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package pagination.v1;
+
+option go_package = "github.com/soyacen/goose/example/pagination/v1;pagination";
+
+import "google/api/annotations.proto";
+
+// PaginationService demonstrates query parameter-based pagination
+service PaginationService {
+  // ListItems returns a paginated list of items
+  // Query params: page_num, page_size
+  rpc ListItems(ListItemsRequest) returns (ListItemsResponse) {
+    option (google.api.http) = {
+      get: "/v1/items"  // All fields in ListItemsRequest become query parameters
+    };
+  }
+}
+
+// Request message for listing items with pagination
+message ListItemsRequest {
+  // Page number (1-indexed)
+  int64 page_num = 1;
+  // Number of items per page
+  int64 page_size = 2;
+  // Optional: filter by status
+  string status = 3;
+  // Optional: sort field
+  string sort_by = 4;
+}
+
+// Response message containing paginated items
+message ListItemsResponse {
+  repeated Item items = 1;
+  PaginationMeta meta = 2;
+}
+
+// Individual item in the list
+message Item {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string status = 4;
+  int64 created_at = 5;
+}
+
+// Pagination metadata
+message PaginationMeta {
+  int64 total_count = 1;
+  int64 page_num = 2;
+  int64 page_size = 3;
+  int64 total_pages = 4;
+  bool has_next = 5;
+  bool has_prev = 6;
+}

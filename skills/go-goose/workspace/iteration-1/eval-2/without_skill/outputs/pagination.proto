@@ -1,0 +1,82 @@
+syntax = "proto3";
+package leo.goose.example.pagination.v1;
+option go_package = "github.com/soyacen/goose/example/pagination/v1;pagination";
+
+import "google/api/annotations.proto";
+import "google/api/httpbody.proto";
+
+// PaginationService demonstrates pagination with query parameters
+service PaginationService {
+
+  // ListItems 获取列表（带分页）
+  // `GET /v1/items?page_num=1&page_size=10` | `ListItemsRequest(page_num: 1, page_size: 10)`
+  rpc ListItems(ListItemsRequest) returns (ListItemsResponse) {
+    option (google.api.http) = {
+      get : "/v1/items"
+    };
+  }
+
+  // ListUsers 获取用户列表（带分页）
+  // `GET /v1/users?page_num=1&page_size=20` | `ListUsersRequest(page_num: 1, page_size: 20)`
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get : "/v1/users"
+    };
+  }
+}
+
+// ListItemsRequest 请求获取列表项（分页）
+message ListItemsRequest {
+  // page_num 页码，从1开始
+  int64 page_num = 1;
+  // page_size 每页数量
+  int64 page_size = 2;
+}
+
+// ListItemsResponse 列表响应（分页）
+message ListItemsResponse {
+  // page_num 当前页码
+  int64 page_num = 1;
+  // page_size 每页数量
+  int64 page_size = 2;
+  // total 总数
+  int64 total = 3;
+  // list 数据列表
+  repeated Item list = 4;
+}
+
+// Item 列表项
+message Item {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+// ListUsersRequest 请求获取用户列表（分页）
+message ListUsersRequest {
+  // page_num 页码，从1开始
+  int64 page_num = 1;
+  // page_size 每页数量
+  int64 page_size = 2;
+  // keyword 搜索关键字（可选）
+  string keyword = 3;
+}
+
+// ListUsersResponse 用户列表响应（分页）
+message ListUsersResponse {
+  // page_num 当前页码
+  int64 page_num = 1;
+  // page_size 每页数量
+  int64 page_size = 2;
+  // total 总数
+  int64 total = 3;
+  // list 用户列表
+  repeated UserItem list = 4;
+}
+
+// UserItem 用户项
+message UserItem {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+}
