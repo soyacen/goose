@@ -228,6 +228,7 @@ type (
 	}
 	QueryOption func(QueryOptions)
 	QuerySetter interface {
+		HeaderSetter
 		Query(opts ...QueryOption) HeaderSetter
 	}
 )
@@ -367,6 +368,7 @@ type (
 
 	HeaderOption func(HeaderOptions)
 	HeaderSetter interface {
+		BodySetter
 		Header(opts ...HeaderOption) BodySetter
 	}
 )
@@ -671,6 +673,7 @@ type (
 	}
 	BodyOption func(BodyOptions)
 	BodySetter interface {
+		Sender
 		Body(opts ...BodyOption) Sender
 	}
 )

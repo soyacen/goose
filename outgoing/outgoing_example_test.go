@@ -20,7 +20,6 @@ func Example_basicGet() {
 		URL(outgoing.URLString("https://httpbin.org/get")).
 		Query(outgoing.SetQuery("key1", "value1"), outgoing.SetQuery("key2", "value2")).
 		Header(outgoing.SetHeader("X-Custom-Header", "custom-value")).
-		Body().
 		Send(context.Background())
 	if err != nil {
 		log.Printf("Error: %v", err)
@@ -77,8 +76,6 @@ func Example_withClientAndTimeout() {
 
 	result, err := outgoing.Post(outgoing.Client(client)).
 		URL(outgoing.URLString("https://httpbin.org/post")).
-		Query().
-		Header().
 		Body(outgoing.JSONBody(req)).
 		Send(context.Background())
 	if err != nil {
@@ -96,8 +93,6 @@ func Example_formPost() {
 
 	result, err := outgoing.Post().
 		URL(outgoing.URLString("https://httpbin.org/post")).
-		Query().
-		Header().
 		Body(outgoing.FormBody(formData)).
 		Send(context.Background())
 	if err != nil {
@@ -124,8 +119,6 @@ func Example_multipartUpload() {
 
 	result, err := outgoing.Post().
 		URL(outgoing.URLString("https://httpbin.org/post")).
-		Query().
-		Header().
 		Body(outgoing.MultipartBody(formData...)).
 		Send(context.Background())
 	if err != nil {
@@ -150,9 +143,6 @@ func Example_withMiddleware() {
 
 	result, err := outgoing.Get(outgoing.Middlewares(loggingMiddleware)).
 		URL(outgoing.URLString("https://httpbin.org/get")).
-		Query().
-		Header().
-		Body().
 		Send(context.Background())
 	if err != nil {
 		log.Printf("Error: %v", err)
