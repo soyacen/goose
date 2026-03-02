@@ -65,10 +65,12 @@ jobs:
 
       - name: Create and push tag
         run: |
-          git tag middleware/otel/$VERSION
-          git push origin middleware/otel/$VERSION
           git tag middleware/jwtauth/$VERSION
           git push origin middleware/jwtauth/$VERSION
+          git tag middleware/otel/$VERSION
+          git push origin middleware/otel/$VERSION
+          git tag middleware/limiter/$VERSION
+          git push origin middleware/limiter/$VERSION
           git tag $VERSION
           git push origin $VERSION
           echo "Tag ${{ env.VERSION }} created and pushed successfully"
