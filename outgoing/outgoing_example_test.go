@@ -141,7 +141,7 @@ func Example_withMiddleware() {
 		return resp, err
 	}
 
-	result, err := outgoing.Get(outgoing.Middlewares(loggingMiddleware)).
+	result, err := outgoing.Get(outgoing.Middleware(loggingMiddleware)).
 		URL(outgoing.URLString("https://httpbin.org/get")).
 		Send(context.Background())
 	if err != nil {
