@@ -118,7 +118,7 @@ type (
 	}
 )
 
-func Middlewares(middlewares ...client.Middleware) MethodOption {
+func Middleware(middlewares ...client.Middleware) MethodOption {
 	return func(o MethodOptions) {
 		o.Middleware(middlewares...)
 	}
