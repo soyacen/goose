@@ -50,8 +50,8 @@ jobs:
           sed -i "s|github.com/soyacen/goose v[0-9]\+\.[0-9]\+\.[0-9]\+|github.com/soyacen/goose $VERSION|g" middleware/otel/go.mod
           echo "Updated version in middleware/otel/go.mod to $VERSION"
 
-          sed -i "s|github.com/soyacen/goose v[0-9]\+\.[0-9]\+\.[0-9]\+|github.com/soyacen/goose $VERSION|g" middleware/bbr/go.mod
-          echo "Updated version in middleware/bbr/go.mod to $VERSION"
+          sed -i "s|github.com/soyacen/goose v[0-9]\+\.[0-9]\+\.[0-9]\+|github.com/soyacen/goose $VERSION|g" middleware/limiter/go.mod
+          echo "Updated version in middleware/limiter/go.mod to $VERSION"
       - name: Commit and push changes directly
         run: |
           git config --local user.email "action@github.com"
@@ -59,7 +59,7 @@ jobs:
           git add cmd/protoc-gen-goose/main.go
           git add middleware/jwtauth/go.mod
           git add middleware/otel/go.mod
-          git add middleware/bbr/go.mod
+          git add middleware/limiter/go.mod
           git commit -m "chore: update version to $VERSION"
           git push
 

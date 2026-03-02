@@ -1,4 +1,4 @@
-package ctxgoose
+package context
 
 import (
 	"context"

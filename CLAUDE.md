@@ -64,7 +64,7 @@ go test -v ./example/body/...
   - `jwtauth/` - JWT authentication
   - `recovery/` - Panic recovery returning 5xx
   - `timeout/` - Request timeout control
-  - `bbr/` - BBR rate limiter (separate go.mod)
+  - `limiter/` - BBR rate limiter (separate go.mod)
   - `cors/` - CORS handling
   - `ctxgoose/` - Context utilities
   - `otel/` - OpenTelemetry integration
@@ -93,7 +93,7 @@ The `goose.RouteInfo` struct holds HTTP route metadata and is injected into requ
 
 ## Development Notes
 
-- The bbr middleware has its own `go.mod` (middleware/bbr/go.mod)
+- The limiter middleware has its own `go.mod` (middleware/limiter/go.mod)
 - Generated code uses `paths=source_relative` for import paths
 - The plugin requires protoc, protoc-gen-go, and protoc-gen-go-grpc to be installed
 - Examples can be regenerated with `make example` after modifying the plugin

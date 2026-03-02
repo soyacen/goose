@@ -5,7 +5,7 @@ description: |
   Use this skill whenever the user wants to:
   - Create a protobuf-based HTTP API in Go
   - Generate server/client code from .proto files
-  - Use goose middleware (accesslog, basicauth, jwtauth, recovery, timeout, bbr, etc.)
+  - Use goose middleware (accesslog, basicauth, jwtauth, recovery, timeout, limiter, etc.)
   - Build REST endpoints with path parameters, query strings, or request bodies
   - Work with the protoc-gen-goose plugin
 
@@ -283,7 +283,7 @@ router = user.AppendUserHttpRoute(router, &userService{},
 | `jwtauth` | JWT token validation |
 | `recovery` | Panic recovery returning 5xx |
 | `timeout` | Request timeout control |
-| `bbr` | BBR rate limiting |
+| `limiter` | BBR rate limiting |
 | `cors` | CORS headers |
 | `otel` | OpenTelemetry tracing |
 
