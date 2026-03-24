@@ -2,7 +2,6 @@
 package accesslog
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 	"reflect"
@@ -16,20 +15,10 @@ import (
 	"github.com/soyacen/goose/server"
 )
 
-// LoggerFactory is a function type that creates a logger instance from a context
-// Parameters:
-//   - ctx: Context that may contain information for creating the logger
-//
-// Returns:
-//   - *slog.Logger: Logger instance
-//   - error: Error if logger creation fails
-type LoggerFactory func(ctx context.Context) (*slog.Logger, error)
-
 // options holds configuration options for the access log middleware
 type options struct {
-	loggerFactory LoggerFactory           // Factory function to create loggers
-	level         slog.Level              // Log level for access log entries
-	skip          func(route string) bool // Function to determine if logging should be skipped for a given route
+	level slog.Level              // Log level for access log entries
+	skip  func(route string) bool // Function to determine if logging should be skipped for a given route
 }
 
 // apply applies the given options to the options struct
@@ -50,28 +39,13 @@ type Option func(o *options)
 
 // defaultOptions returns the default configuration options
 // Returns:
-//   - *options: Default options with nil logger factory and zero log level
+//   - *options: Default options with zero log level
 func defaultOptions() *options {
 	return &options{
-		loggerFactory: func(ctx context.Context) (*slog.Logger, error) {
-			return slog.Default(), nil
-		},
 		level: slog.LevelInfo,
 		skip: func(fullMethodName string) bool {
 			return false
 		},
-	}
-}
-
-// WithLoggerFactory sets the logger factory function
-// Parameters:
-//   - loggerFactory: Function to create loggers from context
-//
-// Returns:
-//   - Option: Function to set the logger factory option
-func WithLoggerFactory(loggerFactory LoggerFactory) Option {
-	return func(o *options) {
-		o.loggerFactory = loggerFactory
 	}
 }
 
@@ -123,12 +97,6 @@ func Server(opts ...Option) server.Middleware {
 	}
 
 	return func(response http.ResponseWriter, request *http.Request, invoker http.HandlerFunc) {
-		// Skip logging if no logger factory is configured
-		if opt.loggerFactory == nil {
-			invoker(response, request)
-			return
-		}
-
 		// Get the context from the request
 		ctx := request.Context()
 
@@ -143,15 +111,6 @@ func Server(opts ...Option) server.Middleware {
 
 		// Skip logging if the route is in the skip list
 		if opt.skip(route) {
-			invoker(response, request)
-			return
-		}
-
-		// Create a logger using the logger factory
-		logger, err := opt.loggerFactory(ctx)
-		if err != nil {
-			// Log error and continue with request processing if logger creation fails
-			slog.Error("accesslog: failed to get logger", slog.String("error", err.Error()))
 			invoker(response, request)
 			return
 		}
@@ -190,7 +149,7 @@ func Server(opts ...Option) server.Middleware {
 		if d, ok := ctx.Deadline(); ok {
 			fields = append(fields, slog.String("deadline", d.Format(time.RFC3339)))
 		}
-		logger.LogAttrs(ctx, opt.level, route, fields...)
+		slog.LogAttrs(ctx, opt.level, route, fields...)
 
 		// Reset the slice length to 0 to reuse the underlying array
 		fields = fields[:0]
@@ -211,21 +170,8 @@ func Client(opts ...Option) client.Middleware {
 	}
 
 	return func(cli *http.Client, request *http.Request, invoker client.Invoker) (*http.Response, error) {
-		// Skip logging if no logger factory is configured
-		if opt.loggerFactory == nil {
-			return invoker(cli, request)
-		}
-
 		// Get context from the request
 		ctx := request.Context()
-
-		// Create a logger using the logger factory
-		logger, err := opt.loggerFactory(ctx)
-		if err != nil {
-			// Log error and continue with request processing if logger creation fails
-			slog.Error("accesslog: failed to get logger", slog.String("error", err.Error()))
-			return invoker(cli, request)
-		}
 
 		// Record the start time for latency calculation
 		startTime := time.Now()
@@ -273,7 +219,7 @@ func Client(opts ...Option) client.Middleware {
 		}
 
 		// Log the access information
-		logger.LogAttrs(ctx, opt.level, route, fields...)
+		slog.LogAttrs(ctx, opt.level, route, fields...)
 
 		// Reset the slice length to 0 to reuse the underlying array
 		fields = fields[:0]
