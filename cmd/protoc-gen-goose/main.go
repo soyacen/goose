@@ -17,7 +17,7 @@ import (
 
 var flags flag.FlagSet
 
-var Version = "v0.7.17"
+var Version = "v1.7.17"
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
