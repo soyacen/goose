@@ -5,7 +5,7 @@ go 1.23.0
 replace github.com/soyacen/goose => ../../
 
 require (
-	github.com/soyacen/goose v1.7.15
+	github.com/soyacen/goose v0.7.16
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.60.0
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/trace v1.38.0

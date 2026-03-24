@@ -6,7 +6,7 @@ replace github.com/soyacen/goose => ../../
 
 require (
 	github.com/shirou/gopsutil/v4 v4.25.9
-	github.com/soyacen/goose v1.7.15
+	github.com/soyacen/goose v0.7.16
 	github.com/stretchr/testify v1.11.1
 )
 
