@@ -9,6 +9,7 @@ import (
 	"github.com/soyacen/goose/server"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -22,12 +23,22 @@ func ExtractTraceId(ctx context.Context) (string, bool) {
 func Server() server.Middleware {
 	return func(response http.ResponseWriter, request *http.Request, invoker http.HandlerFunc) {
 		var operation string
+		var attrs []attribute.KeyValue
 		routeInfo, ok := goose.ExtractRouteInfo(request.Context())
 		if ok {
 			operation = routeInfo.Pattern
+			attrs = append(attrs,
+				attribute.String("http.route", routeInfo.Pattern),
+				attribute.String("rpc.method", routeInfo.FullMethod),
+			)
 		} else {
 			operation = request.URL.Path
+			attrs = append(attrs, attribute.String("http.route", operation))
 		}
+		attrs = append(attrs, attribute.String("http.method", request.Method))
+		labeler := &otelhttp.Labeler{}
+		labeler.Add(attrs...)
+		request = request.WithContext(otelhttp.ContextWithLabeler(request.Context(), labeler))
 		otelhttp.NewHandler(invoker, operation).ServeHTTP(response, request)
 	}
 }
