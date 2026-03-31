@@ -2,6 +2,8 @@
 package accesslog
 
 import (
+	"bytes"
+	"io"
 	"log/slog"
 	"net/http"
 	"reflect"
@@ -17,8 +19,10 @@ import (
 
 // options holds configuration options for the access log middleware
 type options struct {
-	level slog.Level              // Log level for access log entries
-	skip  func(route string) bool // Function to determine if logging should be skipped for a given route
+	level         slog.Level              // Log level for access log entries
+	skip          func(route string) bool // Function to determine if logging should be skipped for a given route
+	printRequest  bool                    // Whether to print request body
+	printResponse bool                    // Whether to print response body
 }
 
 // apply applies the given options to the options struct
@@ -73,6 +77,30 @@ func WithSkip(skip func(route string) bool) Option {
 	}
 }
 
+// WithPrintRequest enables or disables printing request body in access logs
+// Parameters:
+//   - print: Whether to print request body
+//
+// Returns:
+//   - Option: Function to set the print request option
+func WithPrintRequest(print bool) Option {
+	return func(o *options) {
+		o.printRequest = print
+	}
+}
+
+// WithPrintResponse enables or disables printing response body in access logs
+// Parameters:
+//   - print: Whether to print response body
+//
+// Returns:
+//   - Option: Function to set the print response option
+func WithPrintResponse(print bool) Option {
+	return func(o *options) {
+		o.printResponse = print
+	}
+}
+
 // Server creates a server-side access logging middleware
 // Parameters:
 //   - opts: Variable number of Option functions for configuration
@@ -118,8 +146,18 @@ func Server(opts ...Option) server.Middleware {
 		// Record the start time for latency calculation
 		startTime := time.Now()
 
-		// Wrap the response writer to capture the status code
-		statusCodeResponse := &statusCodeResponseWriter{ResponseWriter: response}
+		// Read request body if printRequest is enabled
+		var requestBody []byte
+		if opt.printRequest && request.Body != nil {
+			requestBody, _ = io.ReadAll(request.Body)
+			request.Body = io.NopCloser(bytes.NewReader(requestBody))
+		}
+
+		// Wrap the response writer to capture the status code and body
+		statusCodeResponse := &statusCodeResponseWriter{
+			ResponseWriter: response,
+			printResponse:  opt.printResponse,
+		}
 
 		// Invoke the next handler
 		invoker(statusCodeResponse, request)
@@ -148,6 +186,12 @@ func Server(opts ...Option) server.Middleware {
 		)
 		if d, ok := ctx.Deadline(); ok {
 			fields = append(fields, slog.String("deadline", d.Format(time.RFC3339)))
+		}
+		if opt.printRequest {
+			fields = append(fields, slog.String("request_body", string(requestBody)))
+		}
+		if opt.printResponse {
+			fields = append(fields, slog.String("response_body", statusCodeResponse.body.String()))
 		}
 		slog.LogAttrs(ctx, opt.level, route, fields...)
 
@@ -231,15 +275,21 @@ func Client(opts ...Option) client.Middleware {
 	}
 }
 
-// statusCodeResponseWriter wraps http.ResponseWriter to capture the status code
+// statusCodeResponseWriter wraps http.ResponseWriter to capture the status code and body
 type statusCodeResponseWriter struct {
 	http.ResponseWriter
-	statusCode int // Captured HTTP status code
+	statusCode    int
+	printResponse bool
+	body          bytes.Buffer
 }
 
-// WriteHeader captures the status code before calling the wrapped WriteHeader
-// Parameters:
-//   - statusCode: HTTP status code to be written
+func (r *statusCodeResponseWriter) Write(p []byte) (int, error) {
+	if r.printResponse {
+		r.body.Write(p)
+	}
+	return r.ResponseWriter.Write(p)
+}
+
 func (r *statusCodeResponseWriter) WriteHeader(statusCode int) {
 	r.statusCode = statusCode
 	r.ResponseWriter.WriteHeader(statusCode)
