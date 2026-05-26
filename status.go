@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -156,6 +157,9 @@ type HeaderGetter interface {
 //   - respErr: error to encode
 //   - response: http.ResponseWriter to write the error response
 func DefaultEncodeError(ctx context.Context, respErr error, response http.ResponseWriter) {
+	if respErr == nil {
+		return
+	}
 	// Default to 500 status code unless error provides specific status code
 	code := http.StatusInternalServerError
 	if statusCodeGetter, ok := respErr.(StatusCodeGetter); ok {
@@ -167,7 +171,7 @@ func DefaultEncodeError(ctx context.Context, respErr error, response http.Respon
 	// If the error implements json.Marshaler, try to marshal it as JSON
 	if marshaler, ok := respErr.(json.Marshaler); ok {
 		if jsonBody, err := marshaler.MarshalJSON(); err != nil {
-			log.Println("goose: body marshal error: ", err)
+			slog.ErrorContext(ctx, "goose: body marshal error", slog.String("error", err.Error()))
 		} else {
 			contentType, body = JsonContentType, jsonBody
 		}
