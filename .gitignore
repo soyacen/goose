@@ -10,7 +10,9 @@
 *.out
 # Dependency directories (remove the comment below to include it)
 # vendor/
-.idea
-.vscode
-.bin
-bin
+/.idea
+/.vscode
+/.bin
+/bin
+/protoc-gen-goose
+.DS_Store

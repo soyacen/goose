@@ -1,0 +1,287 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "leo.goose.example.response_body.v1 API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/http/body/named/response": {
+      "get": {
+        "operationId": "Request_HttpBodyNamedResponse",
+        "summary": "HttpBodyNamedResponse",
+        "parameters": [
+          {
+            "name": "message",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/http/body/omitted/response": {
+      "get": {
+        "operationId": "Request_HttpBodyResponse",
+        "summary": "HttpBodyResponse",
+        "parameters": [
+          {
+            "name": "message",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/http/response": {
+      "get": {
+        "operationId": "Request_HttpResponse",
+        "summary": "HttpResponse",
+        "parameters": [
+          {
+            "name": "message",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/google.rpc.HttpResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/named/response": {
+      "get": {
+        "operationId": "Request_NamedResponse",
+        "summary": "NamedResponse",
+        "parameters": [
+          {
+            "name": "message",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/leo.goose.example.response_body.v1.NamedBodyResponse.Body"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/omitted/response": {
+      "get": {
+        "operationId": "Request_OmittedResponse",
+        "summary": "OmittedResponse",
+        "parameters": [
+          {
+            "name": "message",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/leo.goose.example.response_body.v1.Response"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/star/response": {
+      "get": {
+        "operationId": "Request_StarResponse",
+        "summary": "StarResponse",
+        "parameters": [
+          {
+            "name": "message",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/leo.goose.example.response_body.v1.Response"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "google.rpc.HttpHeader": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ]
+      },
+      "google.rpc.HttpResponse": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "format": "byte"
+          },
+          "headers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/google.rpc.HttpHeader"
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "status",
+          "reason",
+          "body"
+        ]
+      },
+      "leo.goose.example.response_body.v1.NamedBodyResponse": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/leo.goose.example.response_body.v1.NamedBodyResponse.Body"
+          }
+        }
+      },
+      "leo.goose.example.response_body.v1.NamedBodyResponse.Body": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "leo.goose.example.response_body.v1.NamedHttpBodyResponse": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "format": "binary"
+          }
+        }
+      },
+      "leo.goose.example.response_body.v1.Request": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "leo.goose.example.response_body.v1.Response": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      }
+    }
+  }
+}

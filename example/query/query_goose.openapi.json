@@ -1,0 +1,1249 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "leo.goose.example.query.v1 API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/bool": {
+      "get": {
+        "operationId": "BoolQueryRequest_BoolQuery",
+        "summary": "BoolQuery",
+        "parameters": [
+          {
+            "name": "bool",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "optBool",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapBool",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            }
+          },
+          {
+            "name": "listBool",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "name": "listWrapBool",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "boolean",
+                "nullable": true
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/double": {
+      "get": {
+        "operationId": "DoubleQueryRequest_DoubleQuery",
+        "summary": "DoubleQuery",
+        "parameters": [
+          {
+            "name": "double",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "optDouble",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapDouble",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "nullable": true
+            }
+          },
+          {
+            "name": "listDouble",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          },
+          {
+            "name": "listWrapDouble",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "double",
+                "nullable": true
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/enum": {
+      "get": {
+        "operationId": "EnumQueryRequest_EnumQuery",
+        "summary": "EnumQuery",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "UNKNOWN",
+                "OK",
+                "CANCELLED",
+                "UNKNOWN_ERROR"
+              ]
+            }
+          },
+          {
+            "name": "optStatus",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "UNKNOWN",
+                "OK",
+                "CANCELLED",
+                "UNKNOWN_ERROR"
+              ],
+              "nullable": true
+            }
+          },
+          {
+            "name": "listStatus",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "UNKNOWN",
+                  "OK",
+                  "CANCELLED",
+                  "UNKNOWN_ERROR"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/float": {
+      "get": {
+        "operationId": "FloatQueryRequest_FloatQuery",
+        "summary": "FloatQuery",
+        "parameters": [
+          {
+            "name": "float",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "float"
+            }
+          },
+          {
+            "name": "optFloat",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapFloat",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "nullable": true
+            }
+          },
+          {
+            "name": "listFloat",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "float"
+              }
+            }
+          },
+          {
+            "name": "listWrapFloat",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "float",
+                "nullable": true
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/int32": {
+      "get": {
+        "operationId": "Int32QueryRequest_Int32Query",
+        "summary": "Int32Query",
+        "parameters": [
+          {
+            "name": "int32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sint32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sfixed32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "optInt32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optSint32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optSfixed32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapInt32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "listInt32",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "listSint32",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "listSfixed32",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "listWrapInt32",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/int64": {
+      "get": {
+        "operationId": "Int64QueryRequest_Int64Query",
+        "summary": "Int64Query",
+        "parameters": [
+          {
+            "name": "int64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "sint64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "sfixed64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "optInt64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optSint64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optSfixed64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapInt64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "listInt64",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "listSint64",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "listSfixed64",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "listWrapInt64",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64",
+                "nullable": true
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/string": {
+      "get": {
+        "operationId": "StringQueryRequest_StringQuery",
+        "summary": "StringQuery",
+        "parameters": [
+          {
+            "name": "string",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "optString",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapString",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "listString",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "listWrapString",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/uint32": {
+      "get": {
+        "operationId": "Uint32QueryRequest_Uint32Query",
+        "summary": "Uint32Query",
+        "parameters": [
+          {
+            "name": "uint32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fixed32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "optUint32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optFixed32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapUint32",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "listUint32",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "listFixed32",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "listWrapUint32",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/uint64": {
+      "get": {
+        "operationId": "Uint64QueryRequest_Uint64Query",
+        "summary": "Uint64Query",
+        "parameters": [
+          {
+            "name": "uint64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "fixed64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "optUint64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optFixed64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapUint64",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "listUint64",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "listFixed64",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "listWrapUint64",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64",
+                "nullable": true
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "leo.goose.example.query.v1.BoolQueryRequest": {
+        "type": "object",
+        "properties": {
+          "bool": {
+            "type": "boolean"
+          },
+          "listBool": {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "listWrapBool": {
+            "type": "array",
+            "items": {
+              "type": "boolean",
+              "nullable": true
+            }
+          },
+          "optBool": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "wrapBool": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "required": [
+          "bool"
+        ]
+      },
+      "leo.goose.example.query.v1.DoubleQueryRequest": {
+        "type": "object",
+        "properties": {
+          "double": {
+            "type": "number",
+            "format": "double"
+          },
+          "listDouble": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "listWrapDouble": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double",
+              "nullable": true
+            }
+          },
+          "optDouble": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "wrapDouble": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "required": [
+          "double"
+        ]
+      },
+      "leo.goose.example.query.v1.EnumQueryRequest": {
+        "type": "object",
+        "properties": {
+          "listStatus": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "UNKNOWN",
+                "OK",
+                "CANCELLED",
+                "UNKNOWN_ERROR"
+              ]
+            }
+          },
+          "optStatus": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "OK",
+              "CANCELLED",
+              "UNKNOWN_ERROR"
+            ],
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "OK",
+              "CANCELLED",
+              "UNKNOWN_ERROR"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "leo.goose.example.query.v1.FloatQueryRequest": {
+        "type": "object",
+        "properties": {
+          "float": {
+            "type": "number",
+            "format": "float"
+          },
+          "listFloat": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "float"
+            }
+          },
+          "listWrapFloat": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "float",
+              "nullable": true
+            }
+          },
+          "optFloat": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "wrapFloat": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          }
+        },
+        "required": [
+          "float"
+        ]
+      },
+      "leo.goose.example.query.v1.Int32QueryRequest": {
+        "type": "object",
+        "properties": {
+          "int32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "listInt32": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "listSfixed32": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "listSint32": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "listWrapInt32": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          "optInt32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "optSfixed32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "optSint32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sfixed32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sint32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "wrapInt32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "required": [
+          "int32",
+          "sint32",
+          "sfixed32"
+        ]
+      },
+      "leo.goose.example.query.v1.Int64QueryRequest": {
+        "type": "object",
+        "properties": {
+          "int64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "listInt64": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "listSfixed64": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "listSint64": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "listWrapInt64": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          "optInt64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "optSfixed64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "optSint64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "sfixed64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sint64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "wrapInt64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "required": [
+          "int64",
+          "sint64",
+          "sfixed64"
+        ]
+      },
+      "leo.goose.example.query.v1.StringQueryRequest": {
+        "type": "object",
+        "properties": {
+          "listString": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "listWrapString": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "optString": {
+            "type": "string",
+            "nullable": true
+          },
+          "string": {
+            "type": "string"
+          },
+          "wrapString": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "string"
+        ]
+      },
+      "leo.goose.example.query.v1.Uint32QueryRequest": {
+        "type": "object",
+        "properties": {
+          "fixed32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "listFixed32": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "listUint32": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "listWrapUint32": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          "optFixed32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "optUint32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "uint32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "wrapUint32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "required": [
+          "uint32",
+          "fixed32"
+        ]
+      },
+      "leo.goose.example.query.v1.Uint64QueryRequest": {
+        "type": "object",
+        "properties": {
+          "fixed64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "listFixed64": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "listUint64": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "listWrapUint64": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          "optFixed64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "optUint64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "uint64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "wrapUint64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "required": [
+          "uint64",
+          "fixed64"
+        ]
+      }
+    }
+  }
+}

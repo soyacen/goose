@@ -9,6 +9,7 @@ import (
 
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/client"
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/constant"
+	"github.com/soyacen/goose/cmd/protoc-gen-goose/openapi"
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/parser"
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/server"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -17,7 +18,10 @@ import (
 
 var flags flag.FlagSet
 
-var Version = "v1.7.18"
+var (
+	Version = "v1.7.18"
+	openapiFlag = flags.Bool("openapi", false, "generate OpenAPI documentation")
+)
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
@@ -87,7 +91,11 @@ func generate(plugin *protogen.Plugin) error {
 				return err
 			}
 		}
-
+		if *openapiFlag {
+			if err := openapi.Generate(plugin, file, services); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

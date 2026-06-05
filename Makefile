@@ -21,6 +21,7 @@ example:
 	--go_opt=paths=source_relative \
 	--goose_out=. \
 	--goose_opt=paths=source_relative \
+	--goose_opt=openapi=true \
 	example/*/*.proto
 
 .PHONY: all

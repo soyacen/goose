@@ -1,0 +1,867 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "leo.goose.example.path.v1 API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/{bool}/{opt_bool}/{wrap_bool}": {
+      "get": {
+        "operationId": "BoolPathRequest_BoolPath",
+        "summary": "BoolPath",
+        "parameters": [
+          {
+            "name": "bool",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "optBool",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapBool",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/{double}/{opt_double}/{wrap_double}": {
+      "get": {
+        "operationId": "DoublePathRequest_DoublePath",
+        "summary": "DoublePath",
+        "parameters": [
+          {
+            "name": "double",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "optDouble",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapDouble",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/{float}/{opt_float}/{wrap_float}": {
+      "get": {
+        "operationId": "FloatPathRequest_FloatPath",
+        "summary": "FloatPath",
+        "parameters": [
+          {
+            "name": "float",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "float"
+            }
+          },
+          {
+            "name": "optFloat",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapFloat",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/{int32}/{sint32}/{sfixed32}/{opt_int32}/{opt_sint32}/{opt_sfixed32}/{wrap_int32}": {
+      "get": {
+        "operationId": "Int32PathRequest_Int32Path",
+        "summary": "Int32Path",
+        "parameters": [
+          {
+            "name": "int32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sint32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sfixed32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "optInt32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optSint32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optSfixed32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapInt32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/{int64}/{sint64}/{sfixed64}/{opt_int64}/{opt_sint64}/{opt_sfixed64}/{wrap_int64}": {
+      "get": {
+        "operationId": "Int64PathRequest_Int64Path",
+        "summary": "Int64Path",
+        "parameters": [
+          {
+            "name": "int64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "sint64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "sfixed64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "optInt64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optSint64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optSfixed64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapInt64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/{status}/{opt_status}": {
+      "get": {
+        "operationId": "EnumPathRequest_EnumPath",
+        "summary": "EnumPath",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "UNKNOWN",
+                "OK",
+                "CANCELLED",
+                "UNKNOWN_ERROR"
+              ]
+            }
+          },
+          {
+            "name": "optStatus",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "UNKNOWN",
+                "OK",
+                "CANCELLED",
+                "UNKNOWN_ERROR"
+              ],
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/{string}/{opt_string}/{wrap_string}/{multi_string...}": {
+      "get": {
+        "operationId": "StringPathRequest_StringPath",
+        "summary": "StringPath",
+        "parameters": [
+          {
+            "name": "string",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "optString",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapString",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "multiString",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/{uint32}/{fixed32}/{opt_uint32}/{opt_fixed32}/{wrap_uint32}": {
+      "get": {
+        "operationId": "Uint32PathRequest_Uint32Path",
+        "summary": "Uint32Path",
+        "parameters": [
+          {
+            "name": "uint32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fixed32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "optUint32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optFixed32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapUint32",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/{uint64}/{fixed64}/{opt_uint64}/{opt_fixed64}/{wrap_uint64}": {
+      "get": {
+        "operationId": "Uint64PathRequest_Uint64Path",
+        "summary": "Uint64Path",
+        "parameters": [
+          {
+            "name": "uint64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "fixed64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "optUint64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "optFixed64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "wrapUint64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "leo.goose.example.path.v1.BoolPathRequest": {
+        "type": "object",
+        "properties": {
+          "bool": {
+            "type": "boolean"
+          },
+          "optBool": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "wrapBool": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "required": [
+          "bool"
+        ]
+      },
+      "leo.goose.example.path.v1.DoublePathRequest": {
+        "type": "object",
+        "properties": {
+          "double": {
+            "type": "number",
+            "format": "double"
+          },
+          "optDouble": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "wrapDouble": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "required": [
+          "double"
+        ]
+      },
+      "leo.goose.example.path.v1.EnumPathRequest": {
+        "type": "object",
+        "properties": {
+          "optStatus": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "OK",
+              "CANCELLED",
+              "UNKNOWN_ERROR"
+            ],
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "OK",
+              "CANCELLED",
+              "UNKNOWN_ERROR"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "leo.goose.example.path.v1.FloatPathRequest": {
+        "type": "object",
+        "properties": {
+          "float": {
+            "type": "number",
+            "format": "float"
+          },
+          "optFloat": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "wrapFloat": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          }
+        },
+        "required": [
+          "float"
+        ]
+      },
+      "leo.goose.example.path.v1.Int32PathRequest": {
+        "type": "object",
+        "properties": {
+          "int32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "optInt32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "optSfixed32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "optSint32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sfixed32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sint32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "wrapInt32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "required": [
+          "int32",
+          "sint32",
+          "sfixed32"
+        ]
+      },
+      "leo.goose.example.path.v1.Int64PathRequest": {
+        "type": "object",
+        "properties": {
+          "int64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "optInt64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "optSfixed64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "optSint64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "sfixed64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sint64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "wrapInt64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "required": [
+          "int64",
+          "sint64",
+          "sfixed64"
+        ]
+      },
+      "leo.goose.example.path.v1.StringPathRequest": {
+        "type": "object",
+        "properties": {
+          "multiString": {
+            "type": "string"
+          },
+          "optString": {
+            "type": "string",
+            "nullable": true
+          },
+          "string": {
+            "type": "string"
+          },
+          "wrapString": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "string",
+          "multiString"
+        ]
+      },
+      "leo.goose.example.path.v1.Uint32PathRequest": {
+        "type": "object",
+        "properties": {
+          "fixed32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "optFixed32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "optUint32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "uint32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "wrapUint32": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "required": [
+          "uint32",
+          "fixed32"
+        ]
+      },
+      "leo.goose.example.path.v1.Uint64PathRequest": {
+        "type": "object",
+        "properties": {
+          "fixed64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "optFixed64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "optUint64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "uint64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "wrapUint64": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "required": [
+          "uint64",
+          "fixed64"
+        ]
+      }
+    }
+  }
+}
