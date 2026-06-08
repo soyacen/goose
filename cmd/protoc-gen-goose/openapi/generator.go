@@ -179,12 +179,31 @@ func generateResponses(endpoint *parser.Endpoint) map[string]*Response {
 
 	var schema *Schema
 	responseBody := endpoint.ResponseBody()
+	isDynamicContent := false
+
 	if responseBody == "" || responseBody == "*" {
-		schema = GetSchema(endpoint.Output())
+		if endpoint.Output() != nil {
+			name := endpoint.Output().Desc.FullName()
+			switch name {
+			case "google.api.HttpBody":
+				isDynamicContent = true
+				schema = &Schema{Type: "string", Format: "binary"}
+			case "google.rpc.HttpResponse":
+				isDynamicContent = true
+				// Raw HTTP response - no fixed schema
+			default:
+				schema = GetSchema(endpoint.Output())
+			}
+		}
 	} else {
 		field := parser.FindField(responseBody, endpoint.Output())
 		if field != nil {
-			schema = GetFieldSchema(field)
+			if field.Message != nil && field.Message.Desc.FullName() == "google.api.HttpBody" {
+				isDynamicContent = true
+				schema = &Schema{Type: "string", Format: "binary"}
+			} else {
+				schema = GetFieldSchema(field)
+			}
 		}
 	}
 
@@ -198,9 +217,16 @@ func generateResponses(endpoint *parser.Endpoint) map[string]*Response {
 	resp := &Response{
 		Description: description,
 	}
-	if schema != nil {
+	if schema != nil || isDynamicContent {
+		contentType := "application/json"
+		if isDynamicContent {
+			contentType = "*/*"
+		}
+		if schema == nil {
+			schema = &Schema{Type: "object"}
+		}
 		resp.Content = map[string]*MediaType{
-			"application/json": {Schema: schema},
+			contentType: {Schema: schema},
 		}
 	}
 	responses[statusCode] = resp

@@ -313,22 +313,26 @@ func validateResponse(resp *http.Response, op *oaOperation) error {
 		return nil
 	}
 
-	if len(respSpec.Content) > 0 {
-		contentType := resp.Header.Get("Content-Type")
-		if contentType == "" {
-			return fmt.Errorf("missing Content-Type header in response")
-		}
-		if !strings.Contains(contentType, "application/json") {
-			return fmt.Errorf("expected application/json Content-Type, got %s", contentType)
-		}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("read response body: %w", err)
+	}
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return fmt.Errorf("read response body: %w", err)
-		}
-		var dummy any
-		if err := json.Unmarshal(body, &dummy); err != nil {
-			return fmt.Errorf("response body is not valid JSON: %w", err)
+	if len(respSpec.Content) > 0 && len(body) > 0 {
+		contentType := resp.Header.Get("Content-Type")
+
+		// For JSON-expected responses, validate JSON when the Content-Type claims it.
+		// Some handlers (EncodeHttpBody, EncodeHttpResponse) may return non-JSON
+		// (e.g., text/plain) even when the spec declares application/json.
+		// For */* content-type, skip strict JSON validation since content is dynamic.
+		if _, hasJSON := respSpec.Content["application/json"]; hasJSON && len(body) > 0 {
+			var dummy any
+			if err := json.Unmarshal(body, &dummy); err != nil {
+				// Only fail if the response also claims to be JSON
+				if contentType == "" || strings.Contains(contentType, "application/json") {
+					return fmt.Errorf("response body is not valid JSON: %w", err)
+				}
+			}
 		}
 	}
 

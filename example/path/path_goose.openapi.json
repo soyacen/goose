@@ -41,7 +41,7 @@
           "200": {
             "description": "Success",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -94,7 +94,7 @@
           "200": {
             "description": "Success",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -147,7 +147,7 @@
           "200": {
             "description": "Success",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -238,7 +238,7 @@
           "200": {
             "description": "Success",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -329,7 +329,7 @@
           "200": {
             "description": "Success",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -382,7 +382,7 @@
           "200": {
             "description": "Success",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -440,7 +440,7 @@
           "200": {
             "description": "Success",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -512,7 +512,7 @@
           "200": {
             "description": "Success",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -584,7 +584,7 @@
           "200": {
             "description": "Success",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
                   "type": "string",
                   "format": "binary"

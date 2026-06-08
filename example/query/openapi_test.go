@@ -1,4 +1,4 @@
-package path
+package query
 
 import (
 	"bytes"
@@ -236,9 +236,6 @@ func buildURLPath(path string, params []oaParameter) string {
 			placeholder := "{" + p.Name + "}"
 			value := pathParamExample(p.Name, p.Schema)
 			result = strings.ReplaceAll(result, placeholder, value)
-
-			placeholderWildcard := "{" + p.Name + "...}"
-			result = strings.ReplaceAll(result, placeholderWildcard, value)
 		}
 	}
 	return result
@@ -347,7 +344,7 @@ func validateResponse(resp *http.Response, op *oaOperation) error {
 func getOpenAPIPath() string {
 	_, b, _, _ := runtime.Caller(0)
 	baseDir := filepath.Dir(b)
-	return filepath.Join(baseDir, "path_goose.openapi.json")
+	return filepath.Join(baseDir, "query_goose.openapi.json")
 }
 
 func loadOpenAPIDoc(t *testing.T) *openAPIDoc {
@@ -371,40 +368,30 @@ func TestOpenAPISpec(t *testing.T) {
 		t.Fatal("OpenAPI document has no paths")
 	}
 
-	// Each path service must run on its own port because Go's ServeMux
-	// rejects overlapping patterns like /v1/{int32}/... and /v1/{int64}/...
-	routeSetups := map[string]struct {
-		port     int
-		register func(*http.ServeMux) *http.ServeMux
-	}{
-		"BoolPathRequest_BoolPath": {48091, func(r *http.ServeMux) *http.ServeMux {
-			return AppendBoolPathHttpRoute(r, &MockBoolPathService{})
-		}},
-		"Int32PathRequest_Int32Path": {48092, func(r *http.ServeMux) *http.ServeMux {
-			return AppendInt32PathHttpRoute(r, &MockInt32PathService{})
-		}},
-		"Int64PathRequest_Int64Path": {48093, func(r *http.ServeMux) *http.ServeMux {
-			return AppendInt64PathHttpRoute(r, &MockInt64PathService{})
-		}},
-		"Uint32PathRequest_Uint32Path": {48094, func(r *http.ServeMux) *http.ServeMux {
-			return AppendUint32PathHttpRoute(r, &MockUint32PathService{})
-		}},
-		"Uint64PathRequest_Uint64Path": {48095, func(r *http.ServeMux) *http.ServeMux {
-			return AppendUint64PathHttpRoute(r, &MockUint64PathService{})
-		}},
-		"FloatPathRequest_FloatPath": {48096, func(r *http.ServeMux) *http.ServeMux {
-			return AppendFloatPathHttpRoute(r, &MockFloatPathService{})
-		}},
-		"DoublePathRequest_DoublePath": {48097, func(r *http.ServeMux) *http.ServeMux {
-			return AppendDoublePathHttpRoute(r, &MockDoublePathService{})
-		}},
-		"StringPathRequest_StringPath": {48098, func(r *http.ServeMux) *http.ServeMux {
-			return AppendStringPathHttpRoute(r, &MockStringPathService{})
-		}},
-		"EnumPathRequest_EnumPath": {48099, func(r *http.ServeMux) *http.ServeMux {
-			return AppendEnumPathHttpRoute(r, &MockEnumPathService{})
-		}},
-	}
+	port := 28090
+	server := &http.Server{}
+	defer server.Shutdown(context.Background())
+	go func() {
+		router := http.NewServeMux()
+		router = AppendBoolQueryHttpRoute(router, &MockBoolQueryService{})
+		router = AppendInt32QueryHttpRoute(router, &MockInt32QueryService{})
+		router = AppendInt64QueryHttpRoute(router, &MockInt64QueryService{})
+		router = AppendUint32QueryHttpRoute(router, &MockUint32QueryService{})
+		router = AppendUint64QueryHttpRoute(router, &MockUint64QueryService{})
+		router = AppendFloatQueryHttpRoute(router, &MockFloatQueryService{})
+		router = AppendDoubleQueryHttpRoute(router, &MockDoubleQueryService{})
+		router = AppendStringQueryHttpRoute(router, &MockStringQueryService{})
+		router = AppendEnumQueryHttpRoute(router, &MockEnumQueryService{})
+		server.Addr = fmt.Sprintf(":%d", port)
+		server.Handler = router
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			panic(err)
+		}
+	}()
+	time.Sleep(500 * time.Millisecond)
+
+	baseURL := fmt.Sprintf("http://localhost:%d", port)
+	client := &http.Client{Timeout: 5 * time.Second}
 
 	for path, item := range doc.Paths {
 		ops := map[string]*oaOperation{
@@ -423,26 +410,6 @@ func TestOpenAPISpec(t *testing.T) {
 			}
 
 			t.Run(op.OperationID, func(t *testing.T) {
-				setup, ok := routeSetups[op.OperationID]
-				if !ok {
-					t.Fatalf("unknown operation: %s", op.OperationID)
-				}
-
-				server := &http.Server{}
-				defer server.Shutdown(context.Background())
-				go func() {
-					router := setup.register(http.NewServeMux())
-					server.Addr = fmt.Sprintf(":%d", setup.port)
-					server.Handler = router
-					if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-						panic(err)
-					}
-				}()
-				time.Sleep(100 * time.Millisecond)
-
-				baseURL := fmt.Sprintf("http://localhost:%d", setup.port)
-				client := &http.Client{Timeout: 5 * time.Second}
-
 				req, _, err := buildRequest(baseURL, path, op, doc.Components)
 				if err != nil {
 					t.Fatalf("build request: %v", err)
@@ -468,26 +435,33 @@ func TestOpenAPISpec(t *testing.T) {
 func TestOpenAPIContent(t *testing.T) {
 	doc := loadOpenAPIDoc(t)
 
-	requiredPaths := []string{
-		"/v1/{bool}/{opt_bool}/{wrap_bool}",
-		"/v1/{int32}/{sint32}/{sfixed32}/{opt_int32}/{opt_sint32}/{opt_sfixed32}/{wrap_int32}",
-		"/v1/{int64}/{sint64}/{sfixed64}/{opt_int64}/{opt_sint64}/{opt_sfixed64}/{wrap_int64}",
-		"/v1/{uint32}/{fixed32}/{opt_uint32}/{opt_fixed32}/{wrap_uint32}",
-		"/v1/{uint64}/{fixed64}/{opt_uint64}/{opt_fixed64}/{wrap_uint64}",
-		"/v1/{float}/{opt_float}/{wrap_float}",
-		"/v1/{double}/{opt_double}/{wrap_double}",
-		"/v1/{string}/{opt_string}/{wrap_string}/{multi_string...}",
-		"/v1/{status}/{opt_status}",
+	requiredPaths := map[string][]string{
+		"/v1/bool":   {"GET"},
+		"/v1/int32":  {"GET"},
+		"/v1/int64":  {"GET"},
+		"/v1/uint32": {"GET"},
+		"/v1/uint64": {"GET"},
+		"/v1/float":  {"GET"},
+		"/v1/double": {"GET"},
+		"/v1/string": {"GET"},
+		"/v1/enum":   {"GET"},
 	}
 
-	for _, requiredPath := range requiredPaths {
+	for requiredPath, methods := range requiredPaths {
 		item, ok := doc.Paths[requiredPath]
 		if !ok {
 			t.Errorf("missing required path: %s", requiredPath)
 			continue
 		}
-		if item.Get == nil {
-			t.Errorf("path %s missing GET operation", requiredPath)
+
+		ops := map[string]*oaOperation{
+			"GET": item.Get,
+		}
+
+		for _, method := range methods {
+			if ops[method] == nil {
+				t.Errorf("path %s missing %s operation", requiredPath, method)
+			}
 		}
 	}
 
@@ -496,15 +470,15 @@ func TestOpenAPIContent(t *testing.T) {
 	}
 
 	requiredSchemas := []string{
-		"leo.goose.example.path.v1.BoolPathRequest",
-		"leo.goose.example.path.v1.Int32PathRequest",
-		"leo.goose.example.path.v1.Int64PathRequest",
-		"leo.goose.example.path.v1.Uint32PathRequest",
-		"leo.goose.example.path.v1.Uint64PathRequest",
-		"leo.goose.example.path.v1.FloatPathRequest",
-		"leo.goose.example.path.v1.DoublePathRequest",
-		"leo.goose.example.path.v1.StringPathRequest",
-		"leo.goose.example.path.v1.EnumPathRequest",
+		"leo.goose.example.query.v1.BoolQueryRequest",
+		"leo.goose.example.query.v1.Int32QueryRequest",
+		"leo.goose.example.query.v1.Int64QueryRequest",
+		"leo.goose.example.query.v1.Uint32QueryRequest",
+		"leo.goose.example.query.v1.Uint64QueryRequest",
+		"leo.goose.example.query.v1.FloatQueryRequest",
+		"leo.goose.example.query.v1.DoubleQueryRequest",
+		"leo.goose.example.query.v1.StringQueryRequest",
+		"leo.goose.example.query.v1.EnumQueryRequest",
 	}
 	for _, name := range requiredSchemas {
 		if _, ok := doc.Components.Schemas[name]; !ok {
@@ -512,18 +486,33 @@ func TestOpenAPIContent(t *testing.T) {
 		}
 	}
 
-	// Verify path parameters exist
-	boolOp := doc.Paths["/v1/{bool}/{opt_bool}/{wrap_bool}"].Get
+	// Verify query parameters exist
+	boolOp := doc.Paths["/v1/bool"].Get
 	if boolOp != nil {
 		foundBool := false
 		for _, p := range boolOp.Parameters {
-			if p.In == "path" && p.Name == "bool" {
+			if p.In == "query" && p.Name == "bool" {
 				foundBool = true
 				break
 			}
 		}
 		if !foundBool {
-			t.Error("GET /v1/{bool}/{opt_bool}/{wrap_bool} missing path parameter 'bool'")
+			t.Error("GET /v1/bool missing query parameter 'bool'")
+		}
+	}
+
+	// Verify array query parameters
+	int32Op := doc.Paths["/v1/int32"].Get
+	if int32Op != nil {
+		foundList := false
+		for _, p := range int32Op.Parameters {
+			if p.In == "query" && p.Name == "listInt32" {
+				foundList = true
+				break
+			}
+		}
+		if !foundList {
+			t.Error("GET /v1/int32 missing query parameter 'listInt32'")
 		}
 	}
 }
