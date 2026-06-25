@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: error_handling
+title: 错误处理与恢复机制
+scope: []
+source_files:
+    - status.go
+    - common.go
+    - middleware/recovery/middleware.go
+    - middleware/errorlog/middleware.go
+    - client/resolver/error.go
+depends_on: []
+related_to: []

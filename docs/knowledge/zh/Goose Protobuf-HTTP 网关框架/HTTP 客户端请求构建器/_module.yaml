@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: outgoing
+title: HTTP 客户端请求构建器
+scope:
+    - outgoing/
+source_files: []
+depends_on: []
+related_to:
+    - path: client

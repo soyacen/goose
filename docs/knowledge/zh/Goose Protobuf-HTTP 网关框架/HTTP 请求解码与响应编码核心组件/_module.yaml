@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: server
+title: HTTP 请求解码与响应编码核心组件
+scope:
+    - server/
+source_files: []
+depends_on: []
+related_to:
+    - path: client
+    - path: middleware
+    - path: protoc_gen_goose

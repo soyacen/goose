@@ -12,6 +12,7 @@
 # vendor/
 /.idea
 /.vscode
+/.qoder
 /.bin
 /bin
 /protoc-gen-goose

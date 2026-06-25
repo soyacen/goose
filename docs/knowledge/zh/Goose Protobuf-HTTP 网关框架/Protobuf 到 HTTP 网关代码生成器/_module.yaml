@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: protoc_gen_goose
+title: Protobuf 到 HTTP 网关代码生成器
+scope:
+    - cmd/protoc-gen-goose/
+source_files: []
+depends_on: []
+related_to:
+    - path: client
+    - path: server
