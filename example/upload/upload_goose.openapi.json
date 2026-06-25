@@ -1,0 +1,166 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "leo.goose.example.upload.v1 API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/upload/api": {
+      "put": {
+        "operationId": "HttpBody_Upload",
+        "summary": "Upload",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/leo.goose.example.upload.v1.Response"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/upload/embd": {
+      "put": {
+        "operationId": "HttpBodyRequest_UploadEmbed",
+        "summary": "UploadEmbed",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/leo.goose.example.upload.v1.Response"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    },
+    "/v1/upload/rpc": {
+      "put": {
+        "operationId": "HttpRequest_UploadForRPC",
+        "summary": "UploadForRPC",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/google.rpc.HttpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/leo.goose.example.upload.v1.Response"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "google.rpc.HttpHeader": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ]
+      },
+      "google.rpc.HttpRequest": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "format": "byte"
+          },
+          "headers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/google.rpc.HttpHeader"
+            }
+          },
+          "method": {
+            "type": "string"
+          },
+          "uri": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "uri",
+          "body"
+        ]
+      },
+      "leo.goose.example.upload.v1.HttpBodyRequest": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "format": "binary"
+          }
+        }
+      },
+      "leo.goose.example.upload.v1.Response": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+syntax = "proto3";
+package leo.goose.example.upload.v1;
+option go_package = "github.com/soyacen/goose/example/upload/v1;upload";
+
+import "google/api/annotations.proto";
+import "google/api/httpbody.proto";
+import "google/rpc/http.proto";
+
+service Upload {
+  rpc Upload(google.api.HttpBody) returns (Response) {
+    option (google.api.http) = {
+      put : "/v1/upload/api"
+      body : "*"
+    };
+  }
+
+  rpc UploadEmbed(HttpBodyRequest) returns (Response) {
+    option (google.api.http) = {
+      put : "/v1/upload/embd"
+      body : "body"
+    };
+  }
+
+  rpc UploadForRPC(google.rpc.HttpRequest) returns (Response) {
+    option (google.api.http) = {
+      put : "/v1/upload/rpc"
+      body : "*"
+    };
+  }
+}
+
+message BodyRequest { string message = 1; }
+
+message NamedBodyRequest {
+  message Body { string message = 1; }
+  Body body = 1;
+}
+
+message HttpBodyRequest { google.api.HttpBody body = 1; }
+
+message Response { string message = 1; }
