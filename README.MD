@@ -16,8 +16,9 @@ Goose 是一个面向 Go 的 Protobuf + HTTP/REST 代码生成与运行时支持
 - protoc 插件：`cmd/protoc-gen-goose`，用于从 .proto 生成服务端/客户端样板代码。
 - 服务端/客户端编码器与解码器：位于 `server` 与 `client` 包，支持常见的请求/响应体映射。
 - 常用中间件：`middleware` 目录下包含访问日志、基本认证、JWT、恢复、请求日志、超时等实现，便于集成到生成的服务中。
+- 文件上传：`upload` 包提供 multipart/form-data 解析与文件保存，支持单文件、多文件、混合表单、文件大小限制及扩展名自动推断。
 - OpenAPI 文档生成：插件可自动生成 `*_goose.openapi.json`，完整描述 HTTP 接口的 path、参数、请求体、响应与 schema。
-- 丰富的示例：`example` 目录包含多个基于 proto 的示例（body、path、query、response_body、user），包含生成后的 Go 文件、OpenAPI 文档与测试。
+- 丰富的示例：`example` 目录包含多个基于 proto 的示例（body、path、query、response_body、user、upload），包含生成后的 Go 文件、OpenAPI 文档与测试。
 - 辅助工具：验证、路径处理、pprof、格式化辅助等工具函数。
 
 ## 目录概览
@@ -26,6 +27,7 @@ Goose 是一个面向 Go 的 Protobuf + HTTP/REST 代码生成与运行时支持
 - `client/`：客户端相关的编码/解码与中间件选项。
 - `server/`：服务端相关的编码/解码与中间件选项。
 - `middleware/`：一组可复用的中间件实现（accesslog、basicauth、jwtauth、recovery、requestlog、timeout 等）。
+- `upload/`：multipart/form-data 解析与文件保存，支持单文件、多文件、混合字段、大小限制及扩展名推断。
 - `example/`：示例 proto、生成的 Go 文件与 OpenAPI 文档，演示如何使用插件和运行生成代码。
 - `internal/`、`tools/`：库内部工具与构建脚本。
 
@@ -80,6 +82,42 @@ protoc --go_out=. --go-grpc_out=. --goose_out=. \
 4. 使用生成的客户端（或 curl/postman）调用接口并查看响应。
 
 示例中也包含对应的测试文件（`*_test.go`），可直接运行 `go test` 来查看行为。每个示例还包含 `openapi_test.go`，用于根据生成的 `*_goose.openapi.json` 自动验证 OpenAPI 文档与实际 HTTP 接口行为的一致性。
+
+## 文件上传（upload 包）
+
+`upload` 包封装了 multipart/form-data 的解析与文件保存，可与生成的服务端代码或自定义 HTTP 处理器配合使用。
+
+```go
+import "github.com/soyacen/goose/upload"
+
+handler, err := upload.NewHandler(
+    upload.WithUploadDir("./uploads"),
+    upload.WithMaxFileSize(32 << 20),   // 单文件 32MB
+    upload.WithMaxTotalSize(128 << 20), // 总大小 128MB
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+// data 为请求体字节，contentType 为 Content-Type 头
+result, err := handler.Handle(data, contentType)
+if err != nil {
+    log.Printf("upload failed: %v", err)
+    return
+}
+log.Printf("saved %d file(s), %d field(s)", result.FileCount, result.FieldCount)
+```
+
+主要功能：
+
+- 自动识别 `multipart/form-data` 与原始 body，分别处理
+- 多文件上传（同名字段多文件全部独立保存）
+- 混合表单：文件与文本字段同时提交，字段名重复时自动聚合为切片
+- 空文件检测（`SavedFile.IsEmpty == true`）
+- 按 Content-Type 或原始文件名推断扩展名
+- 导出错误：`ErrFileTooLarge`、`ErrTotalTooLarge`、`ErrMissBoundary`
+
+完整集成示例见 `example/upload/`。
 
 ## 中间件
 
