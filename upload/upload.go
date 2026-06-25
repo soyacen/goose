@@ -1,11 +1,11 @@
-// Package upload provides full-featured multipart/form-data parsing and file saving.
+// Package upload provides multipart/form-data parsing and file saving.
 //
 // Features:
 //   - File parts: saved to disk with content-type, filename, field-name metadata
 //   - Form fields: collected with support for repeated names (array aggregation)
 //   - Empty file parts: detected and marked with IsEmpty=true
 //   - Size limits: per-file and total upload size enforcement
-//   - Same field name multiple files: all saved independently (e.g. files[])
+//   - Same field name multiple files: all saved independently
 //   - Extension inference: from Content-Type or original filename
 package upload
 
@@ -22,20 +22,11 @@ import (
 	"time"
 )
 
-// ---------------------------------------------------------------------------
-// Errors
-// ---------------------------------------------------------------------------
+// ErrFileTooLarge is returned when a single file exceeds MaxFileSize.
+var ErrFileTooLarge = errors.New("file exceeds max file size limit")
 
-var (
-	// ErrFileTooLarge is returned when a single file exceeds MaxFileSize.
-	ErrFileTooLarge = errors.New("file exceeds max file size limit")
-	// ErrTotalTooLarge is returned when total upload size exceeds MaxTotalSize.
-	ErrTotalTooLarge = errors.New("upload exceeds max total size limit")
-)
-
-// ---------------------------------------------------------------------------
-// Data types
-// ---------------------------------------------------------------------------
+// ErrTotalTooLarge is returned when total upload size exceeds MaxTotalSize.
+var ErrTotalTooLarge = errors.New("upload exceeds max total size limit")
 
 // SavedFile records a successfully saved file with full multipart metadata.
 type SavedFile struct {
@@ -72,21 +63,26 @@ func (r *Result) JSON() string {
 	return string(b)
 }
 
-// ---------------------------------------------------------------------------
-// Config & Options
-// ---------------------------------------------------------------------------
-
 // Options controls multipart parsing and file saving behavior.
 type Options struct {
-	UploadDir    string // directory to save uploaded files
-	MaxFileSize  int64  // per-file limit in bytes (0 = unlimited)
-	MaxTotalSize int64  // total upload limit in bytes (0 = unlimited)
+	// UploadDir is the directory where uploaded files are saved.
+	UploadDir string
+	// MaxFileSize is the per-file size limit in bytes (0 = unlimited).
+	MaxFileSize int64
+	// MaxTotalSize is the total upload size limit in bytes (0 = unlimited).
+	MaxTotalSize int64
 }
 
 // Option is a functional option that mutates a Config.
 type Option func(*Options)
 
 // WithUploadDir sets the directory where uploaded files are saved.
+//
+// Parameters:
+//   - dir: Directory path for saving uploaded files
+//
+// Returns:
+//   - Option: Functional option that sets UploadDir
 func WithUploadDir(dir string) Option {
 	return func(c *Options) {
 		c.UploadDir = dir
@@ -94,6 +90,12 @@ func WithUploadDir(dir string) Option {
 }
 
 // WithMaxFileSize sets the per-file size limit in bytes (0 = unlimited).
+//
+// Parameters:
+//   - n: Maximum file size in bytes
+//
+// Returns:
+//   - Option: Functional option that sets MaxFileSize
 func WithMaxFileSize(n int64) Option {
 	return func(c *Options) {
 		c.MaxFileSize = n
@@ -101,23 +103,37 @@ func WithMaxFileSize(n int64) Option {
 }
 
 // WithMaxTotalSize sets the total upload size limit in bytes (0 = unlimited).
+//
+// Parameters:
+//   - n: Maximum total upload size in bytes
+//
+// Returns:
+//   - Option: Functional option that sets MaxTotalSize
 func WithMaxTotalSize(n int64) Option {
 	return func(c *Options) {
 		c.MaxTotalSize = n
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Handler
-// ---------------------------------------------------------------------------
-
-// Handler processes multipart/form-data and saves files to disk.
+// Handler processes multipart/form-data requests and saves files to disk.
 type Handler struct {
 	cfg Options
 }
 
-// NewHandler creates an UploadHandler, applying the given options.
+// NewHandler creates a Handler with the given functional options.
 // The upload directory is created automatically if it does not exist.
+//
+// Parameters:
+//   - opts: Functional options to configure the Handler
+//
+// Returns:
+//   - *Handler: Configured upload handler
+//   - error: Error if the upload directory cannot be created
+//
+// Behavior:
+//  1. Applies all functional options to default Options
+//  2. Falls back to "./uploads" if UploadDir is empty
+//  3. Creates the upload directory if it does not exist
 func NewHandler(opts ...Option) (*Handler, error) {
 	cfg := Options{}
 	for _, opt := range opts {
@@ -132,9 +148,21 @@ func NewHandler(opts ...Option) (*Handler, error) {
 	return &Handler{cfg: cfg}, nil
 }
 
-// Handle is the main entry point. It auto-detects multipart vs raw body:
-//   - multipart/form-data or multipart/mixed → ParseMultipart
-//   - otherwise → SaveSingleFile
+// Handle is the main entry point for processing uploaded data.
+// It auto-detects multipart vs raw body based on the Content-Type header.
+//
+// Parameters:
+//   - data: Raw request body bytes
+//   - contentType: HTTP Content-Type header value
+//
+// Returns:
+//   - *Result: Parsed result containing saved files and form fields
+//   - error: Error if parsing or saving fails
+//
+// Behavior:
+//  1. If Content-Type is multipart/form-data or multipart/mixed, delegates to ParseMultipart
+//  2. Otherwise, saves the raw body as a single file via SaveSingleFile
+//  3. Returns ErrTotalTooLarge if the data exceeds MaxTotalSize
 func (h *Handler) Handle(data []byte, contentType string) (*Result, error) {
 	mediaType, params, _ := mime.ParseMediaType(contentType)
 
@@ -163,6 +191,21 @@ func (h *Handler) Handle(data []byte, contentType string) (*Result, error) {
 }
 
 // ParseMultipart parses multipart/form-data, saves file parts, and collects form fields.
+//
+// Parameters:
+//   - data: Raw multipart body bytes
+//   - boundary: Multipart boundary string from Content-Type header
+//
+// Returns:
+//   - *Result: Parsed result containing saved files and form fields
+//   - error: Error if parsing or saving fails
+//
+// Behavior:
+//  1. Checks total size against MaxTotalSize limit
+//  2. Iterates over each part in the multipart body
+//  3. For file parts (with filename), infers extension and saves to disk
+//  4. For regular form fields, aggregates values by field name
+//  5. Returns ErrFileTooLarge if any single file exceeds MaxFileSize
 func (h *Handler) ParseMultipart(data []byte, boundary string) (*Result, error) {
 	if h.cfg.MaxTotalSize > 0 && int64(len(data)) > h.cfg.MaxTotalSize {
 		return nil, fmt.Errorf("%w: %d > %d", ErrTotalTooLarge, len(data), h.cfg.MaxTotalSize)
@@ -221,6 +264,22 @@ func (h *Handler) ParseMultipart(data []byte, boundary string) (*Result, error) 
 }
 
 // SaveSingleFile writes data to a timestamped file on disk.
+//
+// Parameters:
+//   - data: File content bytes to write
+//   - ext: File extension (e.g. ".png", ".pdf")
+//   - fieldName: Form field name from the multipart part
+//   - origName: Original filename from the client
+//   - contentType: MIME Content-Type of the file
+//
+// Returns:
+//   - SavedFile: Metadata of the saved file
+//   - error: Error if size check fails or disk write fails
+//
+// Behavior:
+//  1. Checks data size against MaxFileSize limit
+//  2. Generates a unique filename using current UnixNano timestamp
+//  3. Writes data to the upload directory
 func (h *Handler) SaveSingleFile(data []byte, ext string, fieldName, origName, contentType string) (SavedFile, error) {
 	if h.cfg.MaxFileSize > 0 && int64(len(data)) > h.cfg.MaxFileSize {
 		return SavedFile{}, fmt.Errorf("%w: %d > %d", ErrFileTooLarge, len(data), h.cfg.MaxFileSize)
@@ -240,11 +299,16 @@ func (h *Handler) SaveSingleFile(data []byte, ext string, fieldName, origName, c
 	}, nil
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-// addField appends a value to an existing FormField or creates a new one.
+// addField appends a value to an existing FormField with the same name,
+// or creates a new FormField if no match is found.
+//
+// Parameters:
+//   - fields: Existing list of FormField entries
+//   - name: Form field name to add or append to
+//   - value: Form field value to append
+//
+// Returns:
+//   - []FormField: Updated list of form fields
 func addField(fields []FormField, name, value string) []FormField {
 	for i := range fields {
 		if fields[i].Name == name {
@@ -256,6 +320,13 @@ func addField(fields []FormField, name, value string) []FormField {
 }
 
 // ExtensionFromContentType returns a file extension for the given MIME content type.
+// Falls back to ".bin" for unknown or unsupported content types.
+//
+// Parameters:
+//   - contentType: MIME Content-Type string (e.g. "image/png", "application/pdf")
+//
+// Returns:
+//   - string: File extension including the leading dot (e.g. ".png", ".pdf")
 func ExtensionFromContentType(contentType string) string {
 	if mediaType, _, err := mime.ParseMediaType(contentType); err == nil {
 		contentType = mediaType
@@ -301,6 +372,13 @@ func ExtensionFromContentType(contentType string) string {
 }
 
 // ExtensionFromFilename returns the file extension from a filename.
+// Falls back to ".bin" if the filename has no extension.
+//
+// Parameters:
+//   - name: Original filename (e.g. "report.pdf", "photo")
+//
+// Returns:
+//   - string: File extension including the leading dot (e.g. ".pdf", ".bin")
 func ExtensionFromFilename(name string) string {
 	ext := filepath.Ext(name)
 	if ext != "" {
@@ -309,7 +387,13 @@ func ExtensionFromFilename(name string) string {
 	return ".bin"
 }
 
-// FormatBytes returns a human-readable byte size string.
+// FormatBytes returns a human-readable byte size string using binary units.
+//
+// Parameters:
+//   - b: Size in bytes
+//
+// Returns:
+//   - string: Human-readable size string (e.g. "1.5 MB", "256 B")
 func FormatBytes(b int64) string {
 	const unit = 1024
 	if b < unit {
