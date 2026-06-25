@@ -23,10 +23,13 @@ import (
 )
 
 // ErrFileTooLarge is returned when a single file exceeds MaxFileSize.
-var ErrFileTooLarge = errors.New("file exceeds max file size limit")
+var ErrFileTooLarge = errors.New("goose: file exceeds max file size limit")
 
 // ErrTotalTooLarge is returned when total upload size exceeds MaxTotalSize.
-var ErrTotalTooLarge = errors.New("upload exceeds max total size limit")
+var ErrTotalTooLarge = errors.New("goose: upload exceeds max total size limit")
+
+// ErrMissBoundary is return when multipart missing boundary
+var ErrMissBoundary = fmt.Errorf("goose: multipart missing boundary")
 
 // SavedFile records a successfully saved file with full multipart metadata.
 type SavedFile struct {
@@ -169,7 +172,7 @@ func (h *Handler) Handle(data []byte, contentType string) (*Result, error) {
 	if mediaType == "multipart/form-data" || mediaType == "multipart/mixed" {
 		boundary := params["boundary"]
 		if boundary == "" {
-			return nil, fmt.Errorf("multipart missing boundary")
+			return nil, ErrMissBoundary
 		}
 		return h.ParseMultipart(data, boundary)
 	}
