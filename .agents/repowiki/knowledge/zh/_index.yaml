@@ -1,0 +1,177 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: main
+nodes_managed: true
+exported_at: "2026-06-25T08:52:55Z"
+modules:
+    "":
+        dir_name: Goose HTTP 网关框架
+        title: Goose HTTP 网关框架
+        scope:
+            - go.mod
+            - go.sum
+            - Makefile
+            - .gitignore
+            - .editorconfig
+            - CLAUDE.md
+            - common.go
+            - constant.go
+            - desc.go
+            - doc.go
+            - form.go
+            - header.go
+            - path.go
+            - route.go
+            - status.go
+            - validate.go
+            - type_bool.go
+            - type_float.go
+            - type_int.go
+            - type_string.go
+            - type_uint.go
+            - example/
+            - internal/
+            - upload/
+            - third_party/
+            - tools/
+            - skills/
+            - .github/
+            - .claude/
+            - LICENSE
+            - README.MD
+            - common_test.go
+            - form_test.go
+            - status_test.go
+            - type_test.go
+        source_files: []
+        children:
+            - client
+            - middleware
+            - outgoing
+            - protoc_gen_goose
+            - server
+        depends_on: []
+        related_to: []
+    build_system:
+        dir_name: Goose 构建系统与发布流程
+        title: Goose 构建系统与发布流程
+        scope: []
+        source_files:
+            - Makefile
+            - .github/workflows/release.yml
+            - cmd/protoc-gen-goose/main.go
+            - go.mod
+            - tools/build.go
+            - middleware/jwtauth/go.mod
+            - middleware/limiter/go.mod
+            - middleware/otel/go.mod
+        children: []
+        depends_on: []
+        related_to: []
+    client:
+        dir_name: HTTP客户端核心功能
+        title: HTTP客户端核心功能
+        scope:
+            - client/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: outgoing
+            - path: protoc_gen_goose
+            - path: server
+    configuration_system:
+        dir_name: Goose 配置系统：基于函数选项模式 (Functional Options) 的运行时配置
+        title: Goose 配置系统：基于函数选项模式 (Functional Options) 的运行时配置
+        scope: []
+        source_files:
+            - server/option.go
+            - client/option.go
+            - middleware/jwtauth/middleware.go
+            - middleware/limiter/bbr.go
+            - cmd/protoc-gen-goose/main.go
+        children: []
+        depends_on: []
+        related_to: []
+    dependency_management:
+        dir_name: Goose 框架依赖管理与模块化架构
+        title: Goose 框架依赖管理与模块化架构
+        scope: []
+        source_files:
+            - go.mod
+            - middleware/jwtauth/go.mod
+            - middleware/limiter/go.mod
+            - middleware/otel/go.mod
+            - third_party/google/api/annotations.proto
+            - Makefile
+        children: []
+        depends_on: []
+        related_to: []
+    error_handling:
+        dir_name: 错误处理与恢复机制
+        title: 错误处理与恢复机制
+        scope: []
+        source_files:
+            - status.go
+            - common.go
+            - middleware/recovery/middleware.go
+            - middleware/errorlog/middleware.go
+            - client/resolver/error.go
+        children: []
+        depends_on: []
+        related_to: []
+    logging_system:
+        dir_name: 基于 slog 的中间件日志系统
+        title: 基于 slog 的中间件日志系统
+        scope: []
+        source_files:
+            - middleware/accesslog/middleware.go
+            - middleware/errorlog/middleware.go
+            - middleware/errorlog/option.go
+        children: []
+        depends_on: []
+        related_to: []
+    middleware:
+        dir_name: 通用 HTTP 中间件集合
+        title: 通用 HTTP 中间件集合
+        scope:
+            - middleware/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: server
+    outgoing:
+        dir_name: HTTP 客户端请求构建器
+        title: HTTP 客户端请求构建器
+        scope:
+            - outgoing/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: client
+    protoc_gen_goose:
+        dir_name: Protobuf 到 HTTP 网关代码生成器
+        title: Protobuf 到 HTTP 网关代码生成器
+        scope:
+            - cmd/protoc-gen-goose/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: client
+            - path: server
+    server:
+        dir_name: HTTP 请求解码与响应编码核心组件
+        title: HTTP 请求解码与响应编码核心组件
+        scope:
+            - server/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: client
+            - path: middleware
+            - path: protoc_gen_goose

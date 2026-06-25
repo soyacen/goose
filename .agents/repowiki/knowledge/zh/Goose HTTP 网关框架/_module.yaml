@@ -1,0 +1,42 @@
+schema_version: 1
+module_path: ""
+title: Goose HTTP 网关框架
+scope:
+    - go.mod
+    - go.sum
+    - Makefile
+    - .gitignore
+    - .editorconfig
+    - CLAUDE.md
+    - common.go
+    - constant.go
+    - desc.go
+    - doc.go
+    - form.go
+    - header.go
+    - path.go
+    - route.go
+    - status.go
+    - validate.go
+    - type_bool.go
+    - type_float.go
+    - type_int.go
+    - type_string.go
+    - type_uint.go
+    - example/
+    - internal/
+    - upload/
+    - third_party/
+    - tools/
+    - skills/
+    - .github/
+    - .claude/
+    - LICENSE
+    - README.MD
+    - common_test.go
+    - form_test.go
+    - status_test.go
+    - type_test.go
+source_files: []
+depends_on: []
+related_to: []
