@@ -24,116 +24,28 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type BodyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BodyRequest) Reset() {
-	*x = BodyRequest{}
-	mi := &file_example_upload_upload_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BodyRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BodyRequest) ProtoMessage() {}
-
-func (x *BodyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_example_upload_upload_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BodyRequest.ProtoReflect.Descriptor instead.
-func (*BodyRequest) Descriptor() ([]byte, []int) {
-	return file_example_upload_upload_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *BodyRequest) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
-type NamedBodyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Body          *NamedBodyRequest_Body `protobuf:"bytes,1,opt,name=body,proto3" json:"body,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *NamedBodyRequest) Reset() {
-	*x = NamedBodyRequest{}
-	mi := &file_example_upload_upload_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *NamedBodyRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NamedBodyRequest) ProtoMessage() {}
-
-func (x *NamedBodyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_example_upload_upload_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use NamedBodyRequest.ProtoReflect.Descriptor instead.
-func (*NamedBodyRequest) Descriptor() ([]byte, []int) {
-	return file_example_upload_upload_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *NamedBodyRequest) GetBody() *NamedBodyRequest_Body {
-	if x != nil {
-		return x.Body
-	}
-	return nil
-}
-
-type HttpBodyRequest struct {
+type UploadEmbedRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Body          *httpbody.HttpBody     `protobuf:"bytes,1,opt,name=body,proto3" json:"body,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *HttpBodyRequest) Reset() {
-	*x = HttpBodyRequest{}
-	mi := &file_example_upload_upload_proto_msgTypes[2]
+func (x *UploadEmbedRequest) Reset() {
+	*x = UploadEmbedRequest{}
+	mi := &file_example_upload_upload_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *HttpBodyRequest) String() string {
+func (x *UploadEmbedRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*HttpBodyRequest) ProtoMessage() {}
+func (*UploadEmbedRequest) ProtoMessage() {}
 
-func (x *HttpBodyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_example_upload_upload_proto_msgTypes[2]
+func (x *UploadEmbedRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_example_upload_upload_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -144,12 +56,12 @@ func (x *HttpBodyRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use HttpBodyRequest.ProtoReflect.Descriptor instead.
-func (*HttpBodyRequest) Descriptor() ([]byte, []int) {
-	return file_example_upload_upload_proto_rawDescGZIP(), []int{2}
+// Deprecated: Use UploadEmbedRequest.ProtoReflect.Descriptor instead.
+func (*UploadEmbedRequest) Descriptor() ([]byte, []int) {
+	return file_example_upload_upload_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *HttpBodyRequest) GetBody() *httpbody.HttpBody {
+func (x *UploadEmbedRequest) GetBody() *httpbody.HttpBody {
 	if x != nil {
 		return x.Body
 	}
@@ -165,7 +77,7 @@ type Response struct {
 
 func (x *Response) Reset() {
 	*x = Response{}
-	mi := &file_example_upload_upload_proto_msgTypes[3]
+	mi := &file_example_upload_upload_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -177,7 +89,7 @@ func (x *Response) String() string {
 func (*Response) ProtoMessage() {}
 
 func (x *Response) ProtoReflect() protoreflect.Message {
-	mi := &file_example_upload_upload_proto_msgTypes[3]
+	mi := &file_example_upload_upload_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -190,54 +102,10 @@ func (x *Response) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Response.ProtoReflect.Descriptor instead.
 func (*Response) Descriptor() ([]byte, []int) {
-	return file_example_upload_upload_proto_rawDescGZIP(), []int{3}
+	return file_example_upload_upload_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Response) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
-type NamedBodyRequest_Body struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *NamedBodyRequest_Body) Reset() {
-	*x = NamedBodyRequest_Body{}
-	mi := &file_example_upload_upload_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *NamedBodyRequest_Body) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NamedBodyRequest_Body) ProtoMessage() {}
-
-func (x *NamedBodyRequest_Body) ProtoReflect() protoreflect.Message {
-	mi := &file_example_upload_upload_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use NamedBodyRequest_Body.ProtoReflect.Descriptor instead.
-func (*NamedBodyRequest_Body) Descriptor() ([]byte, []int) {
-	return file_example_upload_upload_proto_rawDescGZIP(), []int{1, 0}
-}
-
-func (x *NamedBodyRequest_Body) GetMessage() string {
 	if x != nil {
 		return x.Message
 	}
@@ -248,20 +116,14 @@ var File_example_upload_upload_proto protoreflect.FileDescriptor
 
 const file_example_upload_upload_proto_rawDesc = "" +
 	"\n" +
-	"\x1bexample/upload/upload.proto\x12\x1bleo.goose.example.upload.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x19google/api/httpbody.proto\x1a\x15google/rpc/http.proto\"'\n" +
-	"\vBodyRequest\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"|\n" +
-	"\x10NamedBodyRequest\x12F\n" +
-	"\x04body\x18\x01 \x01(\v22.leo.goose.example.upload.v1.NamedBodyRequest.BodyR\x04body\x1a \n" +
-	"\x04Body\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\";\n" +
-	"\x0fHttpBodyRequest\x12(\n" +
+	"\x1bexample/upload/upload.proto\x12\x1bleo.goose.example.upload.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x19google/api/httpbody.proto\x1a\x15google/rpc/http.proto\">\n" +
+	"\x12UploadEmbedRequest\x12(\n" +
 	"\x04body\x18\x01 \x01(\v2\x14.google.api.HttpBodyR\x04body\"$\n" +
 	"\bResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2\xd9\x02\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage2\xdc\x02\n" +
 	"\x06Upload\x12`\n" +
-	"\x06Upload\x12\x14.google.api.HttpBody\x1a%.leo.goose.example.upload.v1.Response\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\x1a\x0e/v1/upload/api\x12\x81\x01\n" +
-	"\vUploadEmbed\x12,.leo.goose.example.upload.v1.HttpBodyRequest\x1a%.leo.goose.example.upload.v1.Response\"\x1d\x82\xd3\xe4\x93\x02\x17:\x04body\x1a\x0f/v1/upload/embd\x12i\n" +
+	"\x06Upload\x12\x14.google.api.HttpBody\x1a%.leo.goose.example.upload.v1.Response\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\x1a\x0e/v1/upload/api\x12\x84\x01\n" +
+	"\vUploadEmbed\x12/.leo.goose.example.upload.v1.UploadEmbedRequest\x1a%.leo.goose.example.upload.v1.Response\"\x1d\x82\xd3\xe4\x93\x02\x17:\x04body\x1a\x0f/v1/upload/embd\x12i\n" +
 	"\fUploadForRPC\x12\x17.google.rpc.HttpRequest\x1a%.leo.goose.example.upload.v1.Response\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\x1a\x0e/v1/upload/rpcB3Z1github.com/soyacen/goose/example/upload/v1;uploadb\x06proto3"
 
 var (
@@ -276,30 +138,26 @@ func file_example_upload_upload_proto_rawDescGZIP() []byte {
 	return file_example_upload_upload_proto_rawDescData
 }
 
-var file_example_upload_upload_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_example_upload_upload_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_example_upload_upload_proto_goTypes = []any{
-	(*BodyRequest)(nil),           // 0: leo.goose.example.upload.v1.BodyRequest
-	(*NamedBodyRequest)(nil),      // 1: leo.goose.example.upload.v1.NamedBodyRequest
-	(*HttpBodyRequest)(nil),       // 2: leo.goose.example.upload.v1.HttpBodyRequest
-	(*Response)(nil),              // 3: leo.goose.example.upload.v1.Response
-	(*NamedBodyRequest_Body)(nil), // 4: leo.goose.example.upload.v1.NamedBodyRequest.Body
-	(*httpbody.HttpBody)(nil),     // 5: google.api.HttpBody
-	(*http.HttpRequest)(nil),      // 6: google.rpc.HttpRequest
+	(*UploadEmbedRequest)(nil), // 0: leo.goose.example.upload.v1.UploadEmbedRequest
+	(*Response)(nil),           // 1: leo.goose.example.upload.v1.Response
+	(*httpbody.HttpBody)(nil),  // 2: google.api.HttpBody
+	(*http.HttpRequest)(nil),   // 3: google.rpc.HttpRequest
 }
 var file_example_upload_upload_proto_depIdxs = []int32{
-	4, // 0: leo.goose.example.upload.v1.NamedBodyRequest.body:type_name -> leo.goose.example.upload.v1.NamedBodyRequest.Body
-	5, // 1: leo.goose.example.upload.v1.HttpBodyRequest.body:type_name -> google.api.HttpBody
-	5, // 2: leo.goose.example.upload.v1.Upload.Upload:input_type -> google.api.HttpBody
-	2, // 3: leo.goose.example.upload.v1.Upload.UploadEmbed:input_type -> leo.goose.example.upload.v1.HttpBodyRequest
-	6, // 4: leo.goose.example.upload.v1.Upload.UploadForRPC:input_type -> google.rpc.HttpRequest
-	3, // 5: leo.goose.example.upload.v1.Upload.Upload:output_type -> leo.goose.example.upload.v1.Response
-	3, // 6: leo.goose.example.upload.v1.Upload.UploadEmbed:output_type -> leo.goose.example.upload.v1.Response
-	3, // 7: leo.goose.example.upload.v1.Upload.UploadForRPC:output_type -> leo.goose.example.upload.v1.Response
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2, // 0: leo.goose.example.upload.v1.UploadEmbedRequest.body:type_name -> google.api.HttpBody
+	2, // 1: leo.goose.example.upload.v1.Upload.Upload:input_type -> google.api.HttpBody
+	0, // 2: leo.goose.example.upload.v1.Upload.UploadEmbed:input_type -> leo.goose.example.upload.v1.UploadEmbedRequest
+	3, // 3: leo.goose.example.upload.v1.Upload.UploadForRPC:input_type -> google.rpc.HttpRequest
+	1, // 4: leo.goose.example.upload.v1.Upload.Upload:output_type -> leo.goose.example.upload.v1.Response
+	1, // 5: leo.goose.example.upload.v1.Upload.UploadEmbed:output_type -> leo.goose.example.upload.v1.Response
+	1, // 6: leo.goose.example.upload.v1.Upload.UploadForRPC:output_type -> leo.goose.example.upload.v1.Response
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_example_upload_upload_proto_init() }
@@ -313,7 +171,7 @@ func file_example_upload_upload_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_example_upload_upload_proto_rawDesc), len(file_example_upload_upload_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

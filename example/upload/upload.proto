@@ -14,7 +14,7 @@ service Upload {
     };
   }
 
-  rpc UploadEmbed(HttpBodyRequest) returns (Response) {
+  rpc UploadEmbed(UploadEmbedRequest) returns (Response) {
     option (google.api.http) = {
       put : "/v1/upload/embd"
       body : "body"
@@ -29,13 +29,6 @@ service Upload {
   }
 }
 
-message BodyRequest { string message = 1; }
-
-message NamedBodyRequest {
-  message Body { string message = 1; }
-  Body body = 1;
-}
-
-message HttpBodyRequest { google.api.HttpBody body = 1; }
+message UploadEmbedRequest { google.api.HttpBody body = 1; }
 
 message Response { string message = 1; }

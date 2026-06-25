@@ -18,7 +18,7 @@ import (
 
 type UploadService interface {
 	Upload(ctx context.Context, req *httpbody.HttpBody) (*Response, error)
-	UploadEmbed(ctx context.Context, req *HttpBodyRequest) (*Response, error)
+	UploadEmbed(ctx context.Context, req *UploadEmbedRequest) (*Response, error)
 	UploadForRPC(ctx context.Context, req *http.HttpRequest) (*Response, error)
 }
 
@@ -150,8 +150,8 @@ func (decoder uploadRequestDecoder) Upload(ctx context.Context, request *http1.R
 	}
 	return req, nil
 }
-func (decoder uploadRequestDecoder) UploadEmbed(ctx context.Context, request *http1.Request) (*HttpBodyRequest, error) {
-	req := &HttpBodyRequest{}
+func (decoder uploadRequestDecoder) UploadEmbed(ctx context.Context, request *http1.Request) (*UploadEmbedRequest, error) {
+	req := &UploadEmbedRequest{}
 	ok, err := server.CustomDecodeRequest(ctx, request, req)
 	if err != nil {
 		return nil, err
@@ -246,7 +246,7 @@ func (c *uploadHttpClient) Upload(ctx context.Context, req *httpbody.HttpBody) (
 	return resp, nil
 }
 
-func (c *uploadHttpClient) UploadEmbed(ctx context.Context, req *HttpBodyRequest) (*Response, error) {
+func (c *uploadHttpClient) UploadEmbed(ctx context.Context, req *UploadEmbedRequest) (*Response, error) {
 	if err := goose.ValidateRequest(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {
 		return nil, err
 	}
@@ -314,7 +314,7 @@ func (encoder *uploadRequestEncoder) Upload(ctx context.Context, req *httpbody.H
 	return request, nil
 }
 
-func (encoder *uploadRequestEncoder) UploadEmbed(ctx context.Context, req *HttpBodyRequest) (*http1.Request, error) {
+func (encoder *uploadRequestEncoder) UploadEmbed(ctx context.Context, req *UploadEmbedRequest) (*http1.Request, error) {
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}

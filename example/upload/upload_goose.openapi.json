@@ -38,7 +38,7 @@
     },
     "/v1/upload/embd": {
       "put": {
-        "operationId": "HttpBodyRequest_UploadEmbed",
+        "operationId": "UploadEmbedRequest_UploadEmbed",
         "summary": "UploadEmbed",
         "requestBody": {
           "content": {
@@ -141,15 +141,6 @@
           "body"
         ]
       },
-      "leo.goose.example.upload.v1.HttpBodyRequest": {
-        "type": "object",
-        "properties": {
-          "body": {
-            "type": "string",
-            "format": "binary"
-          }
-        }
-      },
       "leo.goose.example.upload.v1.Response": {
         "type": "object",
         "properties": {
@@ -160,6 +151,15 @@
         "required": [
           "message"
         ]
+      },
+      "leo.goose.example.upload.v1.UploadEmbedRequest": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "format": "binary"
+          }
+        }
       }
     }
   }

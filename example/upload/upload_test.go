@@ -28,7 +28,7 @@ func (s *UploadServiceImpl) Upload(ctx context.Context, req *httpbody.HttpBody) 
 }
 
 // UploadEmbed handles PUT /v1/upload/embd — receives HttpBodyRequest with embedded HttpBody (body: "body")
-func (s *UploadServiceImpl) UploadEmbed(ctx context.Context, req *HttpBodyRequest) (*Response, error) {
+func (s *UploadServiceImpl) UploadEmbed(ctx context.Context, req *UploadEmbedRequest) (*Response, error) {
 	body := req.GetBody()
 	result, err := s.handler.Handle(body.GetData(), body.GetContentType())
 	if err != nil {
