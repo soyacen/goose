@@ -1,0 +1,171 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"sync/atomic"
+	"syscall"
+	"time"
+)
+
+// ServerConfig holds the server-level configuration.
+type ServerConfig struct {
+	// Addr is the listen address, e.g. ":8080".
+	Addr string
+	// MaxConnsPerEndpoint limits concurrent WebSocket connections per endpoint (0 = unlimited).
+	MaxConnsPerEndpoint int64
+	// ReadTimeout is the HTTP server read timeout.
+	ReadTimeout time.Duration
+	// WriteTimeout is the HTTP server write timeout.
+	WriteTimeout time.Duration
+	// IdleTimeout is the HTTP server idle timeout.
+	IdleTimeout time.Duration
+	// ShutdownTimeout is the maximum time to wait for graceful shutdown.
+	ShutdownTimeout time.Duration
+	// ServerPushInterval is the message push interval for server-stream endpoint.
+	ServerPushInterval time.Duration
+	// PreStopDrainDelay is the duration to wait after marking not-ready
+	// before initiating shutdown. This allows Kubernetes to remove the pod
+	// from Service endpoints before connections are closed.
+	// Should be slightly less than terminationGracePeriodSeconds.
+	PreStopDrainDelay time.Duration
+}
+
+// DefaultServerConfig returns a ServerConfig with production defaults.
+func DefaultServerConfig() ServerConfig {
+	return ServerConfig{
+		Addr:               ":8080",
+		MaxConnsPerEndpoint: 10000,
+		ReadTimeout:        60 * time.Second,
+		WriteTimeout:       60 * time.Second,
+		IdleTimeout:        120 * time.Second,
+		ShutdownTimeout:    30 * time.Second,
+		ServerPushInterval: 1 * time.Second,
+		PreStopDrainDelay:  5 * time.Second,
+	}
+}
+
+func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	slog.SetDefault(logger)
+
+	cfg := DefaultServerConfig()
+	connCfg := DefaultConnConfig()
+
+	// ready flag for Kubernetes readiness probe.
+	// When set to false, /readyz returns 503 and k8s removes the pod from Service endpoints.
+	var ready atomic.Bool
+	ready.Store(true)
+
+	mux := http.NewServeMux()
+
+	// Liveness probe: always returns 200 if the process is running.
+	// k8s restarts the pod if this fails.
+	mux.HandleFunc("/livez", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"alive"}`))
+	})
+
+	// Readiness probe: returns 200 only when the server is ready to accept traffic.
+	// k8s removes the pod from Service endpoints when this returns non-200.
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if ready.Load() {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"status":"ready"}`))
+		} else {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"status":"not ready"}`))
+		}
+	})
+
+	// Legacy health check (backward compatible).
+	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if ready.Load() {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"status":"ok"}`))
+		} else {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"status":"shutting down"}`))
+		}
+	})
+
+	// 1. Client-Stream: client -> server (unidirectional)
+	clientStream := NewClientStreamHandler(connCfg, logger, cfg.MaxConnsPerEndpoint)
+	mux.Handle("/ws/client-stream", clientStream)
+
+	// 2. Server-Stream: server -> client (unidirectional)
+	serverStream := NewServerStreamHandler(connCfg, logger, cfg.MaxConnsPerEndpoint, cfg.ServerPushInterval, nil)
+	mux.Handle("/ws/server-stream", serverStream)
+
+	// 3. Bidi-Stream: full-duplex bidirectional
+	bidiStream := NewBidiStreamHandler(connCfg, logger, cfg.MaxConnsPerEndpoint)
+	mux.Handle("/ws/bidi-stream", bidiStream)
+
+	srv := &http.Server{
+		Addr:         cfg.Addr,
+		Handler:      mux,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+		IdleTimeout:  cfg.IdleTimeout,
+	}
+
+	// Listen for SIGINT (Ctrl+C) and SIGTERM (sent by Kubernetes).
+	shutdownCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		logger.Info("server starting", slog.String("addr", cfg.Addr))
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("server error", slog.String("error", err.Error()))
+			os.Exit(1)
+		}
+	}()
+
+	// Block until a termination signal is received.
+	<-shutdownCtx.Done()
+	logger.Info("termination signal received, starting graceful shutdown")
+
+	// Phase 1: Mark pod as not-ready so Kubernetes stops routing new traffic.
+	ready.Store(false)
+	logger.Info("marked as not-ready, draining existing traffic",
+		slog.Duration("drain_delay", cfg.PreStopDrainDelay),
+		slog.Int64("client_stream_conns", clientStream.ActiveConnections()),
+		slog.Int64("server_stream_conns", serverStream.ActiveConnections()),
+		slog.Int64("bidi_stream_conns", bidiStream.ActiveConnections()),
+	)
+
+	// Phase 2: Wait for Kubernetes to propagate the readiness change and
+	// remove this pod from Service endpoints. Existing connections continue
+	// to be served during this window.
+	time.Sleep(cfg.PreStopDrainDelay)
+
+	// Phase 3: Initiate HTTP server graceful shutdown.
+	// This stops accepting new connections and waits for in-flight requests
+	// (including WebSocket upgrades) to complete or the timeout to expire.
+	shutdownTimeoutCtx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
+	defer cancel()
+
+	logger.Info("shutting down HTTP server",
+		slog.Int64("client_stream_conns", clientStream.ActiveConnections()),
+		slog.Int64("server_stream_conns", serverStream.ActiveConnections()),
+		slog.Int64("bidi_stream_conns", bidiStream.ActiveConnections()),
+	)
+
+	if err := srv.Shutdown(shutdownTimeoutCtx); err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			logger.Warn("shutdown timeout exceeded, forcing close")
+		} else {
+			logger.Error("shutdown error", slog.String("error", err.Error()))
+		}
+		os.Exit(1)
+	}
+
+	logger.Info("server stopped gracefully")
+}
