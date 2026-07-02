@@ -1,0 +1,41 @@
+syntax = "proto3";
+package leo.goose.example.response_body.v1;
+option go_package = "github.com/soyacen/goose/example/response_body/v1;response_body";
+
+import "google/api/annotations.proto";
+import "google/api/httpbody.proto";
+import "google/rpc/http.proto";
+
+service ResponseBody {
+  rpc OmittedResponse(Request) returns (Response) {
+    option (google.api.http) = {
+      get : "/v1/omitted/response"
+    };
+  }
+
+  rpc StarResponse(Request) returns (Response) {
+    option (google.api.http) = {
+      get : "/v1/star/response"
+      response_body : "*"
+    };
+  }
+
+  rpc NamedResponse(Request) returns (NamedBodyResponse) {
+    option (google.api.http) = {
+      get : "/v1/named/response"
+      response_body : "body"
+    };
+  }
+
+}
+
+message Request { string message = 1; }
+
+message Response { string message = 1; }
+
+message NamedBodyResponse {
+  message Body { string message = 1; }
+  Body body = 1;
+}
+
+message NamedHttpBodyResponse { google.api.HttpBody body = 1; }

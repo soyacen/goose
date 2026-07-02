@@ -62,8 +62,8 @@ func (c *streamServiceClient) dialAndConnect(ctx context.Context) (ws.ClientStre
 	return ws.NewClientStream(ctx, conn, c.codec), nil
 }
 
-// ClientStrean opens a client-streaming RPC.
-func (c *streamServiceClient) ClientStrean(ctx context.Context) (ws.ClientStreamingClient[Request, Response], error) {
+// ClientStream opens a client-streaming RPC.
+func (c *streamServiceClient) ClientStream(ctx context.Context) (ws.ClientStreamingClient[Request, Response], error) {
 	cs, err := c.dialAndConnect(ctx)
 	if err != nil {
 		return nil, err
@@ -71,9 +71,9 @@ func (c *streamServiceClient) ClientStrean(ctx context.Context) (ws.ClientStream
 	return &ws.GenericClientStream[Request, Response]{ClientStream: cs}, nil
 }
 
-// ServerStrean opens a server-streaming RPC. It sends the initial request
+// ServerStream opens a server-streaming RPC. It sends the initial request
 // and returns a stream for receiving multiple responses.
-func (c *streamServiceClient) ServerStrean(ctx context.Context, in *Request) (ws.ServerStreamingClient[Response], error) {
+func (c *streamServiceClient) ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[Response], error) {
 	cs, err := c.dialAndConnect(ctx)
 	if err != nil {
 		return nil, err
