@@ -15,6 +15,9 @@ import (
 // the corresponding streaming RPC.
 // ---------------------------------------------------------------------------
 
+// Compile-time check: streamServiceImpl implements StreamServiceServer.
+var _ StreamServiceServer = (*streamServiceImpl)(nil)
+
 // streamServiceImpl is the user-defined service implementation.
 type streamServiceImpl struct {
 	logger *slog.Logger
@@ -30,35 +33,26 @@ func NewStreamServiceImpl(logger *slog.Logger) StreamServiceServer {
 // aggregated response (e.g., batch upload, log ingestion).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) ClientStream(stream ServerClientStream[ListExpiredCreditBucketsRequest, ListExpiredCreditBucketsResponse]) error {
-	var total int64
-	var buckets []*CreditBucket
+func (s *streamServiceImpl) ClientStream(stream ClientStreamingServer[Request, Response]) error {
+	var count int
 
 	for {
 		req, err := stream.Recv()
 		if err == io.EOF {
 			// Client has finished sending. Send the aggregated response.
-			s.logger.Info("client-stream complete", slog.Int64("total", total))
-			return stream.SendAndClose(&ListExpiredCreditBucketsResponse{
-				Buckets: buckets,
-				Total:   total,
+			s.logger.Info("client-stream complete", slog.Int("count", count))
+			return stream.SendAndClose(&Response{
+				Message: fmt.Sprintf("received %d messages", count),
 			})
 		}
 		if err != nil {
 			return err
 		}
 
+		count++
 		s.logger.Info("client-stream received",
-			slog.String("filter", req.Filter),
+			slog.String("name", req.Name),
 		)
-
-		// Simulate processing: each request produces a credit bucket entry.
-		buckets = append(buckets, &CreditBucket{
-			BucketID: fmt.Sprintf("bucket-%d", total+1),
-			Amount:   100,
-			Expired:  true,
-		})
-		total++
 	}
 }
 
@@ -67,33 +61,26 @@ func (s *streamServiceImpl) ClientStream(stream ServerClientStream[ListExpiredCr
 // (e.g., real-time feed, paginated list push).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) ServerStream(req *ListExpiredCreditBucketsRequest, stream ServerServerStream[ListExpiredCreditBucketsResponse]) error {
-	s.logger.Info("server-stream started", slog.String("filter", req.Filter))
+func (s *streamServiceImpl) ServerStream(req *Request, stream ServerStreamingServer[Response]) error {
+	s.logger.Info("server-stream started", slog.String("name", req.Name))
 
-	// Simulate streaming 5 credit bucket entries back to the client.
-	for i := int64(1); i <= 5; i++ {
+	// Simulate streaming 5 responses back to the client.
+	for i := 1; i <= 5; i++ {
 		select {
 		case <-stream.Context().Done():
 			return stream.Context().Err()
 		default:
 		}
 
-		resp := &ListExpiredCreditBucketsResponse{
-			Buckets: []*CreditBucket{
-				{
-					BucketID: fmt.Sprintf("bucket-%d", i),
-					Amount:   i * 50,
-					Expired:  true,
-				},
-			},
-			Total: i,
+		resp := &Response{
+			Message: fmt.Sprintf("hello %s, message #%d", req.Name, i),
 		}
 
 		if err := stream.Send(resp); err != nil {
 			return err
 		}
 
-		s.logger.Info("server-stream sent", slog.Int64("seq", i))
+		s.logger.Info("server-stream sent", slog.Int("seq", i))
 
 		// Simulate some processing delay between pushes.
 		time.Sleep(500 * time.Millisecond)
@@ -107,7 +94,7 @@ func (s *streamServiceImpl) ServerStream(req *ListExpiredCreditBucketsRequest, s
 // BidStream: full-duplex bidirectional communication (e.g., chat, collab).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) BidStream(stream ServerBidiStream[ListExpiredCreditBucketsRequest, ListExpiredCreditBucketsResponse]) error {
+func (s *streamServiceImpl) BidStream(stream BidiStreamingServer[Request, Response]) error {
 	s.logger.Info("bidi-stream started")
 
 	for {
@@ -121,19 +108,12 @@ func (s *streamServiceImpl) BidStream(stream ServerBidiStream[ListExpiredCreditB
 		}
 
 		s.logger.Info("bidi-stream received",
-			slog.String("filter", req.Filter),
+			slog.String("name", req.Name),
 		)
 
-		// Echo back an acknowledgement with a generated bucket.
-		resp := &ListExpiredCreditBucketsResponse{
-			Buckets: []*CreditBucket{
-				{
-					BucketID: fmt.Sprintf("ack-%s", req.Filter),
-					Amount:   1,
-					Expired:  false,
-				},
-			},
-			Total: 1,
+		// Echo back an acknowledgement.
+		resp := &Response{
+			Message: fmt.Sprintf("ack: %s", req.Name),
 		}
 
 		if err := stream.Send(resp); err != nil {

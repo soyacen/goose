@@ -9,44 +9,54 @@ import (
 	"github.com/coder/websocket"
 )
 
-// ---------------------------------------------------------------------------
-// serverStream — base implementation of ServerStream
-// ---------------------------------------------------------------------------
+// Compile-time check: serverStream implements the ServerStream interface.
+var _ ServerStream = (*serverStream)(nil)
 
-// serverStream is the concrete implementation of the ServerStream interface.
-// It wraps a *Conn and provides Codec-based SendMsg/RecvMsg.
+// serverStream is the concrete implementation of the ServerStream interface
+// defined in stream_interfaces.go. It wraps a *Conn and provides Codec-based
+// SendMsg/RecvMsg for use by GenericServerStream.
 type serverStream struct {
 	conn    *Conn
 	ctx     context.Context
 	codec   Codec
-	req     *http.Request
 	header  http.Header
 	trailer http.Header
 }
 
 // newServerStream creates a base server stream wrapping conn.
-func newServerStream(ctx context.Context, conn *Conn, r *http.Request, codec Codec) *serverStream {
+func newServerStream(ctx context.Context, conn *Conn, codec Codec) *serverStream {
 	return &serverStream{
 		conn:    conn,
 		ctx:     ctx,
 		codec:   codec,
-		req:     r,
 		header:  make(http.Header),
 		trailer: make(http.Header),
 	}
 }
 
-// Header returns the response header metadata.
-func (s *serverStream) Header() http.Header { return s.header }
+// SetHeader sets the header metadata. It may be called multiple times.
+func (s *serverStream) SetHeader(h http.Header) error {
+	for k, v := range h {
+		s.header[k] = v
+	}
+	return nil
+}
 
-// SetHeader sets the response header metadata.
-func (s *serverStream) SetHeader(h http.Header) { s.header = h }
+// SendHeader sends the header metadata. For WebSocket streams this is a no-op
+// since headers are sent during the HTTP upgrade handshake.
+func (s *serverStream) SendHeader(h http.Header) error {
+	for k, v := range h {
+		s.header[k] = v
+	}
+	return nil
+}
 
-// Trailer returns the trailer metadata.
-func (s *serverStream) Trailer() http.Header { return s.trailer }
-
-// SetTrailer sets the trailer metadata.
-func (s *serverStream) SetTrailer(t http.Header) { s.trailer = t }
+// SetTrailer sets the trailer metadata which will be sent with the RPC status.
+func (s *serverStream) SetTrailer(t http.Header) {
+	for k, v := range t {
+		s.trailer[k] = v
+	}
+}
 
 // Context returns the stream's context.
 func (s *serverStream) Context() context.Context { return s.ctx }
@@ -83,88 +93,4 @@ func (s *serverStream) RecvMsg(m any) error {
 		return err
 	}
 	return s.codec.Unmarshal(data, m)
-}
-
-// ---------------------------------------------------------------------------
-// serverClientStream — client-streaming (many requests, one response)
-// ---------------------------------------------------------------------------
-
-// serverClientStream implements ServerClientStream[Req, Res].
-type serverClientStream[Req any, Res any] struct {
-	*serverStream
-}
-
-// newServerClientStream creates a typed client-streaming server stream.
-func newServerClientStream[Req any, Res any](ctx context.Context, conn *Conn, r *http.Request, codec Codec) ServerClientStream[Req, Res] {
-	return &serverClientStream[Req, Res]{
-		serverStream: newServerStream(ctx, conn, r, codec),
-	}
-}
-
-// Recv reads the next request from the client. Returns io.EOF when the
-// client has closed the stream.
-func (s *serverClientStream[Req, Res]) Recv() (*Req, error) {
-	var req Req
-	if err := s.RecvMsg(&req); err != nil {
-		return nil, err
-	}
-	return &req, nil
-}
-
-// SendAndClose sends the final response to the client and signals stream
-// completion. It must be called exactly once after all Recv calls.
-func (s *serverClientStream[Req, Res]) SendAndClose(res *Res) error {
-	return s.SendMsg(res)
-}
-
-// ---------------------------------------------------------------------------
-// serverServerStream — server-streaming (one request, many responses)
-// ---------------------------------------------------------------------------
-
-// serverServerStream implements ServerServerStream[Res].
-type serverServerStream[Res any] struct {
-	*serverStream
-}
-
-// newServerServerStream creates a typed server-streaming server stream.
-func newServerServerStream[Res any](ctx context.Context, conn *Conn, r *http.Request, codec Codec) ServerServerStream[Res] {
-	return &serverServerStream[Res]{
-		serverStream: newServerStream(ctx, conn, r, codec),
-	}
-}
-
-// Send writes a response message to the client stream.
-func (s *serverServerStream[Res]) Send(res *Res) error {
-	return s.SendMsg(res)
-}
-
-// ---------------------------------------------------------------------------
-// serverBidiStream — bidirectional (many requests, many responses)
-// ---------------------------------------------------------------------------
-
-// serverBidiStream implements ServerBidiStream[Req, Res].
-type serverBidiStream[Req any, Res any] struct {
-	*serverStream
-}
-
-// newServerBidiStream creates a typed bidirectional server stream.
-func newServerBidiStream[Req any, Res any](ctx context.Context, conn *Conn, r *http.Request, codec Codec) ServerBidiStream[Req, Res] {
-	return &serverBidiStream[Req, Res]{
-		serverStream: newServerStream(ctx, conn, r, codec),
-	}
-}
-
-// Recv reads the next request from the client. Returns io.EOF when the
-// client has closed the stream.
-func (s *serverBidiStream[Req, Res]) Recv() (*Req, error) {
-	var req Req
-	if err := s.RecvMsg(&req); err != nil {
-		return nil, err
-	}
-	return &req, nil
-}
-
-// Send writes a response message to the client stream.
-func (s *serverBidiStream[Req, Res]) Send(res *Res) error {
-	return s.SendMsg(res)
 }

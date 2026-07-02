@@ -14,6 +14,9 @@ import (
 // clientStream — base implementation of ClientStream on the client side
 // ---------------------------------------------------------------------------
 
+// Compile-time check: clientStream implements the ClientStream interface.
+var _ ClientStream = (*clientStream)(nil)
+
 // clientStream is the base struct for all client-side stream stubs.
 // It wraps a *Conn and provides Codec-based SendMsg/RecvMsg.
 type clientStream struct {
@@ -106,76 +109,13 @@ func (s *clientStream) close() {
 }
 
 // ---------------------------------------------------------------------------
-// clientStreamingStub — implements ClientStreamingClient[Req, Res]
+// streamServiceClient — implements StreamServiceClient
 // ---------------------------------------------------------------------------
 
-type clientStreamingStub[Req any, Res any] struct {
-	*clientStream
-}
+// Compile-time check: streamServiceClient implements StreamServiceClient.
+var _ StreamServiceClient = (*streamServiceClient)(nil)
 
-// Send sends a request message to the server.
-func (s *clientStreamingStub[Req, Res]) Send(req *Req) error {
-	return s.SendMsg(req)
-}
-
-// CloseAndRecv closes the request stream and waits for the server's response.
-func (s *clientStreamingStub[Req, Res]) CloseAndRecv() (*Res, error) {
-	// Signal that we are done sending.
-	s.conn.Close()
-
-	var res Res
-	if err := s.RecvMsg(&res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-// ---------------------------------------------------------------------------
-// serverStreamingStub — implements ServerStreamingClient[Res]
-// ---------------------------------------------------------------------------
-
-type serverStreamingStub[Res any] struct {
-	*clientStream
-}
-
-// Recv receives the next response message from the server.
-// Returns io.EOF when the stream has completed.
-func (s *serverStreamingStub[Res]) Recv() (*Res, error) {
-	var res Res
-	if err := s.RecvMsg(&res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-// ---------------------------------------------------------------------------
-// bidiStreamingStub — implements BidiStreamingClient[Req, Res]
-// ---------------------------------------------------------------------------
-
-type bidiStreamingStub[Req any, Res any] struct {
-	*clientStream
-}
-
-// Send sends a request message to the server.
-func (s *bidiStreamingStub[Req, Res]) Send(req *Req) error {
-	return s.SendMsg(req)
-}
-
-// Recv receives the next response message from the server.
-// Returns io.EOF when the stream has completed.
-func (s *bidiStreamingStub[Req, Res]) Recv() (*Res, error) {
-	var res Res
-	if err := s.RecvMsg(&res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-// ---------------------------------------------------------------------------
-// streamServiceClient — implements StreamService (client-side)
-// ---------------------------------------------------------------------------
-
-// streamServiceClient implements the StreamService interface by creating
+// streamServiceClient implements the StreamServiceClient interface by creating
 // WebSocket connections for each RPC call. This is what protoc-gen-goose
 // would generate as the client stub.
 type streamServiceClient struct {
@@ -186,10 +126,10 @@ type streamServiceClient struct {
 	logger   *slog.Logger
 }
 
-// NewStreamServiceClient creates a client that implements StreamService.
+// NewStreamServiceClient creates a client that implements StreamServiceClient.
 // url is the WebSocket endpoint (e.g., "ws://localhost:8080/ws/bidi-stream").
 // Each method call dials a new connection for the corresponding streaming RPC.
-func NewStreamServiceClient(url string, codec Codec, logger *slog.Logger) StreamService {
+func NewStreamServiceClient(url string, codec Codec, logger *slog.Logger) StreamServiceClient {
 	if codec == nil {
 		codec = JSONCodec{}
 	}
@@ -208,17 +148,17 @@ func NewStreamServiceClient(url string, codec Codec, logger *slog.Logger) Stream
 }
 
 // ClientStrean opens a client-streaming RPC.
-func (c *streamServiceClient) ClientStrean(ctx context.Context) (ClientStreamingClient[ListExpiredCreditBucketsRequest, ListExpiredCreditBucketsResponse], error) {
+func (c *streamServiceClient) ClientStrean(ctx context.Context) (ClientStreamingClient[Request, Response], error) {
 	cs, err := newClientStream(ctx, c.url, c.codec, c.dialOpts, c.connCfg, c.logger)
 	if err != nil {
 		return nil, err
 	}
-	return &clientStreamingStub[ListExpiredCreditBucketsRequest, ListExpiredCreditBucketsResponse]{clientStream: cs}, nil
+	return &GenericClientStream[Request, Response]{ClientStream: cs}, nil
 }
 
 // ServerStrean opens a server-streaming RPC. It sends the initial request
 // and returns a stream for receiving multiple responses.
-func (c *streamServiceClient) ServerStrean(ctx context.Context, in *ListExpiredCreditBucketsRequest) (ServerStreamingClient[ListExpiredCreditBucketsResponse], error) {
+func (c *streamServiceClient) ServerStrean(ctx context.Context, in *Request) (ServerStreamingClient[Response], error) {
 	cs, err := newClientStream(ctx, c.url, c.codec, c.dialOpts, c.connCfg, c.logger)
 	if err != nil {
 		return nil, err
@@ -230,14 +170,14 @@ func (c *streamServiceClient) ServerStrean(ctx context.Context, in *ListExpiredC
 		return nil, err
 	}
 
-	return &serverStreamingStub[ListExpiredCreditBucketsResponse]{clientStream: cs}, nil
+	return &GenericClientStream[Request, Response]{ClientStream: cs}, nil
 }
 
 // Bid opens a bidirectional-streaming RPC.
-func (c *streamServiceClient) Bid(ctx context.Context) (BidiStreamingClient[ListExpiredCreditBucketsRequest, ListExpiredCreditBucketsResponse], error) {
+func (c *streamServiceClient) Bid(ctx context.Context) (BidiStreamingClient[Request, Response], error) {
 	cs, err := newClientStream(ctx, c.url, c.codec, c.dialOpts, c.connCfg, c.logger)
 	if err != nil {
 		return nil, err
 	}
-	return &bidiStreamingStub[ListExpiredCreditBucketsRequest, ListExpiredCreditBucketsResponse]{clientStream: cs}, nil
+	return &GenericClientStream[Request, Response]{ClientStream: cs}, nil
 }

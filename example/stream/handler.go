@@ -81,7 +81,8 @@ func (h *ClientStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	h.logger.Info("client-stream connected", slog.String("remote", r.RemoteAddr))
 	defer h.logger.Info("client-stream disconnected", slog.String("remote", r.RemoteAddr))
 
-	stream := newServerClientStream[ListExpiredCreditBucketsRequest, ListExpiredCreditBucketsResponse](ctx, conn, r, h.codec)
+	ss := newServerStream(ctx, conn, h.codec)
+	stream := &GenericServerStream[Request, Response]{ServerStream: ss}
 	if err := h.service.ClientStream(stream); err != nil && !isNormalClose(err) {
 		h.logger.Error("client-stream error", slog.String("error", err.Error()))
 	}
@@ -147,7 +148,7 @@ func (h *ServerStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	defer h.logger.Info("server-stream disconnected", slog.String("remote", r.RemoteAddr))
 
 	// Read the initial request from the client.
-	var req ListExpiredCreditBucketsRequest
+	var req Request
 	data, err := conn.Read(ctx)
 	if err != nil {
 		if !isNormalClose(err) {
@@ -160,7 +161,8 @@ func (h *ServerStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	stream := newServerServerStream[ListExpiredCreditBucketsResponse](ctx, conn, r, h.codec)
+	ss := newServerStream(ctx, conn, h.codec)
+	stream := &GenericServerStream[Request, Response]{ServerStream: ss}
 	if err := h.service.ServerStream(&req, stream); err != nil && !isNormalClose(err) {
 		h.logger.Error("server-stream error", slog.String("error", err.Error()))
 	}
@@ -225,7 +227,8 @@ func (h *BidiStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("bidi-stream connected", slog.String("remote", r.RemoteAddr))
 	defer h.logger.Info("bidi-stream disconnected", slog.String("remote", r.RemoteAddr))
 
-	stream := newServerBidiStream[ListExpiredCreditBucketsRequest, ListExpiredCreditBucketsResponse](ctx, conn, r, h.codec)
+	ss := newServerStream(ctx, conn, h.codec)
+	stream := &GenericServerStream[Request, Response]{ServerStream: ss}
 	if err := h.service.BidStream(stream); err != nil && !isNormalClose(err) {
 		h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
 	}
