@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/coder/websocket"
+	"github.com/soyacen/goose/ws"
 )
 
 // ---------------------------------------------------------------------------
@@ -15,28 +16,28 @@ import (
 // ---------------------------------------------------------------------------
 
 // Compile-time check: clientStream implements the ClientStream interface.
-var _ ClientStream = (*clientStream)(nil)
+var _ ws.ClientStream = (*clientStream)(nil)
 
 // clientStream is the base struct for all client-side stream stubs.
 // It wraps a *Conn and provides Codec-based SendMsg/RecvMsg.
 type clientStream struct {
-	conn    *Conn
+	conn    *ws.Conn
 	ctx     context.Context
 	cancel  context.CancelFunc
-	codec   Codec
+	codec   ws.Codec
 	header  http.Header
 	trailer http.Header
 }
 
 // newClientStream dials a WebSocket and returns a base clientStream.
-func newClientStream(ctx context.Context, url string, codec Codec, dialOpts *websocket.DialOptions, cfg ConnConfig, logger *slog.Logger) (*clientStream, error) {
-	ws, _, err := websocket.Dial(ctx, url, dialOpts)
+func newClientStream(ctx context.Context, url string, codec ws.Codec, dialOpts *websocket.DialOptions, cfg ws.ConnConfig, logger *slog.Logger) (*clientStream, error) {
+	wsConn, _, err := websocket.Dial(ctx, url, dialOpts)
 	if err != nil {
 		return nil, err
 	}
 
 	streamCtx, cancel := context.WithCancel(ctx)
-	conn := NewConn(ws, cfg, logger)
+	conn := ws.NewConn(wsConn, cfg, logger)
 	go conn.Start(streamCtx)
 
 	return &clientStream{
@@ -120,27 +121,27 @@ var _ StreamServiceClient = (*streamServiceClient)(nil)
 // would generate as the client stub.
 type streamServiceClient struct {
 	url      string
-	codec    Codec
+	codec    ws.Codec
 	dialOpts *websocket.DialOptions
-	connCfg  ConnConfig
+	connCfg  ws.ConnConfig
 	logger   *slog.Logger
 }
 
 // NewStreamServiceClient creates a client that implements StreamServiceClient.
 // url is the WebSocket endpoint (e.g., "ws://localhost:8080/ws/bidi-stream").
 // Each method call dials a new connection for the corresponding streaming RPC.
-func NewStreamServiceClient(url string, codec Codec, logger *slog.Logger) StreamServiceClient {
+func NewStreamServiceClient(url string, codec ws.Codec, logger *slog.Logger) StreamServiceClient {
 	if codec == nil {
-		codec = JSONCodec{}
+		codec = ws.JSONCodec{}
 	}
 	if logger == nil {
 		logger = slog.Default()
 	}
 	return &streamServiceClient{
-		url:    url,
-		codec:  codec,
-		logger: logger,
-		connCfg: DefaultConnConfig(),
+		url:     url,
+		codec:   codec,
+		logger:  logger,
+		connCfg: ws.DefaultConnConfig(),
 		dialOpts: &websocket.DialOptions{
 			CompressionMode: websocket.CompressionContextTakeover,
 		},
@@ -148,17 +149,17 @@ func NewStreamServiceClient(url string, codec Codec, logger *slog.Logger) Stream
 }
 
 // ClientStrean opens a client-streaming RPC.
-func (c *streamServiceClient) ClientStrean(ctx context.Context) (ClientStreamingClient[Request, Response], error) {
+func (c *streamServiceClient) ClientStrean(ctx context.Context) (ws.ClientStreamingClient[Request, Response], error) {
 	cs, err := newClientStream(ctx, c.url, c.codec, c.dialOpts, c.connCfg, c.logger)
 	if err != nil {
 		return nil, err
 	}
-	return &GenericClientStream[Request, Response]{ClientStream: cs}, nil
+	return &ws.GenericClientStream[Request, Response]{ClientStream: cs}, nil
 }
 
 // ServerStrean opens a server-streaming RPC. It sends the initial request
 // and returns a stream for receiving multiple responses.
-func (c *streamServiceClient) ServerStrean(ctx context.Context, in *Request) (ServerStreamingClient[Response], error) {
+func (c *streamServiceClient) ServerStrean(ctx context.Context, in *Request) (ws.ServerStreamingClient[Response], error) {
 	cs, err := newClientStream(ctx, c.url, c.codec, c.dialOpts, c.connCfg, c.logger)
 	if err != nil {
 		return nil, err
@@ -170,14 +171,14 @@ func (c *streamServiceClient) ServerStrean(ctx context.Context, in *Request) (Se
 		return nil, err
 	}
 
-	return &GenericClientStream[Request, Response]{ClientStream: cs}, nil
+	return &ws.GenericClientStream[Request, Response]{ClientStream: cs}, nil
 }
 
 // Bid opens a bidirectional-streaming RPC.
-func (c *streamServiceClient) Bid(ctx context.Context) (BidiStreamingClient[Request, Response], error) {
+func (c *streamServiceClient) Bid(ctx context.Context) (ws.BidiStreamingClient[Request, Response], error) {
 	cs, err := newClientStream(ctx, c.url, c.codec, c.dialOpts, c.connCfg, c.logger)
 	if err != nil {
 		return nil, err
 	}
-	return &GenericClientStream[Request, Response]{ClientStream: cs}, nil
+	return &ws.GenericClientStream[Request, Response]{ClientStream: cs}, nil
 }

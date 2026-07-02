@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	"github.com/coder/websocket"
+	"github.com/soyacen/goose/ws"
 )
 
 // acceptOptions returns the websocket.AcceptOptions for CORS and subprotocol.
@@ -34,8 +35,8 @@ func isNormalClose(err error) bool {
 // It delegates business logic to the StreamServiceServer implementation.
 type ClientStreamHandler struct {
 	service StreamServiceServer
-	codec   Codec
-	cfg     ConnConfig
+	codec   ws.Codec
+	cfg     ws.ConnConfig
 	logger  *slog.Logger
 	active  atomic.Int64
 	maxConn int64
@@ -44,7 +45,7 @@ type ClientStreamHandler struct {
 // NewClientStreamHandler creates a new ClientStreamHandler.
 // service is the user-implemented StreamServiceServer that contains the
 // business logic for this streaming pattern.
-func NewClientStreamHandler(service StreamServiceServer, codec Codec, cfg ConnConfig, logger *slog.Logger, maxConn int64) *ClientStreamHandler {
+func NewClientStreamHandler(service StreamServiceServer, codec ws.Codec, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64) *ClientStreamHandler {
 	return &ClientStreamHandler{
 		service: service,
 		codec:   codec,
@@ -63,7 +64,7 @@ func (h *ClientStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	ws, err := websocket.Accept(w, r, acceptOptions())
+	wsConn, err := websocket.Accept(w, r, acceptOptions())
 	if err != nil {
 		h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
 		return
@@ -72,7 +73,7 @@ func (h *ClientStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	h.active.Add(1)
 	defer h.active.Add(-1)
 
-	conn := NewConn(ws, h.cfg, h.logger)
+	conn := ws.NewConn(wsConn, h.cfg, h.logger)
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
@@ -81,8 +82,8 @@ func (h *ClientStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	h.logger.Info("client-stream connected", slog.String("remote", r.RemoteAddr))
 	defer h.logger.Info("client-stream disconnected", slog.String("remote", r.RemoteAddr))
 
-	ss := newServerStream(ctx, conn, h.codec)
-	stream := &GenericServerStream[Request, Response]{ServerStream: ss}
+	ss := ws.NewServerStream(ctx, conn, h.codec)
+	stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
 	if err := h.service.ClientStream(stream); err != nil && !isNormalClose(err) {
 		h.logger.Error("client-stream error", slog.String("error", err.Error()))
 	}
@@ -102,15 +103,15 @@ func (h *ClientStreamHandler) ActiveConnections() int64 {
 // It delegates business logic to the StreamServiceServer implementation.
 type ServerStreamHandler struct {
 	service StreamServiceServer
-	codec   Codec
-	cfg     ConnConfig
+	codec   ws.Codec
+	cfg     ws.ConnConfig
 	logger  *slog.Logger
 	active  atomic.Int64
 	maxConn int64
 }
 
 // NewServerStreamHandler creates a new ServerStreamHandler.
-func NewServerStreamHandler(service StreamServiceServer, codec Codec, cfg ConnConfig, logger *slog.Logger, maxConn int64) *ServerStreamHandler {
+func NewServerStreamHandler(service StreamServiceServer, codec ws.Codec, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64) *ServerStreamHandler {
 	return &ServerStreamHandler{
 		service: service,
 		codec:   codec,
@@ -129,7 +130,7 @@ func (h *ServerStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	ws, err := websocket.Accept(w, r, acceptOptions())
+	wsConn, err := websocket.Accept(w, r, acceptOptions())
 	if err != nil {
 		h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
 		return
@@ -138,7 +139,7 @@ func (h *ServerStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	h.active.Add(1)
 	defer h.active.Add(-1)
 
-	conn := NewConn(ws, h.cfg, h.logger)
+	conn := ws.NewConn(wsConn, h.cfg, h.logger)
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
@@ -161,8 +162,8 @@ func (h *ServerStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	ss := newServerStream(ctx, conn, h.codec)
-	stream := &GenericServerStream[Request, Response]{ServerStream: ss}
+	ss := ws.NewServerStream(ctx, conn, h.codec)
+	stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
 	if err := h.service.ServerStream(&req, stream); err != nil && !isNormalClose(err) {
 		h.logger.Error("server-stream error", slog.String("error", err.Error()))
 	}
@@ -182,15 +183,15 @@ func (h *ServerStreamHandler) ActiveConnections() int64 {
 // It delegates business logic to the StreamServiceServer implementation.
 type BidiStreamHandler struct {
 	service StreamServiceServer
-	codec   Codec
-	cfg     ConnConfig
+	codec   ws.Codec
+	cfg     ws.ConnConfig
 	logger  *slog.Logger
 	active  atomic.Int64
 	maxConn int64
 }
 
 // NewBidiStreamHandler creates a new BidiStreamHandler.
-func NewBidiStreamHandler(service StreamServiceServer, codec Codec, cfg ConnConfig, logger *slog.Logger, maxConn int64) *BidiStreamHandler {
+func NewBidiStreamHandler(service StreamServiceServer, codec ws.Codec, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64) *BidiStreamHandler {
 	return &BidiStreamHandler{
 		service: service,
 		codec:   codec,
@@ -209,7 +210,7 @@ func (h *BidiStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ws, err := websocket.Accept(w, r, acceptOptions())
+	wsConn, err := websocket.Accept(w, r, acceptOptions())
 	if err != nil {
 		h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
 		return
@@ -218,7 +219,7 @@ func (h *BidiStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.active.Add(1)
 	defer h.active.Add(-1)
 
-	conn := NewConn(ws, h.cfg, h.logger)
+	conn := ws.NewConn(wsConn, h.cfg, h.logger)
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
@@ -227,8 +228,8 @@ func (h *BidiStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("bidi-stream connected", slog.String("remote", r.RemoteAddr))
 	defer h.logger.Info("bidi-stream disconnected", slog.String("remote", r.RemoteAddr))
 
-	ss := newServerStream(ctx, conn, h.codec)
-	stream := &GenericServerStream[Request, Response]{ServerStream: ss}
+	ss := ws.NewServerStream(ctx, conn, h.codec)
+	stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
 	if err := h.service.BidStream(stream); err != nil && !isNormalClose(err) {
 		h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
 	}

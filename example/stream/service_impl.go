@@ -5,6 +5,8 @@ import (
 	"io"
 	"log/slog"
 	"time"
+
+	"github.com/soyacen/goose/ws"
 )
 
 // ---------------------------------------------------------------------------
@@ -33,7 +35,7 @@ func NewStreamServiceImpl(logger *slog.Logger) StreamServiceServer {
 // aggregated response (e.g., batch upload, log ingestion).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) ClientStream(stream ClientStreamingServer[Request, Response]) error {
+func (s *streamServiceImpl) ClientStream(stream ws.ClientStreamingServer[Request, Response]) error {
 	var count int
 
 	for {
@@ -61,7 +63,7 @@ func (s *streamServiceImpl) ClientStream(stream ClientStreamingServer[Request, R
 // (e.g., real-time feed, paginated list push).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) ServerStream(req *Request, stream ServerStreamingServer[Response]) error {
+func (s *streamServiceImpl) ServerStream(req *Request, stream ws.ServerStreamingServer[Response]) error {
 	s.logger.Info("server-stream started", slog.String("name", req.Name))
 
 	// Simulate streaming 5 responses back to the client.
@@ -94,7 +96,7 @@ func (s *streamServiceImpl) ServerStream(req *Request, stream ServerStreamingSer
 // BidStream: full-duplex bidirectional communication (e.g., chat, collab).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) BidStream(stream BidiStreamingServer[Request, Response]) error {
+func (s *streamServiceImpl) BidStream(stream ws.BidiStreamingServer[Request, Response]) error {
 	s.logger.Info("bidi-stream started")
 
 	for {

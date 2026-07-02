@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+
+	"github.com/soyacen/goose/ws"
 )
 
 type Request struct {
@@ -13,13 +15,13 @@ type Response struct {
 }
 
 type StreamServiceClient interface {
-	ClientStrean(ctx context.Context) (ClientStreamingClient[Request, Response], error)
-	ServerStrean(ctx context.Context, in *Request) (ServerStreamingClient[Response], error)
-	Bid(ctx context.Context) (BidiStreamingClient[Request, Response], error)
+	ClientStrean(ctx context.Context) (ws.ClientStreamingClient[Request, Response], error)
+	ServerStrean(ctx context.Context, in *Request) (ws.ServerStreamingClient[Response], error)
+	Bid(ctx context.Context) (ws.BidiStreamingClient[Request, Response], error)
 }
 
 type StreamServiceServer interface {
-	ClientStream(ClientStreamingServer[Request, Response]) error
-	ServerStream(*Request, ServerStreamingServer[Response]) error
-	BidStream(BidiStreamingServer[Request, Response]) error
+	ClientStream(ws.ClientStreamingServer[Request, Response]) error
+	ServerStream(*Request, ws.ServerStreamingServer[Response]) error
+	BidStream(ws.BidiStreamingServer[Request, Response]) error
 }

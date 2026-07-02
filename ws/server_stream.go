@@ -1,4 +1,4 @@
-package main
+package ws
 
 import (
 	"context"
@@ -24,7 +24,7 @@ type serverStream struct {
 }
 
 // newServerStream creates a base server stream wrapping conn.
-func newServerStream(ctx context.Context, conn *Conn, codec Codec) *serverStream {
+func NewServerStream(ctx context.Context, conn *Conn, codec Codec) *serverStream {
 	return &serverStream{
 		conn:    conn,
 		ctx:     ctx,

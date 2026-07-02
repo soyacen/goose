@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/soyacen/goose/ws"
 )
 
 // RetryConfig controls the reconnection behavior.
@@ -84,7 +85,7 @@ type ClientOptions struct {
 	// Retry controls reconnection behavior.
 	Retry RetryConfig
 	// ConnConfig is the underlying connection configuration.
-	ConnConfig ConnConfig
+	ConnConfig ws.ConnConfig
 	// Logger for structured logging.
 	Logger *slog.Logger
 	// OnStateChange is called on connection state transitions.
@@ -190,7 +191,7 @@ func (c *Client) runOnceWithRetry(parentCtx context.Context, attempt *int) {
 		HTTPHeader:      c.opts.Headers,
 		CompressionMode: websocket.CompressionContextTakeover,
 	}
-	ws, _, err := websocket.Dial(dialCtx, c.opts.URL, wsOpts)
+	wsConn, _, err := websocket.Dial(dialCtx, c.opts.URL, wsOpts)
 	dialCancel()
 	if err != nil {
 		c.opts.Logger.Warn("dial failed, will retry",
@@ -210,9 +211,9 @@ func (c *Client) runOnceWithRetry(parentCtx context.Context, attempt *int) {
 
 	connCfg := c.opts.ConnConfig
 	if connCfg.WriteBufferSize == 0 {
-		connCfg = DefaultConnConfig()
+		connCfg = ws.DefaultConnConfig()
 	}
-	conn := NewConn(ws, connCfg, c.opts.Logger)
+	conn := ws.NewConn(wsConn, connCfg, c.opts.Logger)
 
 	ctx, cancel := context.WithCancel(parentCtx)
 	go conn.Start(ctx)
@@ -245,7 +246,7 @@ func errStr(err error) string {
 }
 
 // messageLoop runs the appropriate read/write pumps based on the stream type.
-func (c *Client) messageLoop(ctx context.Context, conn *Conn) error {
+func (c *Client) messageLoop(ctx context.Context, conn *ws.Conn) error {
 	errCh := make(chan error, 2)
 
 	// Read pump (server-stream or bidi-stream).
