@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-02T13:06:26Z"
+exported_at: "2026-07-02T13:37:46Z"
 modules:
     "":
         dir_name: Goose Protobuf HTTP 网关框架
@@ -51,6 +51,7 @@ modules:
             - outgoing
             - protoc_gen_goose
             - server
+            - stream
         depends_on: []
         related_to: []
     build_system:
@@ -78,9 +79,9 @@ modules:
         children: []
         depends_on: []
         related_to:
+            - path: middleware
             - path: outgoing
             - path: protoc_gen_goose
-            - path: server
     configuration_system:
         dir_name: Goose 配置系统：基于函数选项模式 (Functional Options) 的运行时配置
         title: Goose 配置系统：基于函数选项模式 (Functional Options) 的运行时配置
@@ -149,6 +150,7 @@ modules:
         children: []
         depends_on: []
         related_to:
+            - path: client
             - path: server
     outgoing:
         dir_name: HTTP 客户端请求构建器
@@ -180,6 +182,14 @@ modules:
         children: []
         depends_on: []
         related_to:
-            - path: client
             - path: middleware
             - path: protoc_gen_goose
+    stream:
+        dir_name: WebSocket 流式 RPC 示例（客户端_服务端_双向）
+        title: WebSocket 流式 RPC 示例（客户端/服务端/双向）
+        scope:
+            - example/stream/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []

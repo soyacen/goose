@@ -2,15 +2,11 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"sync/atomic"
-	"time"
 
-	"golang.org/x/sync/errgroup"
 	"github.com/coder/websocket"
 )
 
@@ -21,14 +17,24 @@ func acceptOptions() *websocket.AcceptOptions {
 	}
 }
 
+// isNormalClose returns true if the error represents a normal WebSocket close.
+func isNormalClose(err error) bool {
+	status := websocket.CloseStatus(err)
+	return status == websocket.StatusNormalClosure ||
+		status == websocket.StatusGoingAway ||
+		errors.Is(err, context.Canceled)
+}
+
 // ------------------------------------------------------------------
 // 1. Client-Stream: client sends, server only receives
 // ------------------------------------------------------------------
 
 // ClientStreamHandler handles WebSocket connections where only the client
 // sends messages to the server (unidirectional: client -> server).
-// Typical use cases: log ingestion, telemetry upload, event reporting.
+// It delegates business logic to the StreamServiceServer implementation.
 type ClientStreamHandler struct {
+	service StreamServiceServer
+	codec   Codec
 	cfg     ConnConfig
 	logger  *slog.Logger
 	active  atomic.Int64
@@ -36,12 +42,21 @@ type ClientStreamHandler struct {
 }
 
 // NewClientStreamHandler creates a new ClientStreamHandler.
-// maxConn limits the number of concurrent connections (0 = unlimited).
-func NewClientStreamHandler(cfg ConnConfig, logger *slog.Logger, maxConn int64) *ClientStreamHandler {
-	return &ClientStreamHandler{cfg: cfg, logger: logger, maxConn: maxConn}
+// service is the user-implemented StreamServiceServer that contains the
+// business logic for this streaming pattern.
+func NewClientStreamHandler(service StreamServiceServer, codec Codec, cfg ConnConfig, logger *slog.Logger, maxConn int64) *ClientStreamHandler {
+	return &ClientStreamHandler{
+		service: service,
+		codec:   codec,
+		cfg:     cfg,
+		logger:  logger,
+		maxConn: maxConn,
+	}
 }
 
 // ServeHTTP implements http.Handler.
+// It upgrades the connection, creates a Conn and a typed server stream,
+// then delegates to the StreamServiceServer.ClientStream method.
 func (h *ClientStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if h.maxConn > 0 && h.active.Load() >= h.maxConn {
 		http.Error(w, "too many connections", http.StatusServiceUnavailable)
@@ -66,25 +81,10 @@ func (h *ClientStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	h.logger.Info("client-stream connected", slog.String("remote", r.RemoteAddr))
 	defer h.logger.Info("client-stream disconnected", slog.String("remote", r.RemoteAddr))
 
-	for {
-		data, err := conn.Read(ctx)
-		if err != nil {
-			if websocket.CloseStatus(err) == websocket.StatusNormalClosure ||
-				websocket.CloseStatus(err) == websocket.StatusGoingAway ||
-				errors.Is(err, context.Canceled) {
-				return
-			}
-			h.logger.Error("client-stream read error", slog.String("error", err.Error()))
-			return
-		}
-		h.onMessage(r.Context(), data)
+	stream := newServerClientStream[ListExpiredCreditBucketsRequest, ListExpiredCreditBucketsResponse](ctx, conn, r, h.codec)
+	if err := h.service.ClientStream(stream); err != nil && !isNormalClose(err) {
+		h.logger.Error("client-stream error", slog.String("error", err.Error()))
 	}
-}
-
-// onMessage processes each incoming message from the client.
-func (h *ClientStreamHandler) onMessage(_ context.Context, data []byte) {
-	h.logger.Info("client-stream received", slog.Int("bytes", len(data)))
-	// In production, dispatch to a message queue or processing pipeline here.
 }
 
 // ActiveConnections returns the current number of active connections.
@@ -98,43 +98,30 @@ func (h *ClientStreamHandler) ActiveConnections() int64 {
 
 // ServerStreamHandler handles WebSocket connections where only the server
 // pushes messages to the client (unidirectional: server -> client).
-// Typical use cases: real-time notifications, live feeds, server-sent events.
+// It delegates business logic to the StreamServiceServer implementation.
 type ServerStreamHandler struct {
-	cfg         ConnConfig
-	logger      *slog.Logger
-	active      atomic.Int64
-	maxConn     int64
-	interval    time.Duration
-	messageFunc func(seq uint64) []byte
+	service StreamServiceServer
+	codec   Codec
+	cfg     ConnConfig
+	logger  *slog.Logger
+	active  atomic.Int64
+	maxConn int64
 }
 
 // NewServerStreamHandler creates a new ServerStreamHandler.
-// interval controls how frequently the server pushes messages.
-// messageFunc generates the payload for each push; if nil a default JSON is used.
-func NewServerStreamHandler(cfg ConnConfig, logger *slog.Logger, maxConn int64, interval time.Duration, messageFunc func(seq uint64) []byte) *ServerStreamHandler {
-	if messageFunc == nil {
-		messageFunc = defaultServerMessage
-	}
+func NewServerStreamHandler(service StreamServiceServer, codec Codec, cfg ConnConfig, logger *slog.Logger, maxConn int64) *ServerStreamHandler {
 	return &ServerStreamHandler{
-		cfg:         cfg,
-		logger:      logger,
-		maxConn:     maxConn,
-		interval:    interval,
-		messageFunc: messageFunc,
+		service: service,
+		codec:   codec,
+		cfg:     cfg,
+		logger:  logger,
+		maxConn: maxConn,
 	}
-}
-
-func defaultServerMessage(seq uint64) []byte {
-	msg := map[string]interface{}{
-		"type":      "server-push",
-		"seq":       seq,
-		"timestamp": time.Now().UnixMilli(),
-	}
-	data, _ := json.Marshal(msg)
-	return data
 }
 
 // ServeHTTP implements http.Handler.
+// It upgrades the connection, reads the initial request from the client,
+// creates a server-streaming stream, and delegates to the service.
 func (h *ServerStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if h.maxConn > 0 && h.active.Load() >= h.maxConn {
 		http.Error(w, "too many connections", http.StatusServiceUnavailable)
@@ -159,43 +146,22 @@ func (h *ServerStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	h.logger.Info("server-stream connected", slog.String("remote", r.RemoteAddr))
 	defer h.logger.Info("server-stream disconnected", slog.String("remote", r.RemoteAddr))
 
-	g, gCtx := errgroup.WithContext(ctx)
-
-	// Read pump: detect client close / errors.
-	g.Go(func() error {
-		for {
-			_, err := conn.Read(gCtx)
-			if err != nil {
-				return err
-			}
+	// Read the initial request from the client.
+	var req ListExpiredCreditBucketsRequest
+	data, err := conn.Read(ctx)
+	if err != nil {
+		if !isNormalClose(err) {
+			h.logger.Error("server-stream read request error", slog.String("error", err.Error()))
 		}
-	})
+		return
+	}
+	if err := h.codec.Unmarshal(data, &req); err != nil {
+		h.logger.Error("server-stream unmarshal error", slog.String("error", err.Error()))
+		return
+	}
 
-	// Write pump: server pushes messages at configured interval.
-	g.Go(func() error {
-		var seq uint64
-		ticker := time.NewTicker(h.interval)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-gCtx.Done():
-				return gCtx.Err()
-			case <-ticker.C:
-				seq++
-				if !conn.Send(h.messageFunc(seq)) {
-					return fmt.Errorf("send buffer full")
-				}
-			}
-		}
-	})
-
-	if err := g.Wait(); err != nil {
-		closeStatus := websocket.CloseStatus(err)
-		if closeStatus == websocket.StatusNormalClosure ||
-			closeStatus == websocket.StatusGoingAway ||
-			errors.Is(err, context.Canceled) {
-			return
-		}
+	stream := newServerServerStream[ListExpiredCreditBucketsResponse](ctx, conn, r, h.codec)
+	if err := h.service.ServerStream(&req, stream); err != nil && !isNormalClose(err) {
 		h.logger.Error("server-stream error", slog.String("error", err.Error()))
 	}
 }
@@ -211,8 +177,10 @@ func (h *ServerStreamHandler) ActiveConnections() int64 {
 
 // BidiStreamHandler handles WebSocket connections where both the client
 // and the server can send messages concurrently (full-duplex).
-// Typical use cases: chat, collaborative editing, gaming.
+// It delegates business logic to the StreamServiceServer implementation.
 type BidiStreamHandler struct {
+	service StreamServiceServer
+	codec   Codec
 	cfg     ConnConfig
 	logger  *slog.Logger
 	active  atomic.Int64
@@ -220,11 +188,19 @@ type BidiStreamHandler struct {
 }
 
 // NewBidiStreamHandler creates a new BidiStreamHandler.
-func NewBidiStreamHandler(cfg ConnConfig, logger *slog.Logger, maxConn int64) *BidiStreamHandler {
-	return &BidiStreamHandler{cfg: cfg, logger: logger, maxConn: maxConn}
+func NewBidiStreamHandler(service StreamServiceServer, codec Codec, cfg ConnConfig, logger *slog.Logger, maxConn int64) *BidiStreamHandler {
+	return &BidiStreamHandler{
+		service: service,
+		codec:   codec,
+		cfg:     cfg,
+		logger:  logger,
+		maxConn: maxConn,
+	}
 }
 
 // ServeHTTP implements http.Handler.
+// It upgrades the connection, creates a bidirectional stream, and delegates
+// to the StreamServiceServer.BidStream method.
 func (h *BidiStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if h.maxConn > 0 && h.active.Load() >= h.maxConn {
 		http.Error(w, "too many connections", http.StatusServiceUnavailable)
@@ -249,66 +225,10 @@ func (h *BidiStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("bidi-stream connected", slog.String("remote", r.RemoteAddr))
 	defer h.logger.Info("bidi-stream disconnected", slog.String("remote", r.RemoteAddr))
 
-	g, gCtx := errgroup.WithContext(ctx)
-
-	// Read pump: receive messages from client.
-	g.Go(func() error {
-		for {
-			data, err := conn.Read(gCtx)
-			if err != nil {
-				return err
-			}
-			h.onClientMessage(conn, data)
-		}
-	})
-
-	// Server push pump: periodically send heartbeat/status to client.
-	g.Go(func() error {
-		var seq uint64
-		ticker := time.NewTicker(5 * time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-gCtx.Done():
-				return gCtx.Err()
-			case <-ticker.C:
-				seq++
-				msg := map[string]interface{}{
-					"type":      "server-heartbeat",
-					"seq":       seq,
-					"timestamp": time.Now().UnixMilli(),
-				}
-				data, _ := json.Marshal(msg)
-				if !conn.Send(data) {
-					return fmt.Errorf("send buffer full")
-				}
-			}
-		}
-	})
-
-	if err := g.Wait(); err != nil {
-		closeStatus := websocket.CloseStatus(err)
-		if closeStatus == websocket.StatusNormalClosure ||
-			closeStatus == websocket.StatusGoingAway ||
-			errors.Is(err, context.Canceled) {
-			return
-		}
+	stream := newServerBidiStream[ListExpiredCreditBucketsRequest, ListExpiredCreditBucketsResponse](ctx, conn, r, h.codec)
+	if err := h.service.BidStream(stream); err != nil && !isNormalClose(err) {
 		h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
 	}
-}
-
-// onClientMessage processes an incoming client message and optionally responds.
-func (h *BidiStreamHandler) onClientMessage(conn *Conn, data []byte) {
-	h.logger.Info("bidi-stream received", slog.Int("bytes", len(data)))
-
-	// Echo-back acknowledgement (can be replaced with business logic).
-	ack := map[string]interface{}{
-		"type":      "ack",
-		"size":      len(data),
-		"timestamp": time.Now().UnixMilli(),
-	}
-	ackData, _ := json.Marshal(ack)
-	conn.Send(ackData)
 }
 
 // ActiveConnections returns the current number of active connections.

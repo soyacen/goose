@@ -6,6 +6,6 @@ scope:
 source_files: []
 depends_on: []
 related_to:
+    - path: middleware
     - path: outgoing
     - path: protoc_gen_goose
-    - path: server

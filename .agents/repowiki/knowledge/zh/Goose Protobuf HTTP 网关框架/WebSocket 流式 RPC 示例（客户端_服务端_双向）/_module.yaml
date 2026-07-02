@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: stream
+title: WebSocket 流式 RPC 示例（客户端/服务端/双向）
+scope:
+    - example/stream/
+source_files: []
+depends_on: []
+related_to: []
