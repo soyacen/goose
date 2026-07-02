@@ -17,7 +17,7 @@ type Response struct {
 type StreamServiceClient interface {
 	ClientStrean(ctx context.Context) (ws.ClientStreamingClient[Request, Response], error)
 	ServerStrean(ctx context.Context, in *Request) (ws.ServerStreamingClient[Response], error)
-	Bid(ctx context.Context) (ws.BidiStreamingClient[Request, Response], error)
+	BidStream(ctx context.Context) (ws.BidiStreamingClient[Request, Response], error)
 }
 
 type StreamServiceServer interface {

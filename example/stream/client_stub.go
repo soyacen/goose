@@ -89,7 +89,7 @@ func (c *streamServiceClient) ServerStrean(ctx context.Context, in *Request) (ws
 }
 
 // Bid opens a bidirectional-streaming RPC.
-func (c *streamServiceClient) Bid(ctx context.Context) (ws.BidiStreamingClient[Request, Response], error) {
+func (c *streamServiceClient) BidStream(ctx context.Context) (ws.BidiStreamingClient[Request, Response], error) {
 	cs, err := c.dialAndConnect(ctx)
 	if err != nil {
 		return nil, err
