@@ -6,14 +6,6 @@ import (
 	"github.com/soyacen/goose/ws"
 )
 
-type Request struct {
-	Name string `json:"name,omitempty"`
-}
-
-type Response struct {
-	Message string `json:"message,omitempty"`
-}
-
 type StreamServiceClient interface {
 	ClientStream(ctx context.Context) (ws.ClientStreamingClient[Request, Response], error)
 	ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[Response], error)
