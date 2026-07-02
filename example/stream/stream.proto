@@ -7,35 +7,25 @@ import "google/api/httpbody.proto";
 import "google/rpc/http.proto";
 
 service ResponseBody {
-  rpc OmittedResponse(Request) returns (Response) {
+  rpc ClientStream(stream Request) returns (Response) {
     option (google.api.http) = {
-      get : "/v1/omitted/response"
+      post: "/ws/client-stream"
     };
   }
 
-  rpc StarResponse(Request) returns (Response) {
+  rpc ServerStream(Request) returns (stream Response) {
     option (google.api.http) = {
-      get : "/v1/star/response"
-      response_body : "*"
+      post: "/ws/server-stream"
     };
   }
 
-  rpc NamedResponse(Request) returns (NamedBodyResponse) {
+  rpc BidStream(stream Request) returns (stream Response) {
     option (google.api.http) = {
-      get : "/v1/named/response"
-      response_body : "body"
+      post: "/ws/bidi-stream"
     };
   }
-
 }
 
-message Request { string message = 1; }
+message Request { string name = 1; }
 
 message Response { string message = 1; }
-
-message NamedBodyResponse {
-  message Body { string message = 1; }
-  Body body = 1;
-}
-
-message NamedHttpBodyResponse { google.api.HttpBody body = 1; }
