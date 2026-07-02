@@ -1,10 +1,8 @@
 syntax = "proto3";
-package leo.goose.example.response_body.v1;
-option go_package = "github.com/soyacen/goose/example/response_body/v1;response_body";
+package leo.goose.example.websocket.v1;
+option go_package = "github.com/soyacen/goose/example/websocket/v1;websocket";
 
 import "google/api/annotations.proto";
-import "google/api/httpbody.proto";
-import "google/rpc/http.proto";
 
 service ResponseBody {
   rpc ClientStream(stream Request) returns (Response) {
