@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-06-25T09:52:13Z"
+exported_at: "2026-06-29T11:14:02Z"
 modules:
     "":
         dir_name: Goose HTTP 网关框架
