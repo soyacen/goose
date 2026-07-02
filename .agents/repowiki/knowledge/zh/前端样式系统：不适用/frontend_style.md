@@ -1,0 +1,1 @@
+该仓库是一个 Go 语言的 Protobuf HTTP 网关框架（Goose），专注于后端服务开发，不包含任何前端代码。经搜索确认，仓库中不存在 CSS、SCSS、LESS、Stylus、Tailwind 配置文件或任何前端主题/样式相关文件。因此 `frontend_style` 类别不适用于此仓库。

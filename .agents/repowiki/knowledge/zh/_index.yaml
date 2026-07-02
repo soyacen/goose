@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-06-29T11:14:02Z"
+exported_at: "2026-07-02T13:06:26Z"
 modules:
     "":
-        dir_name: Goose HTTP 网关框架
-        title: Goose HTTP 网关框架
+        dir_name: Goose Protobuf HTTP 网关框架
+        title: Goose Protobuf HTTP 网关框架
         scope:
             - go.mod
             - go.sum
@@ -121,6 +121,14 @@ modules:
         children: []
         depends_on: []
         related_to: []
+    frontend_style:
+        dir_name: 前端样式系统：不适用
+        title: 前端样式系统：不适用
+        scope: []
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
     logging_system:
         dir_name: 基于 slog 的中间件日志系统
         title: 基于 slog 的中间件日志系统
@@ -133,8 +141,8 @@ modules:
         depends_on: []
         related_to: []
     middleware:
-        dir_name: 通用 HTTP 中间件集合
-        title: 通用 HTTP 中间件集合
+        dir_name: HTTP 通用中间件集合（CORS_JWT_限流_日志_追踪等）
+        title: HTTP 通用中间件集合（CORS/JWT/限流/日志/追踪等）
         scope:
             - middleware/
         source_files: []
