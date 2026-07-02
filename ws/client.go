@@ -1,4 +1,4 @@
-package main
+package ws
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/soyacen/goose/ws"
 )
 
 // RetryConfig controls the reconnection behavior.
@@ -85,7 +84,7 @@ type ClientOptions struct {
 	// Retry controls reconnection behavior.
 	Retry RetryConfig
 	// ConnConfig is the underlying connection configuration.
-	ConnConfig ws.ConnConfig
+	ConnConfig ConnConfig
 	// Logger for structured logging.
 	Logger *slog.Logger
 	// OnStateChange is called on connection state transitions.
@@ -211,9 +210,9 @@ func (c *Client) runOnceWithRetry(parentCtx context.Context, attempt *int) {
 
 	connCfg := c.opts.ConnConfig
 	if connCfg.WriteBufferSize == 0 {
-		connCfg = ws.DefaultConnConfig()
+		connCfg = DefaultConnConfig()
 	}
-	conn := ws.NewConn(wsConn, connCfg, c.opts.Logger)
+	conn := NewConn(wsConn, connCfg, c.opts.Logger)
 
 	ctx, cancel := context.WithCancel(parentCtx)
 	go conn.Start(ctx)
@@ -246,7 +245,7 @@ func errStr(err error) string {
 }
 
 // messageLoop runs the appropriate read/write pumps based on the stream type.
-func (c *Client) messageLoop(ctx context.Context, conn *ws.Conn) error {
+func (c *Client) messageLoop(ctx context.Context, conn *Conn) error {
 	errCh := make(chan error, 2)
 
 	// Read pump (server-stream or bidi-stream).

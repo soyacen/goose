@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-02T14:06:05Z"
+exported_at: "2026-07-02T14:36:29Z"
 modules:
     "":
         dir_name: Goose Protobuf HTTP 网关框架

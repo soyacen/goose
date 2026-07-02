@@ -2,112 +2,11 @@ package main
 
 import (
 	"context"
-	"errors"
-	"io"
 	"log/slog"
-	"net/http"
 
 	"github.com/coder/websocket"
 	"github.com/soyacen/goose/ws"
 )
-
-// ---------------------------------------------------------------------------
-// clientStream — base implementation of ClientStream on the client side
-// ---------------------------------------------------------------------------
-
-// Compile-time check: clientStream implements the ClientStream interface.
-var _ ws.ClientStream = (*clientStream)(nil)
-
-// clientStream is the base struct for all client-side stream stubs.
-// It wraps a *Conn and provides Codec-based SendMsg/RecvMsg.
-type clientStream struct {
-	conn    *ws.Conn
-	ctx     context.Context
-	cancel  context.CancelFunc
-	codec   ws.Codec
-	header  http.Header
-	trailer http.Header
-}
-
-// newClientStream dials a WebSocket and returns a base clientStream.
-func newClientStream(ctx context.Context, url string, codec ws.Codec, dialOpts *websocket.DialOptions, cfg ws.ConnConfig, logger *slog.Logger) (*clientStream, error) {
-	wsConn, _, err := websocket.Dial(ctx, url, dialOpts)
-	if err != nil {
-		return nil, err
-	}
-
-	streamCtx, cancel := context.WithCancel(ctx)
-	conn := ws.NewConn(wsConn, cfg, logger)
-	go conn.Start(streamCtx)
-
-	return &clientStream{
-		conn:    conn,
-		ctx:     streamCtx,
-		cancel:  cancel,
-		codec:   codec,
-		header:  make(http.Header),
-		trailer: make(http.Header),
-	}, nil
-}
-
-// Header implements ClientStream.
-func (s *clientStream) Header() (http.Header, error) {
-	return s.header, nil
-}
-
-// Trailer implements ClientStream.
-func (s *clientStream) Trailer() http.Header {
-	return s.trailer
-}
-
-// CloseSend closes the send direction of the stream.
-func (s *clientStream) CloseSend() error {
-	s.conn.Close()
-	return nil
-}
-
-// Context implements ClientStream.
-func (s *clientStream) Context() context.Context {
-	return s.ctx
-}
-
-// SendMsg serializes m and enqueues it for sending.
-func (s *clientStream) SendMsg(m any) error {
-	data, err := s.codec.Marshal(m)
-	if err != nil {
-		return err
-	}
-	if !s.conn.Send(data) {
-		return io.ErrClosedPipe
-	}
-	return nil
-}
-
-// RecvMsg reads a message from the connection and deserializes it into m.
-// Returns io.EOF when the server closes the stream.
-func (s *clientStream) RecvMsg(m any) error {
-	data, err := s.conn.Read(s.ctx)
-	if err != nil {
-		if errors.Is(err, context.Canceled) {
-			return err
-		}
-		if errors.Is(err, context.DeadlineExceeded) {
-			return err
-		}
-		// Map websocket close to io.EOF, mirroring gRPC behavior.
-		if websocket.CloseStatus(err) != -1 {
-			return io.EOF
-		}
-		return err
-	}
-	return s.codec.Unmarshal(data, m)
-}
-
-// close tears down the stream.
-func (s *clientStream) close() {
-	s.conn.Close()
-	s.cancel()
-}
 
 // ---------------------------------------------------------------------------
 // streamServiceClient — implements StreamServiceClient
@@ -148,9 +47,24 @@ func NewStreamServiceClient(url string, codec ws.Codec, logger *slog.Logger) Str
 	}
 }
 
+// dialAndConnect dials the WebSocket endpoint and returns a ClientStream ready
+// for use. The caller is responsible for the returned cancel function if the
+// stream is not fully consumed.
+func (c *streamServiceClient) dialAndConnect(ctx context.Context) (ws.ClientStream, error) {
+	wsConn, _, err := websocket.Dial(ctx, c.url, c.dialOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := ws.NewConn(wsConn, c.connCfg, c.logger)
+	go conn.Start(ctx)
+
+	return ws.NewClientStream(ctx, conn, c.codec), nil
+}
+
 // ClientStrean opens a client-streaming RPC.
 func (c *streamServiceClient) ClientStrean(ctx context.Context) (ws.ClientStreamingClient[Request, Response], error) {
-	cs, err := newClientStream(ctx, c.url, c.codec, c.dialOpts, c.connCfg, c.logger)
+	cs, err := c.dialAndConnect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -160,14 +74,14 @@ func (c *streamServiceClient) ClientStrean(ctx context.Context) (ws.ClientStream
 // ServerStrean opens a server-streaming RPC. It sends the initial request
 // and returns a stream for receiving multiple responses.
 func (c *streamServiceClient) ServerStrean(ctx context.Context, in *Request) (ws.ServerStreamingClient[Response], error) {
-	cs, err := newClientStream(ctx, c.url, c.codec, c.dialOpts, c.connCfg, c.logger)
+	cs, err := c.dialAndConnect(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// Send the initial request.
 	if err := cs.SendMsg(in); err != nil {
-		cs.close()
+		_ = cs.CloseSend()
 		return nil, err
 	}
 
@@ -176,7 +90,7 @@ func (c *streamServiceClient) ServerStrean(ctx context.Context, in *Request) (ws
 
 // Bid opens a bidirectional-streaming RPC.
 func (c *streamServiceClient) Bid(ctx context.Context) (ws.BidiStreamingClient[Request, Response], error) {
-	cs, err := newClientStream(ctx, c.url, c.codec, c.dialOpts, c.connCfg, c.logger)
+	cs, err := c.dialAndConnect(ctx)
 	if err != nil {
 		return nil, err
 	}

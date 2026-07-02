@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"sync/atomic"
@@ -10,21 +9,6 @@ import (
 	"github.com/coder/websocket"
 	"github.com/soyacen/goose/ws"
 )
-
-// acceptOptions returns the websocket.AcceptOptions for CORS and subprotocol.
-func acceptOptions() *websocket.AcceptOptions {
-	return &websocket.AcceptOptions{
-		InsecureSkipVerify: false,
-	}
-}
-
-// isNormalClose returns true if the error represents a normal WebSocket close.
-func isNormalClose(err error) bool {
-	status := websocket.CloseStatus(err)
-	return status == websocket.StatusNormalClosure ||
-		status == websocket.StatusGoingAway ||
-		errors.Is(err, context.Canceled)
-}
 
 // ------------------------------------------------------------------
 // 1. Client-Stream: client sends, server only receives
@@ -64,7 +48,7 @@ func (h *ClientStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	wsConn, err := websocket.Accept(w, r, acceptOptions())
+	wsConn, err := websocket.Accept(w, r, ws.AcceptOptions())
 	if err != nil {
 		h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
 		return
@@ -84,7 +68,7 @@ func (h *ClientStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	ss := ws.NewServerStream(ctx, conn, h.codec)
 	stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
-	if err := h.service.ClientStream(stream); err != nil && !isNormalClose(err) {
+	if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
 		h.logger.Error("client-stream error", slog.String("error", err.Error()))
 	}
 }
@@ -130,7 +114,7 @@ func (h *ServerStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	wsConn, err := websocket.Accept(w, r, acceptOptions())
+	wsConn, err := websocket.Accept(w, r, ws.AcceptOptions())
 	if err != nil {
 		h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
 		return
@@ -152,7 +136,7 @@ func (h *ServerStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	var req Request
 	data, err := conn.Read(ctx)
 	if err != nil {
-		if !isNormalClose(err) {
+		if !ws.IsNormalClose(err) {
 			h.logger.Error("server-stream read request error", slog.String("error", err.Error()))
 		}
 		return
@@ -164,7 +148,7 @@ func (h *ServerStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	ss := ws.NewServerStream(ctx, conn, h.codec)
 	stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
-	if err := h.service.ServerStream(&req, stream); err != nil && !isNormalClose(err) {
+	if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
 		h.logger.Error("server-stream error", slog.String("error", err.Error()))
 	}
 }
@@ -210,7 +194,7 @@ func (h *BidiStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wsConn, err := websocket.Accept(w, r, acceptOptions())
+	wsConn, err := websocket.Accept(w, r, ws.AcceptOptions())
 	if err != nil {
 		h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
 		return
@@ -230,7 +214,7 @@ func (h *BidiStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	ss := ws.NewServerStream(ctx, conn, h.codec)
 	stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
-	if err := h.service.BidStream(stream); err != nil && !isNormalClose(err) {
+	if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
 		h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
 	}
 }
