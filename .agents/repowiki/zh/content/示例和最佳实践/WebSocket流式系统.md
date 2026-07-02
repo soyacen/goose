@@ -1,7 +1,7 @@
 # WebSocket流式系统
 
 <cite>
-**本文档引用的文件**
+**本文引用的文件**
 - [main.go](file://example/stream/main.go)
 - [service.go](file://example/stream/service.go)
 - [service_impl.go](file://example/stream/service_impl.go)
@@ -16,11 +16,10 @@
 
 ## 更新摘要
 **变更内容**
-- 新增全面的流服务接口定义，包括StreamService和StreamServiceServer
-- 添加通用流客户端接口支持三种流式通信模式
-- 实现服务器端流处理基础结构和客户端桩代码
-- 引入可插拔的消息编解码器架构
-- 完善错误处理和io.EOF语义支持
+- 新增全面的gRPC风格流服务接口设计，包括StreamService和StreamServiceServer接口
+- 引入可插拔的Codec编解码器架构，支持JSON、Protobuf等多种消息格式
+- 重构处理器层为服务委托模式，实现三种流式通信模式的完整实现（客户端流、服务器流、双向流）
+- 完善错误处理和io.EOF语义支持，提供生产级别的连接管理和自动重连机制
 
 ## 目录
 1. [简介](#简介)
@@ -77,7 +76,7 @@ Main --> Client
 ```
 
 **图表来源**
-- [service.go:1-254](file://example/stream/service.go#L1-L254)
+- [service.go:1-44](file://example/stream/service.go#L1-L44)
 - [service_impl.go:1-144](file://example/stream/service_impl.go#L1-L144)
 - [handler.go:1-238](file://example/stream/handler.go#L1-L238)
 - [server_stream.go:1-171](file://example/stream/server_stream.go#L1-L171)
@@ -93,13 +92,13 @@ Main --> Client
 
 ## 核心组件
 
-### 流服务接口架构
+### gRPC风格流服务接口架构
 
 系统采用gRPC风格的接口设计，提供类型安全的流式通信能力：
 
 ```mermaid
 classDiagram
-class StreamService {
+class StreamServiceClient {
 +ClientStrean(ctx) ClientStreamingClient
 +ServerStrean(ctx, in) ServerStreamingClient
 +Bid(ctx) BidiStreamingClient
@@ -137,19 +136,19 @@ class ServerBidiStream~Req, Res~ {
 +Send(*Res) error
 +ServerStream
 }
-StreamService <.. ClientStreamingClient
-StreamService <.. ServerStreamingClient
-StreamService <.. BidiStreamingClient
+StreamServiceClient <.. ClientStreamingClient
+StreamServiceClient <.. ServerStreamingClient
+StreamServiceClient <.. BidiStreamingClient
 StreamServiceServer <.. ServerClientStream
 StreamServiceServer <.. ServerServerStream
 StreamServiceServer <.. ServerBidiStream
 ```
 
 **图表来源**
-- [service.go:36-52](file://example/stream/service.go#L36-L52)
-- [service.go:181-197](file://example/stream/service.go#L181-L197)
-- [service.go:54-117](file://example/stream/service.go#L54-L117)
-- [service.go:221-250](file://example/stream/service.go#L221-L250)
+- [service.go:23-35](file://example/stream/service.go#L23-L35)
+- [service.go:39-43](file://example/stream/service.go#L39-L43)
+- [client_stub.go:112-172](file://example/stream/client_stub.go#L112-L172)
+- [server_stream.go:92-170](file://example/stream/server_stream.go#L92-L170)
 
 ### 连接配置系统
 
@@ -193,7 +192,7 @@ RetryConfig <|-- ClientOptions
 - [main.go:15-50](file://example/stream/main.go#L15-L50)
 - [client.go:15-42](file://example/stream/client.go#L15-L42)
 
-### 编解码器架构
+### 可插拔编解码器架构
 
 系统引入了可插拔的编解码器架构，支持多种消息格式：
 
@@ -230,7 +229,7 @@ serverStream --> Codec : 使用
 - [server_stream.go:16-25](file://example/stream/server_stream.go#L16-L25)
 
 **章节来源**
-- [service.go:1-254](file://example/stream/service.go#L1-L254)
+- [service.go:1-44](file://example/stream/service.go#L1-L44)
 - [service_impl.go:1-144](file://example/stream/service_impl.go#L1-L144)
 - [server_stream.go:1-171](file://example/stream/server_stream.go#L1-L171)
 - [client_stub.go:1-244](file://example/stream/client_stub.go#L1-L244)
@@ -248,7 +247,7 @@ Server[WebSocket服务器]
 Service[流服务实现]
 end
 subgraph "接口层"
-StreamService[StreamService接口]
+StreamServiceClient[StreamServiceClient接口]
 StreamServiceServer[StreamServiceServer接口]
 ClientStream[ClientStream接口]
 ServerStream[ServerStream接口]
@@ -263,9 +262,9 @@ K8s[Kubernetes]
 LB[负载均衡器]
 Log[日志系统]
 end
-Client --> StreamService
+Client --> StreamServiceClient
 Server --> StreamServiceServer
-StreamService --> HTTP
+StreamServiceClient --> HTTP
 StreamServiceServer --> HTTP
 HTTP --> WS
 WS --> Codec
@@ -275,8 +274,8 @@ Server --> Log
 ```
 
 **图表来源**
-- [service.go:36-52](file://example/stream/service.go#L36-L52)
-- [service.go:181-197](file://example/stream/service.go#L181-L197)
+- [service.go:23-35](file://example/stream/service.go#L23-L35)
+- [service.go:39-43](file://example/stream/service.go#L39-L43)
 - [main.go:52-178](file://example/stream/main.go#L52-L178)
 - [handler.go:44-88](file://example/stream/handler.go#L44-L88)
 
@@ -292,14 +291,14 @@ Server --> Log
 
 ## 详细组件分析
 
-### 流服务接口定义
+### gRPC风格流服务接口定义
 
 系统定义了完整的流服务接口体系，支持三种流式通信模式：
 
 ```mermaid
 sequenceDiagram
 participant Client as 客户端
-participant Service as StreamService
+participant Service as StreamServiceClient
 participant Server as StreamServiceServer
 participant Stream as 流实例
 Client->>Service : ClientStrean(ctx)
@@ -312,7 +311,7 @@ Server->>Client : 返回聚合响应
 ```
 
 **图表来源**
-- [service.go:40-43](file://example/stream/service.go#L40-L43)
+- [service.go:24-26](file://example/stream/service.go#L24-L26)
 - [service_impl.go:33-63](file://example/stream/service_impl.go#L33-L63)
 
 #### 客户端单向流（Client-Stream）
@@ -322,7 +321,7 @@ Server->>Client : 返回聚合响应
 ```mermaid
 sequenceDiagram
 participant Client as 客户端
-participant Service as StreamService
+participant Service as StreamServiceClient
 participant Server as StreamServiceServer
 participant Stream as ServerClientStream
 Client->>Service : ClientStrean(ctx)
@@ -338,7 +337,7 @@ Server->>Client : 返回最终响应
 ```
 
 **图表来源**
-- [service.go:54-75](file://example/stream/service.go#L54-L75)
+- [service.go:24-26](file://example/stream/service.go#L24-L26)
 - [service_impl.go:33-63](file://example/stream/service_impl.go#L33-L63)
 
 #### 服务器单向流（Server-Stream）
@@ -348,7 +347,7 @@ Server->>Client : 返回最终响应
 ```mermaid
 sequenceDiagram
 participant Client as 客户端
-participant Service as StreamService
+participant Service as StreamServiceClient
 participant Server as StreamServiceServer
 participant Stream as ServerServerStream
 Client->>Service : ServerStrean(ctx, request)
@@ -363,7 +362,7 @@ Server->>Client : 发送响应流
 ```
 
 **图表来源**
-- [service.go:77-92](file://example/stream/service.go#L77-L92)
+- [service.go:28-30](file://example/stream/service.go#L28-L30)
 - [service_impl.go:70-104](file://example/stream/service_impl.go#L70-L104)
 
 #### 双向流（Bidi-Stream）
@@ -373,7 +372,7 @@ Server->>Client : 发送响应流
 ```mermaid
 sequenceDiagram
 participant Client as 客户端
-participant Service as StreamService
+participant Service as StreamServiceClient
 participant Server as StreamServiceServer
 participant Stream as ServerBidiStream
 Client->>Service : Bid(ctx)
@@ -390,11 +389,11 @@ Server->>Server : 遇到io.EOF结束
 ```
 
 **图表来源**
-- [service.go:94-117](file://example/stream/service.go#L94-L117)
+- [service.go:32-34](file://example/stream/service.go#L32-L34)
 - [service_impl.go:110-143](file://example/stream/service_impl.go#L110-L143)
 
 **章节来源**
-- [service.go:1-254](file://example/stream/service.go#L1-L254)
+- [service.go:1-44](file://example/stream/service.go#L1-L44)
 - [service_impl.go:1-144](file://example/stream/service_impl.go#L1-L144)
 
 ### 客户端实现
@@ -477,84 +476,84 @@ GracefulClose --> End([连接结束])
 **章节来源**
 - [conn.go:1-164](file://example/stream/conn.go#L1-L164)
 
-### 流处理器
+### 服务委托模式处理器
 
-流处理器实现了三种不同的流式通信模式：
+处理器层采用服务委托模式，将业务逻辑委托给StreamServiceServer实现：
 
-#### 客户端单向流（Client-Stream）
+#### 客户端单向流处理器
 
 客户端单向流适用于日志收集、遥测上报等场景：
 
 ```mermaid
 sequenceDiagram
 participant Client as 客户端
-participant Handler as 处理器
-participant Queue as 消息队列
-participant Storage as 存储
-Client->>Handler : 发送消息
-Handler->>Handler : 验证连接数
+participant Handler as ClientStreamHandler
+participant Service as StreamServiceServer
+participant Stream as ServerClientStream
+Client->>Handler : 建立WebSocket连接
+Handler->>Handler : 验证连接数限制
 Handler->>Handler : 接受WebSocket连接
 Handler->>Handler : 启动连接管理器
-Handler->>Client : 读取消息
-Client-->>Handler : 消息数据
-Handler->>Queue : 处理消息
-Queue->>Storage : 存储数据
-Handler-->>Client : 确认接收
+Handler->>Service : 调用ClientStream方法
+Service->>Stream : 处理流式请求
+Stream->>Service : 接收多个请求
+Service->>Stream : 发送聚合响应
+Stream->>Client : 返回最终结果
 ```
 
 **图表来源**
-- [handler.go:28-88](file://example/stream/handler.go#L28-L88)
+- [handler.go:35-88](file://example/stream/handler.go#L35-L88)
+- [service_impl.go:33-63](file://example/stream/service_impl.go#L33-L63)
 
-#### 服务器单向流（Server-Stream）
+#### 服务器单向流处理器
 
 服务器单向流适用于实时通知、直播推送等场景：
 
 ```mermaid
 sequenceDiagram
 participant Client as 客户端
-participant Handler as 处理器
-participant Timer as 定时器
-participant Conn as 连接管理器
-Client->>Handler : 建立连接
+participant Handler as ServerStreamHandler
+participant Service as StreamServiceServer
+participant Stream as ServerServerStream
+Client->>Handler : 建立WebSocket连接
 Handler->>Handler : 检查连接数限制
 Handler->>Handler : 接受WebSocket连接
 Handler->>Handler : 启动连接管理器
-Handler->>Timer : 启动定时器
-Timer->>Handler : 触发推送事件
-Handler->>Conn : 发送消息
-Conn->>Client : 推送数据
-Client-->>Conn : 确认接收
-Conn-->>Handler : 更新状态
+Handler->>Service : 调用ServerStream方法
+Service->>Stream : 处理单个请求
+Stream->>Service : 持续推送响应
+Service->>Stream : 发送多个响应
+Stream->>Client : 推送数据流
 ```
 
 **图表来源**
-- [handler.go:99-201](file://example/stream/handler.go#L99-L201)
+- [handler.go:102-167](file://example/stream/handler.go#L102-L167)
+- [service_impl.go:70-104](file://example/stream/service_impl.go#L70-L104)
 
-#### 双向流（Bidi-Stream）
+#### 双向流处理器
 
 双向流支持全双工通信，适用于聊天室、协作编辑等场景：
 
 ```mermaid
 sequenceDiagram
 participant Client as 客户端
-participant Handler as 处理器
-participant Group as 并发组
-participant Conn as 连接管理器
-Client->>Handler : 建立连接
+participant Handler as BidiStreamHandler
+participant Service as StreamServiceServer
+participant Stream as ServerBidiStream
+Client->>Handler : 建立WebSocket连接
 Handler->>Handler : 检查连接数限制
 Handler->>Handler : 接受WebSocket连接
 Handler->>Handler : 启动连接管理器
-Handler->>Group : 启动读写并发组
-Group->>Conn : 启动读取泵
-Group->>Conn : 启动写入泵
-Client->>Conn : 发送消息
-Conn->>Handler : 处理消息
-Handler->>Conn : 发送响应
-Conn->>Client : 返回数据
+Handler->>Service : 调用BidStream方法
+Service->>Stream : 处理双向流
+Stream->>Service : 接收请求并发送响应
+Service->>Stream : 并发处理请求响应
+Stream->>Client : 全双工通信
 ```
 
 **图表来源**
-- [handler.go:212-298](file://example/stream/handler.go#L212-L298)
+- [handler.go:181-232](file://example/stream/handler.go#L181-L232)
+- [service_impl.go:110-143](file://example/stream/service_impl.go#L110-L143)
 
 **章节来源**
 - [handler.go:1-238](file://example/stream/handler.go#L1-L238)
@@ -600,7 +599,7 @@ Main --> Client
 
 **图表来源**
 - [go.mod:1-17](file://go.mod#L1-L17)
-- [service.go:1-254](file://example/stream/service.go#L1-L254)
+- [service.go:1-44](file://example/stream/service.go#L1-L44)
 - [service_impl.go:1-144](file://example/stream/service_impl.go#L1-L144)
 - [handler.go:1-238](file://example/stream/handler.go#L1-L238)
 - [server_stream.go:1-171](file://example/stream/server_stream.go#L1-L171)
@@ -677,7 +676,7 @@ WebSocket流式系统在设计时充分考虑了性能和可扩展性：
 
 **章节来源**
 - [main.go:131-178](file://example/stream/main.go#L131-L178)
-- [client.go:196-204](file://example/stream/client.go#L196-L204)
+- [client.go:196-204](file://example/stream/client.go#L196-204)
 
 ## 结论
 
