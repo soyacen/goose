@@ -104,17 +104,8 @@ func main() {
 		}
 	})
 
-	// 1. Client-Stream: client -> server (unidirectional)
-	clientStream := NewClientStreamHandler(svc, codec, connCfg, logger, cfg.MaxConnsPerEndpoint)
-	mux.Handle("/ws/client-stream", clientStream)
-
-	// 2. Server-Stream: server -> client (unidirectional)
-	serverStream := NewServerStreamHandler(svc, codec, connCfg, logger, cfg.MaxConnsPerEndpoint)
-	mux.Handle("/ws/server-stream", serverStream)
-
-	// 3. Bidi-Stream: full-duplex bidirectional
-	bidiStream := NewBidiStreamHandler(svc, codec, connCfg, logger, cfg.MaxConnsPerEndpoint)
-	mux.Handle("/ws/bidi-stream", bidiStream)
+	// Register WebSocket routes using generated code.
+	AppendStreamServiceHttpRoute(mux, svc, codec, connCfg, logger, cfg.MaxConnsPerEndpoint)
 
 	srv := &http.Server{
 		Addr:         cfg.Addr,
@@ -144,9 +135,6 @@ func main() {
 	ready.Store(false)
 	logger.Info("marked as not-ready, draining existing traffic",
 		slog.Duration("drain_delay", cfg.PreStopDrainDelay),
-		slog.Int64("client_stream_conns", clientStream.ActiveConnections()),
-		slog.Int64("server_stream_conns", serverStream.ActiveConnections()),
-		slog.Int64("bidi_stream_conns", bidiStream.ActiveConnections()),
 	)
 
 	// Phase 2: Wait for Kubernetes to propagate the readiness change and
@@ -160,11 +148,7 @@ func main() {
 	shutdownTimeoutCtx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
 	defer cancel()
 
-	logger.Info("shutting down HTTP server",
-		slog.Int64("client_stream_conns", clientStream.ActiveConnections()),
-		slog.Int64("server_stream_conns", serverStream.ActiveConnections()),
-		slog.Int64("bidi_stream_conns", bidiStream.ActiveConnections()),
-	)
+	logger.Info("shutting down HTTP server")
 
 	if err := srv.Shutdown(shutdownTimeoutCtx); err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
