@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	goose "github.com/soyacen/goose"
 	"github.com/coder/websocket"
+	goose "github.com/soyacen/goose"
+	"github.com/soyacen/goose/server"
 	"github.com/soyacen/goose/ws"
 )
 
@@ -36,140 +37,150 @@ func AppendStreamServiceHttpRoute(router *http.ServeMux, service StreamServiceSe
 		logger:  logger,
 		maxConn: maxConn,
 	}
-	router.Handle("POST /ws/client-stream", http.HandlerFunc(handler.ClientStreamMethod))
-	router.Handle("POST /ws/server-stream", http.HandlerFunc(handler.ServerStreamMethod))
-	router.Handle("POST /ws/bidi-stream", http.HandlerFunc(handler.BidStreamMethod))
+	router.Handle("POST /ws/client-stream", http.HandlerFunc(handler.ClientStream))
+	router.Handle("POST /ws/server-stream", http.HandlerFunc(handler.ServerStream))
+	router.Handle("POST /ws/bidi-stream", http.HandlerFunc(handler.BidStream))
 	return router
 }
 
 type streamServiceHandler struct {
-	service        StreamServiceServer
-	codec          ws.Codec
-	cfg            ws.ConnConfig
-	logger         *slog.Logger
-	maxConn        int64
-	clientActive   atomic.Int64
-	serverActive   atomic.Int64
-	bidiActive     atomic.Int64
+	service      StreamServiceServer
+	codec        ws.Codec
+	cfg          ws.ConnConfig
+	logger       *slog.Logger
+	maxConn      int64
+	clientActive atomic.Int64
+	serverActive atomic.Int64
+	bidiActive   atomic.Int64
+	middleware   server.Middleware
 }
 
 // ------------------------------------------------------------------
 // 1. Client-Stream: client sends, server only receives
 // ------------------------------------------------------------------
 
-func (h *streamServiceHandler) ClientStreamMethod(response http.ResponseWriter, request *http.Request) {
-	if h.maxConn > 0 && h.clientActive.Load() >= h.maxConn {
-		http.Error(response, "too many connections", http.StatusServiceUnavailable)
-		return
+func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, request *http.Request) {
+	invoke := func(response http.ResponseWriter, request *http.Request) {
+		if h.maxConn > 0 && h.clientActive.Load() >= h.maxConn {
+			http.Error(response, "too many connections", http.StatusServiceUnavailable)
+			return
+		}
+
+		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
+		if err != nil {
+			h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
+			return
+		}
+
+		h.clientActive.Add(1)
+		defer h.clientActive.Add(-1)
+
+		conn := ws.NewConn(wsConn, h.cfg, h.logger)
+		ctx, cancel := context.WithCancel(request.Context())
+		defer cancel()
+
+		go conn.Start(ctx)
+
+		h.logger.Info("client-stream connected", slog.String("remote", request.RemoteAddr))
+		defer h.logger.Info("client-stream disconnected", slog.String("remote", request.RemoteAddr))
+
+		ss := ws.NewServerStream(ctx, conn, h.codec)
+		stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
+		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
+			h.logger.Error("client-stream error", slog.String("error", err.Error()))
+		}
 	}
-
-	wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
-	if err != nil {
-		h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
-		return
-	}
-
-	h.clientActive.Add(1)
-	defer h.clientActive.Add(-1)
-
-	conn := ws.NewConn(wsConn, h.cfg, h.logger)
-	ctx, cancel := context.WithCancel(request.Context())
-	defer cancel()
-
-	go conn.Start(ctx)
-
-	h.logger.Info("client-stream connected", slog.String("remote", request.RemoteAddr))
-	defer h.logger.Info("client-stream disconnected", slog.String("remote", request.RemoteAddr))
-
-	ss := ws.NewServerStream(ctx, conn, h.codec)
-	stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
-	if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
-		h.logger.Error("client-stream error", slog.String("error", err.Error()))
-	}
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo)
 }
 
 // ------------------------------------------------------------------
 // 2. Server-Stream: server sends, client only receives
 // ------------------------------------------------------------------
 
-func (h *streamServiceHandler) ServerStreamMethod(response http.ResponseWriter, request *http.Request) {
-	if h.maxConn > 0 && h.serverActive.Load() >= h.maxConn {
-		http.Error(response, "too many connections", http.StatusServiceUnavailable)
-		return
-	}
-
-	wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
-	if err != nil {
-		h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
-		return
-	}
-
-	h.serverActive.Add(1)
-	defer h.serverActive.Add(-1)
-
-	conn := ws.NewConn(wsConn, h.cfg, h.logger)
-	ctx, cancel := context.WithCancel(request.Context())
-	defer cancel()
-
-	go conn.Start(ctx)
-
-	h.logger.Info("server-stream connected", slog.String("remote", request.RemoteAddr))
-	defer h.logger.Info("server-stream disconnected", slog.String("remote", request.RemoteAddr))
-
-	// Read the initial request from the client.
-	var req Request
-	data, err := conn.Read(ctx)
-	if err != nil {
-		if !ws.IsNormalClose(err) {
-			h.logger.Error("server-stream read request error", slog.String("error", err.Error()))
+func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, request *http.Request) {
+	invoke := func(response http.ResponseWriter, request *http.Request) {
+		if h.maxConn > 0 && h.serverActive.Load() >= h.maxConn {
+			http.Error(response, "too many connections", http.StatusServiceUnavailable)
+			return
 		}
-		return
-	}
-	if err := h.codec.Unmarshal(data, &req); err != nil {
-		h.logger.Error("server-stream unmarshal error", slog.String("error", err.Error()))
-		return
-	}
 
-	ss := ws.NewServerStream(ctx, conn, h.codec)
-	stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
-	if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
-		h.logger.Error("server-stream error", slog.String("error", err.Error()))
+		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
+		if err != nil {
+			h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
+			return
+		}
+
+		h.serverActive.Add(1)
+		defer h.serverActive.Add(-1)
+
+		conn := ws.NewConn(wsConn, h.cfg, h.logger)
+		ctx, cancel := context.WithCancel(request.Context())
+		defer cancel()
+
+		go conn.Start(ctx)
+
+		h.logger.Info("server-stream connected", slog.String("remote", request.RemoteAddr))
+		defer h.logger.Info("server-stream disconnected", slog.String("remote", request.RemoteAddr))
+
+		// Read the initial request from the client.
+		var req Request
+		data, err := conn.Read(ctx)
+		if err != nil {
+			if !ws.IsNormalClose(err) {
+				h.logger.Error("server-stream read request error", slog.String("error", err.Error()))
+			}
+			return
+		}
+		if err := h.codec.Unmarshal(data, &req); err != nil {
+			h.logger.Error("server-stream unmarshal error", slog.String("error", err.Error()))
+			return
+		}
+
+		ss := ws.NewServerStream(ctx, conn, h.codec)
+		stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
+		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
+			h.logger.Error("server-stream error", slog.String("error", err.Error()))
+		}
 	}
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc.RouteInfo)
 }
 
 // ------------------------------------------------------------------
 // 3. Bidirectional-Stream: both sides send messages
 // ------------------------------------------------------------------
 
-func (h *streamServiceHandler) BidStreamMethod(response http.ResponseWriter, request *http.Request) {
-	if h.maxConn > 0 && h.bidiActive.Load() >= h.maxConn {
-		http.Error(response, "too many connections", http.StatusServiceUnavailable)
-		return
+func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *http.Request) {
+	invoke := func(response http.ResponseWriter, request *http.Request) {
+		if h.maxConn > 0 && h.bidiActive.Load() >= h.maxConn {
+			http.Error(response, "too many connections", http.StatusServiceUnavailable)
+			return
+		}
+
+		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
+		if err != nil {
+			h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
+			return
+		}
+
+		h.bidiActive.Add(1)
+		defer h.bidiActive.Add(-1)
+
+		conn := ws.NewConn(wsConn, h.cfg, h.logger)
+		ctx, cancel := context.WithCancel(request.Context())
+		defer cancel()
+
+		go conn.Start(ctx)
+
+		h.logger.Info("bidi-stream connected", slog.String("remote", request.RemoteAddr))
+		defer h.logger.Info("bidi-stream disconnected", slog.String("remote", request.RemoteAddr))
+
+		ss := ws.NewServerStream(ctx, conn, h.codec)
+		stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
+		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
+			h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
+		}
 	}
-
-	wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
-	if err != nil {
-		h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
-		return
-	}
-
-	h.bidiActive.Add(1)
-	defer h.bidiActive.Add(-1)
-
-	conn := ws.NewConn(wsConn, h.cfg, h.logger)
-	ctx, cancel := context.WithCancel(request.Context())
-	defer cancel()
-
-	go conn.Start(ctx)
-
-	h.logger.Info("bidi-stream connected", slog.String("remote", request.RemoteAddr))
-	defer h.logger.Info("bidi-stream disconnected", slog.String("remote", request.RemoteAddr))
-
-	ss := ws.NewServerStream(ctx, conn, h.codec)
-	stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
-	if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
-		h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
-	}
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_BidStream_Desc.RouteInfo)
 }
 
 var _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc = &goose.Desc{
