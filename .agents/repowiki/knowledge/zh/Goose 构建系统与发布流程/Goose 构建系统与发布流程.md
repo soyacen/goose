@@ -1,3 +1,20 @@
+---
+kind: build_system
+name: Goose 构建系统与发布流程
+category: build_system
+scope:
+    - '**'
+source_files:
+    - Makefile
+    - .github/workflows/release.yml
+    - cmd/protoc-gen-goose/main.go
+    - go.mod
+    - tools/build.go
+    - middleware/jwtauth/go.mod
+    - middleware/limiter/go.mod
+    - middleware/otel/go.mod
+---
+
 ## 1. 核心构建体系
 Goose 项目采用标准的 **Go Modules** 进行依赖管理，并配合 **Makefile** 实现本地开发、测试与代码生成的自动化。其核心是一个 `protoc` 插件 (`protoc-gen-goose`)，用于将 Protobuf 定义转换为 Go HTTP 网关代码。
 

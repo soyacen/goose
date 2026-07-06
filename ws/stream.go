@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/coder/websocket"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -74,12 +75,11 @@ type ClientStream interface {
 var _ ClientStream = (*clientStream)(nil)
 
 // clientStream is the base struct for all client-side stream stubs.
-// It wraps a *Conn and provides Codec-based SendMsg/RecvMsg.
+// It wraps a *Conn and uses protojson for SendMsg/RecvMsg.
 type clientStream struct {
 	conn    *Conn
 	ctx     context.Context
 	cancel  context.CancelFunc
-	codec   Codec
 	header  http.Header
 	trailer http.Header
 }
@@ -88,13 +88,12 @@ type clientStream struct {
 // The caller is responsible for dialing the WebSocket and calling conn.Start()
 // before passing the Conn here. The cancel function is called when CloseSend
 // is invoked or the stream is otherwise torn down.
-func NewClientStream(ctx context.Context, conn *Conn, codec Codec) *clientStream {
+func NewClientStream(ctx context.Context, conn *Conn) *clientStream {
 	streamCtx, cancel := context.WithCancel(ctx)
 	return &clientStream{
 		conn:    conn,
 		ctx:     streamCtx,
 		cancel:  cancel,
-		codec:   codec,
 		header:  make(http.Header),
 		trailer: make(http.Header),
 	}
@@ -123,7 +122,7 @@ func (s *clientStream) Context() context.Context {
 
 // SendMsg serializes m and enqueues it for sending.
 func (s *clientStream) SendMsg(m proto.Message) error {
-	data, err := s.codec.Marshal(m)
+	data, err := protojson.Marshal(m)
 	if err != nil {
 		return err
 	}
@@ -150,7 +149,7 @@ func (s *clientStream) RecvMsg(m proto.Message) error {
 		}
 		return err
 	}
-	return s.codec.Unmarshal(data, m)
+	return protojson.Unmarshal(data, m)
 }
 
 // close tears down the stream.
@@ -220,22 +219,20 @@ type ServerStream interface {
 var _ ServerStream = (*serverStream)(nil)
 
 // serverStream is the concrete implementation of the ServerStream interface
-// defined in stream_interfaces.go. It wraps a *Conn and provides Codec-based
-// SendMsg/RecvMsg for use by GenericServerStream.
+// defined in stream_interfaces.go. It wraps a *Conn and uses protojson for
+// SendMsg/RecvMsg.
 type serverStream struct {
 	conn    *Conn
 	ctx     context.Context
-	codec   Codec
 	header  http.Header
 	trailer http.Header
 }
 
 // newServerStream creates a base server stream wrapping conn.
-func NewServerStream(ctx context.Context, conn *Conn, codec Codec) *serverStream {
+func NewServerStream(ctx context.Context, conn *Conn) *serverStream {
 	return &serverStream{
 		conn:    conn,
 		ctx:     ctx,
-		codec:   codec,
 		header:  make(http.Header),
 		trailer: make(http.Header),
 	}
@@ -275,9 +272,9 @@ func (s *serverStream) CloseSend() error {
 	return nil
 }
 
-// SendMsg serializes m using the Codec and enqueues it for writing via Conn.
+// SendMsg serializes m using protojson and enqueues it for writing via Conn.
 func (s *serverStream) SendMsg(m proto.Message) error {
-	data, err := s.codec.Marshal(m)
+	data, err := protojson.Marshal(m)
 	if err != nil {
 		return err
 	}
@@ -287,7 +284,7 @@ func (s *serverStream) SendMsg(m proto.Message) error {
 	return nil
 }
 
-// RecvMsg reads a message from Conn and deserializes it into m using the Codec.
+// RecvMsg reads a message from Conn and deserializes it into m using protojson.
 // Returns io.EOF when the client closes the stream.
 func (s *serverStream) RecvMsg(m proto.Message) error {
 	data, err := s.conn.Read(s.ctx)
@@ -306,7 +303,7 @@ func (s *serverStream) RecvMsg(m proto.Message) error {
 		}
 		return err
 	}
-	return s.codec.Unmarshal(data, m)
+	return protojson.Unmarshal(data, m)
 }
 
 // ClientStreamingClient represents the client side of a client-streaming (many

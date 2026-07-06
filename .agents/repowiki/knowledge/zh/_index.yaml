@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-03T08:05:55Z"
+exported_at: "2026-07-06T08:55:59Z"
 modules:
     "":
         dir_name: Goose Protobuf HTTP 网关框架
@@ -54,22 +54,6 @@ modules:
             - stream
         depends_on: []
         related_to: []
-    build_system:
-        dir_name: Goose 构建系统与发布流程
-        title: Goose 构建系统与发布流程
-        scope: []
-        source_files:
-            - Makefile
-            - .github/workflows/release.yml
-            - cmd/protoc-gen-goose/main.go
-            - go.mod
-            - tools/build.go
-            - middleware/jwtauth/go.mod
-            - middleware/limiter/go.mod
-            - middleware/otel/go.mod
-        children: []
-        depends_on: []
-        related_to: []
     client:
         dir_name: HTTP客户端核心功能
         title: HTTP客户端核心功能
@@ -82,65 +66,6 @@ modules:
             - path: middleware
             - path: outgoing
             - path: protoc_gen_goose
-    configuration_system:
-        dir_name: Goose 配置系统：基于函数选项模式 (Functional Options) 的运行时配置
-        title: Goose 配置系统：基于函数选项模式 (Functional Options) 的运行时配置
-        scope: []
-        source_files:
-            - server/option.go
-            - client/option.go
-            - middleware/jwtauth/middleware.go
-            - middleware/limiter/bbr.go
-            - cmd/protoc-gen-goose/main.go
-        children: []
-        depends_on: []
-        related_to: []
-    dependency_management:
-        dir_name: Goose 框架依赖管理与模块化架构
-        title: Goose 框架依赖管理与模块化架构
-        scope: []
-        source_files:
-            - go.mod
-            - middleware/jwtauth/go.mod
-            - middleware/limiter/go.mod
-            - middleware/otel/go.mod
-            - third_party/google/api/annotations.proto
-            - Makefile
-        children: []
-        depends_on: []
-        related_to: []
-    error_handling:
-        dir_name: 错误处理与恢复机制
-        title: 错误处理与恢复机制
-        scope: []
-        source_files:
-            - status.go
-            - common.go
-            - middleware/recovery/middleware.go
-            - middleware/errorlog/middleware.go
-            - client/resolver/error.go
-        children: []
-        depends_on: []
-        related_to: []
-    frontend_style:
-        dir_name: 前端样式系统：不适用
-        title: 前端样式系统：不适用
-        scope: []
-        source_files: []
-        children: []
-        depends_on: []
-        related_to: []
-    logging_system:
-        dir_name: 基于 slog 的中间件日志系统
-        title: 基于 slog 的中间件日志系统
-        scope: []
-        source_files:
-            - middleware/accesslog/middleware.go
-            - middleware/errorlog/middleware.go
-            - middleware/errorlog/option.go
-        children: []
-        depends_on: []
-        related_to: []
     middleware:
         dir_name: HTTP 通用中间件集合（CORS_JWT_限流_日志_追踪等）
         title: HTTP 通用中间件集合（CORS/JWT/限流/日志/追踪等）

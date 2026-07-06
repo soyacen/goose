@@ -1,3 +1,15 @@
+---
+kind: logging_system
+name: 基于 slog 的中间件日志系统
+category: logging_system
+scope:
+    - '**'
+source_files:
+    - middleware/accesslog/middleware.go
+    - middleware/errorlog/middleware.go
+    - middleware/errorlog/option.go
+---
+
 Goose 框架采用 Go 标准库 `log/slog` 作为其核心日志基础设施，主要通过中间件（Middleware）的形式提供结构化的访问日志和错误日志功能。该设计遵循无侵入式原则，利用 `slog.Attr` 构建结构化字段，并通过 `sync.Pool` 优化高并发下的内存分配。
 
 ### 1. 核心架构与组件

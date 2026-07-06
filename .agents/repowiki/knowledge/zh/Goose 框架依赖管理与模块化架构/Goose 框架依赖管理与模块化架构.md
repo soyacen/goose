@@ -1,3 +1,18 @@
+---
+kind: dependency_management
+name: Goose 框架依赖管理与模块化架构
+category: dependency_management
+scope:
+    - '**'
+source_files:
+    - go.mod
+    - middleware/jwtauth/go.mod
+    - middleware/limiter/go.mod
+    - middleware/otel/go.mod
+    - third_party/google/api/annotations.proto
+    - Makefile
+---
+
 ## 1. 核心依赖管理系统
 Goose 采用标准的 **Go Modules** (`go.mod`/`go.sum`) 进行依赖管理。项目基于 Go 1.23.0 构建，严格遵循语义化版本控制。
 

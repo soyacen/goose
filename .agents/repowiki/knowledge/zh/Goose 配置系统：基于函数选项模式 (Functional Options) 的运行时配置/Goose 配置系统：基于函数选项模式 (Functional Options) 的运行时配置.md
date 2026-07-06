@@ -1,3 +1,17 @@
+---
+kind: configuration_system
+name: Goose 配置系统：基于函数选项模式 (Functional Options) 的运行时配置
+category: configuration_system
+scope:
+    - '**'
+source_files:
+    - server/option.go
+    - client/option.go
+    - middleware/jwtauth/middleware.go
+    - middleware/limiter/bbr.go
+    - cmd/protoc-gen-goose/main.go
+---
+
 ## 1. 核心系统与模式
 
 Goose 框架**不包含**传统的集中式配置文件加载机制（如 YAML、TOML 或 `.env` 文件解析）。其配置系统完全基于 **Go 语言惯用的函数选项模式 (Functional Options Pattern)**。

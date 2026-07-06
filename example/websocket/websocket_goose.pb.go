@@ -12,6 +12,7 @@ import (
 	goose "github.com/soyacen/goose"
 	"github.com/soyacen/goose/server"
 	"github.com/soyacen/goose/ws"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type StreamServiceClient interface {
@@ -26,13 +27,12 @@ type StreamServiceServer interface {
 	BidStream(ws.BidiStreamingServer[*Request, *Response]) error
 }
 
-func AppendStreamServiceHttpRoute(router *http.ServeMux, service StreamServiceServer, codec ws.Codec, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64) *http.ServeMux {
+func AppendStreamServiceHttpRoute(router *http.ServeMux, service StreamServiceServer, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64) *http.ServeMux {
 	if router == nil {
 		router = http.NewServeMux()
 	}
 	handler := &streamServiceHandler{
 		service: service,
-		codec:   codec,
 		cfg:     cfg,
 		logger:  logger,
 		maxConn: maxConn,
@@ -45,7 +45,6 @@ func AppendStreamServiceHttpRoute(router *http.ServeMux, service StreamServiceSe
 
 type streamServiceHandler struct {
 	service      StreamServiceServer
-	codec        ws.Codec
 	cfg          ws.ConnConfig
 	logger       *slog.Logger
 	maxConn      int64
@@ -84,7 +83,7 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 		h.logger.Info("client-stream connected", slog.String("remote", request.RemoteAddr))
 		defer h.logger.Info("client-stream disconnected", slog.String("remote", request.RemoteAddr))
 
-		ss := ws.NewServerStream(ctx, conn, h.codec)
+		ss := ws.NewServerStream(ctx, conn)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("client-stream error", slog.String("error", err.Error()))
@@ -131,12 +130,12 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 			}
 			return
 		}
-		if err := h.codec.Unmarshal(data, &req); err != nil {
+		if err := protojson.Unmarshal(data, &req); err != nil {
 			h.logger.Error("server-stream unmarshal error", slog.String("error", err.Error()))
 			return
 		}
 
-		ss := ws.NewServerStream(ctx, conn, h.codec)
+		ss := ws.NewServerStream(ctx, conn)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("server-stream error", slog.String("error", err.Error()))
@@ -174,7 +173,7 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 		h.logger.Info("bidi-stream connected", slog.String("remote", request.RemoteAddr))
 		defer h.logger.Info("bidi-stream disconnected", slog.String("remote", request.RemoteAddr))
 
-		ss := ws.NewServerStream(ctx, conn, h.codec)
+		ss := ws.NewServerStream(ctx, conn)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
@@ -219,7 +218,6 @@ var _ StreamServiceClient = (*streamServiceClient)(nil)
 // would generate as the client stub.
 type streamServiceClient struct {
 	url      string
-	codec    ws.Codec
 	dialOpts *websocket.DialOptions
 	connCfg  ws.ConnConfig
 	logger   *slog.Logger
@@ -228,16 +226,12 @@ type streamServiceClient struct {
 // NewStreamServiceClient creates a client that implements StreamServiceClient.
 // url is the WebSocket endpoint (e.g., "ws://localhost:8080/ws/bidi-stream").
 // Each method call dials a new connection for the corresponding streaming RPC.
-func NewStreamServiceClient(url string, codec ws.Codec, logger *slog.Logger) StreamServiceClient {
-	if codec == nil {
-		codec = ws.JSONCodec{}
-	}
+func NewStreamServiceClient(url string, logger *slog.Logger) StreamServiceClient {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	return &streamServiceClient{
 		url:     url,
-		codec:   codec,
 		logger:  logger,
 		connCfg: ws.DefaultConnConfig(),
 		dialOpts: &websocket.DialOptions{
@@ -258,7 +252,7 @@ func (c *streamServiceClient) dialAndConnect(ctx context.Context) (ws.ClientStre
 	conn := ws.NewConn(wsConn, c.connCfg, c.logger)
 	go conn.Start(ctx)
 
-	return ws.NewClientStream(ctx, conn, c.codec), nil
+	return ws.NewClientStream(ctx, conn), nil
 }
 
 // ClientStream opens a client-streaming RPC.
