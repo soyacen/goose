@@ -46,6 +46,7 @@ type Conn struct {
 	closeOnce sync.Once
 	closeErr  error
 	sendDone  chan struct{} // closed by CloseSend to signal send-side is done
+	startDone chan struct{} // closed when Start() returns
 }
 
 // NewConn wraps a raw websocket.Conn into a managed Conn.
@@ -55,16 +56,17 @@ func NewConn(ws *websocket.Conn, cfg ConnConfig, logger *slog.Logger) *Conn {
 		logger = slog.Default()
 	}
 	return &Conn{
-		ws:       ws,
-		cfg:      cfg,
-		logger:   logger,
-		writeCh:  make(chan []byte, cfg.WriteBufferSize),
-		sendDone: make(chan struct{}),
+		ws:        ws,
+		cfg:       cfg,
+		logger:    logger,
+		writeCh:   make(chan []byte, cfg.WriteBufferSize),
+		sendDone:  make(chan struct{}),
+		startDone: make(chan struct{}),
 	}
 }
 
 // Start launches the background write pump and ping loop.
-// It blocks until all pending writes are drained and the write pump exits.
+// It blocks until the write pump exits and cleanup is complete.
 //
 // The write pump uses an internal context (independent of ctx) so that
 // cancelling ctx does not abort in-flight writes. The write pump exits when:
@@ -72,10 +74,14 @@ func NewConn(ws *websocket.Conn, cfg ConnConfig, logger *slog.Logger) *Conn {
 //   - Close() is called (writeCh closed), or
 //   - CloseSend() is called (send-side done).
 //
-// After the write pump exits, pending writes are drained synchronously.
-// The WebSocket itself is NOT closed here; the caller (or the remote peer)
-// is responsible for closing the connection.
+// When CloseSend triggers the exit (sendDone path), remaining writes are
+// drained and an end-of-stream (EOS) marker — an empty text frame — is
+// written to signal the peer that no more messages will be sent.
+// The WebSocket itself is NOT closed here; the peer is expected to close
+// the connection after processing the EOS marker.
 func (c *Conn) Start(ctx context.Context) {
+	defer close(c.startDone)
+
 	writeCtx, writeCancel := context.WithCancel(context.Background())
 
 	writePumpDone := make(chan struct{})
@@ -93,7 +99,7 @@ func (c *Conn) Start(ctx context.Context) {
 	// Wait for one of:
 	//   - Parent context cancelled (e.g. HTTP request done)
 	//   - Write pump exited (Close was called)
-	//   - Send-side closed (CloseSend called)
+	//   - Send-side closed (CloseSend called, either by client or by drainAndClose)
 	select {
 	case <-ctx.Done():
 	case <-writePumpDone:
@@ -111,17 +117,25 @@ func (c *Conn) Start(ctx context.Context) {
 	<-pingDone
 
 	// Drain remaining writes synchronously using a fresh context,
-	// then send a WebSocket close frame to signal the peer.
+	// then write an empty message as an end-of-stream (EOS) marker.
+	// The peer interprets this as "no more messages from this side"
+	// (equivalent to gRPC's CloseSend / half-close).
 	drainCtx, drainCancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer drainCancel()
 	c.drainWrites(drainCtx)
-	_ = c.ws.Close(websocket.StatusNormalClosure, "connection closed")
+	_ = c.ws.Write(drainCtx, websocket.MessageText, nil)
 }
 
 func (c *Conn) drainAndClose() {
-	drainCtx, drainCancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer drainCancel()
-	c.drainWrites(drainCtx)
+	// Signal Start() to stop the writePump and pingLoop.
+	c.CloseSend()
+
+	// Wait for Start() to finish stopping the writePump, pingLoop,
+	// and draining writes. This ensures no concurrent writes on the
+	// underlying WebSocket when we call ws.Close().
+	<-c.startDone
+
+	// Close the WebSocket.
 	_ = c.ws.Close(websocket.StatusNormalClosure, "connection closed")
 }
 
@@ -162,8 +176,9 @@ func (c *Conn) Close() {
 }
 
 // CloseSend signals that no more messages will be sent on this connection.
-// Unlike Close, it does not close the write channel immediately.
-// The write pump drains pending writes and then closes the WebSocket.
+// Unlike Close, it does not close the write channel or the WebSocket.
+// Instead, it triggers the Start() goroutine to drain pending writes and
+// write an end-of-stream (EOS) marker (an empty text frame) to the peer.
 // The read side remains open, allowing the caller to still receive messages.
 func (c *Conn) CloseSend() {
 	select {

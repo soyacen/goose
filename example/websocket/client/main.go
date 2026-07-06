@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/soyacen/goose/example/websocket"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -83,7 +82,6 @@ func runClientStream(ctx context.Context, baseURL string, logger *slog.Logger, m
 	fmt.Println("Client-Stream: type messages to send (empty line to finish)")
 
 	scanner := bufio.NewScanner(os.Stdin)
-	var count int
 	for {
 		fmt.Print("> ")
 		if !scanner.Scan() {
@@ -97,25 +95,16 @@ func runClientStream(ctx context.Context, baseURL string, logger *slog.Logger, m
 			fmt.Fprintf(os.Stderr, "send error: %v\n", err)
 			os.Exit(1)
 		}
-		count++
 		fmt.Printf("  sent: %s\n", line)
 	}
 
-	// Signal we're done sending, but keep read side open.
-	if err := stream.CloseSend(); err != nil {
-		fmt.Fprintf(os.Stderr, "close send error: %v\n", err)
+	// Close the send side and wait for the server's aggregated response.
+	resp, err := stream.CloseAndRecv()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "close and recv error: %v\n", err)
 		os.Exit(1)
 	}
-
-	// Small delay to let the server process and send its response.
-	time.Sleep(100 * time.Millisecond)
-
-	var resp websocket.Response
-	if err := stream.RecvMsg(&resp); err != nil {
-		fmt.Fprintf(os.Stderr, "recv error: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Printf("\nresponse: %s (sent %d messages)\n", resp.Message, count)
+	fmt.Printf("\nresponse: %s\n", resp.Message)
 }
 
 // ---------------------------------------------------------------------------

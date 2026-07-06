@@ -120,6 +120,9 @@ func (s *clientStream) SendMsg(m proto.Message) error {
 
 // RecvMsg reads a message from the connection and deserializes it into m.
 // Returns io.EOF when the server closes the stream.
+//
+// An empty message (zero-length text frame) is interpreted as an end-of-stream
+// (EOS) marker, since WebSocket does not support half-close at the transport level.
 func (s *clientStream) RecvMsg(m proto.Message) error {
 	data, err := s.conn.Read(s.ctx)
 	if err != nil {
@@ -134,6 +137,10 @@ func (s *clientStream) RecvMsg(m proto.Message) error {
 			return io.EOF
 		}
 		return err
+	}
+	// An empty message is the EOS marker sent by the peer's CloseSend.
+	if len(data) == 0 {
+		return io.EOF
 	}
 	return s.unmarshalOptions.Unmarshal(data, m)
 }
@@ -234,6 +241,10 @@ func (s *serverStream) SendMsg(m proto.Message) error {
 
 // RecvMsg reads a message from Conn and deserializes it into m using protojson.
 // Returns io.EOF when the client closes the stream.
+//
+// An empty message (zero-length text frame) is interpreted as an end-of-stream
+// (EOS) marker sent by the client's CloseSend, since WebSocket does not support
+// half-close at the transport level.
 func (s *serverStream) RecvMsg(m proto.Message) error {
 	data, err := s.conn.Read(s.ctx)
 	if err != nil {
@@ -250,6 +261,11 @@ func (s *serverStream) RecvMsg(m proto.Message) error {
 			return io.EOF
 		}
 		return err
+	}
+	// An empty message is the EOS marker sent by the client's CloseSend.
+	// It signals that no more messages will be sent from the client side.
+	if len(data) == 0 {
+		return io.EOF
 	}
 	return s.unmarshalOptions.Unmarshal(data, m)
 }

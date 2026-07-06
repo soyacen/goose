@@ -82,7 +82,10 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 		ctx, cancel := context.WithCancel(request.Context())
 		defer cancel()
 
-		go conn.Start(ctx)
+		// Use context.Background() so that Start() is not tied to the
+		// HTTP request lifecycle. The connection is closed explicitly by
+		// DrainAndClose (via stream.CloseSend) when the handler finishes.
+		go conn.Start(context.Background())
 
 		h.logger.Info("client-stream connected", slog.String("remote", request.RemoteAddr))
 		defer h.logger.Info("client-stream disconnected", slog.String("remote", request.RemoteAddr))
@@ -92,6 +95,9 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("client-stream error", slog.String("error", err.Error()))
 		}
+		// Ensure pending writes are drained and the WebSocket is closed
+		// after the handler returns, even if it didn't call SendAndClose.
+		_ = stream.CloseSend()
 	}
 	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo)
 }
@@ -120,7 +126,10 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 		ctx, cancel := context.WithCancel(request.Context())
 		defer cancel()
 
-		go conn.Start(ctx)
+		// Use context.Background() so that Start() is not tied to the
+		// HTTP request lifecycle. The connection is closed explicitly by
+		// DrainAndClose (via stream.CloseSend) when the handler finishes.
+		go conn.Start(context.Background())
 
 		h.logger.Info("server-stream connected", slog.String("remote", request.RemoteAddr))
 		defer h.logger.Info("server-stream disconnected", slog.String("remote", request.RemoteAddr))
@@ -144,6 +153,9 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("server-stream error", slog.String("error", err.Error()))
 		}
+		// Ensure pending writes are drained and the WebSocket is closed
+		// after the handler returns, even if it didn't call CloseSend.
+		_ = stream.CloseSend()
 	}
 	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc.RouteInfo)
 }
@@ -172,7 +184,10 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 		ctx, cancel := context.WithCancel(request.Context())
 		defer cancel()
 
-		go conn.Start(ctx)
+		// Use context.Background() so that Start() is not tied to the
+		// HTTP request lifecycle. The connection is closed explicitly by
+		// DrainAndClose (via stream.CloseSend) when the handler finishes.
+		go conn.Start(context.Background())
 
 		h.logger.Info("bidi-stream connected", slog.String("remote", request.RemoteAddr))
 		defer h.logger.Info("bidi-stream disconnected", slog.String("remote", request.RemoteAddr))
@@ -182,6 +197,9 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
 		}
+		// Ensure pending writes are drained and the WebSocket is closed
+		// after the handler returns, even if it didn't call CloseSend.
+		_ = stream.CloseSend()
 	}
 	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_BidStream_Desc.RouteInfo)
 }
