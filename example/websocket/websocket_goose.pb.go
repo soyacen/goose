@@ -27,7 +27,7 @@ type StreamServiceServer interface {
 	BidStream(ws.BidiStreamingServer[*Request, *Response]) error
 }
 
-func AppendStreamServiceHttpRoute(router *http.ServeMux, service StreamServiceServer, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *http.ServeMux {
+func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServiceServer, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *http.ServeMux {
 	if router == nil {
 		router = http.NewServeMux()
 	}

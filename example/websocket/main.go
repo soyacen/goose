@@ -107,7 +107,7 @@ func main() {
 	})
 
 	// Register WebSocket routes using generated code.
-	AppendStreamServiceHttpRoute(mux, svc, connCfg, logger, cfg.MaxConnsPerEndpoint, marshalOpts, unmarshalOpts)
+	AppendStreamServiceWebsocketRoute(mux, svc, connCfg, logger, cfg.MaxConnsPerEndpoint, marshalOpts, unmarshalOpts)
 
 	srv := &http.Server{
 		Addr:         cfg.Addr,
