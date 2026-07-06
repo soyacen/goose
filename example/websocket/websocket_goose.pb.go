@@ -39,9 +39,9 @@ func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServ
 		marshalOptions:   marshalOpts,
 		unmarshalOptions: unmarshalOpts,
 	}
-	router.Handle("POST /ws/client-stream", http.HandlerFunc(handler.ClientStream))
-	router.Handle("POST /ws/server-stream", http.HandlerFunc(handler.ServerStream))
-	router.Handle("POST /ws/bidi-stream", http.HandlerFunc(handler.BidStream))
+	router.Handle("/ws/client-stream", http.HandlerFunc(handler.ClientStream))
+	router.Handle("/ws/server-stream", http.HandlerFunc(handler.ServerStream))
+	router.Handle("/ws/bidi-stream", http.HandlerFunc(handler.BidStream))
 	return router
 }
 
@@ -258,8 +258,7 @@ func (c *streamServiceClient) dialAndConnect(ctx context.Context) (ws.ClientStre
 	}
 
 	conn := ws.NewConn(wsConn, c.connCfg, c.logger)
-	go conn.Start(ctx)
-
+	// NewClientStream starts conn.Start internally.
 	return ws.NewClientStream(ctx, conn, c.marshalOptions, c.unmarshalOptions), nil
 }
 

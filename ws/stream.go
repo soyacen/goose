@@ -80,6 +80,10 @@ type clientStream struct {
 // is invoked or the stream is otherwise torn down.
 func NewClientStream(ctx context.Context, conn *Conn, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *clientStream {
 	streamCtx, cancel := context.WithCancel(ctx)
+	// Start the conn with context.Background so that cancelling streamCtx
+	// (e.g. after CloseSend) does not prematurely close the WebSocket.
+	// The connection is closed when the server sends its close frame.
+	go conn.Start(context.Background())
 	return &clientStream{
 		conn:             conn,
 		ctx:              streamCtx,
@@ -95,8 +99,10 @@ func (s *clientStream) Context() context.Context {
 }
 
 // CloseSend closes the send direction of the stream.
+// The read side remains open so the caller can still receive messages
+// (e.g. the server's final response in client-streaming RPCs).
 func (s *clientStream) CloseSend() error {
-	s.conn.Close()
+	s.conn.CloseSend()
 	return nil
 }
 
@@ -207,10 +213,10 @@ func NewServerStream(ctx context.Context, conn *Conn, marshalOpts protojson.Mars
 // Context returns the stream's context.
 func (s *serverStream) Context() context.Context { return s.ctx }
 
-// CloseSend closes the send direction of the stream by initiating a graceful
-// close of the underlying WebSocket connection.
+// CloseSend closes the send direction of the stream by draining pending
+// writes and then closing the underlying WebSocket connection.
 func (s *serverStream) CloseSend() error {
-	s.conn.Close()
+	s.conn.DrainAndClose()
 	return nil
 }
 

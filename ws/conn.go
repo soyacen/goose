@@ -36,14 +36,16 @@ func DefaultConnConfig() ConnConfig {
 //   - Periodic ping/pong keepalive
 //   - Graceful close with drain
 //   - Context-based lifecycle
+//   - Separate send-side close (CloseSend) for client-streaming scenarios
 type Conn struct {
-	ws     *websocket.Conn
-	cfg    ConnConfig
-	logger *slog.Logger
+	ws        *websocket.Conn
+	cfg       ConnConfig
+	logger    *slog.Logger
 
-	writeCh chan []byte
+	writeCh   chan []byte
 	closeOnce sync.Once
 	closeErr  error
+	sendDone  chan struct{} // closed by CloseSend to signal send-side is done
 }
 
 // NewConn wraps a raw websocket.Conn into a managed Conn.
@@ -53,39 +55,81 @@ func NewConn(ws *websocket.Conn, cfg ConnConfig, logger *slog.Logger) *Conn {
 		logger = slog.Default()
 	}
 	return &Conn{
-		ws:      ws,
-		cfg:     cfg,
-		logger:  logger,
-		writeCh: make(chan []byte, cfg.WriteBufferSize),
+		ws:       ws,
+		cfg:      cfg,
+		logger:   logger,
+		writeCh:  make(chan []byte, cfg.WriteBufferSize),
+		sendDone: make(chan struct{}),
 	}
 }
 
 // Start launches the background write pump and ping loop.
-// It blocks until the connection is closed.
+// It blocks until all pending writes are drained and the write pump exits.
+//
+// The write pump uses an internal context (independent of ctx) so that
+// cancelling ctx does not abort in-flight writes. The write pump exits when:
+//   - ctx is cancelled,
+//   - Close() is called (writeCh closed), or
+//   - CloseSend() is called (send-side done).
+//
+// After the write pump exits, pending writes are drained synchronously.
+// The WebSocket itself is NOT closed here; the caller (or the remote peer)
+// is responsible for closing the connection.
 func (c *Conn) Start(ctx context.Context) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	writeCtx, writeCancel := context.WithCancel(context.Background())
 
-	done := make(chan struct{})
+	writePumpDone := make(chan struct{})
 	go func() {
-		c.writePump(ctx)
-		close(done)
+		c.writePump(writeCtx)
+		close(writePumpDone)
 	}()
 
-	go c.pingLoop(ctx)
+	pingDone := make(chan struct{})
+	go func() {
+		c.pingLoop(writeCtx)
+		close(pingDone)
+	}()
 
-	// Wait for context cancellation or write pump exit.
+	// Wait for one of:
+	//   - Parent context cancelled (e.g. HTTP request done)
+	//   - Write pump exited (Close was called)
+	//   - Send-side closed (CloseSend called)
 	select {
 	case <-ctx.Done():
-	case <-done:
+	case <-writePumpDone:
+		writeCancel()
+		<-pingDone
+		return
+	case <-c.sendDone:
 	}
 
-	// Drain remaining writes with a short timeout.
+	// Cancel writeCtx to stop the write pump and ping loop,
+	// then wait for both to fully exit before draining.
+	// This ensures no concurrent writes on the underlying WebSocket.
+	writeCancel()
+	<-writePumpDone
+	<-pingDone
+
+	// Drain remaining writes synchronously using a fresh context,
+	// then send a WebSocket close frame to signal the peer.
 	drainCtx, drainCancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer drainCancel()
 	c.drainWrites(drainCtx)
-
 	_ = c.ws.Close(websocket.StatusNormalClosure, "connection closed")
+}
+
+func (c *Conn) drainAndClose() {
+	drainCtx, drainCancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer drainCancel()
+	c.drainWrites(drainCtx)
+	_ = c.ws.Close(websocket.StatusNormalClosure, "connection closed")
+}
+
+// drainAndClose drains pending writes and closes the WebSocket.
+// Used by ServerStream.CloseSend to gracefully terminate the connection
+// after sending the final response.
+func (c *Conn) DrainAndClose() {
+	c.drainAndClose()
 }
 
 // Send enqueues a message for asynchronous writing.
@@ -94,6 +138,8 @@ func (c *Conn) Send(data []byte) bool {
 	select {
 	case c.writeCh <- data:
 		return true
+	case <-c.sendDone:
+		return false
 	default:
 		c.logger.Warn("write buffer full, dropping message")
 		return false
@@ -115,9 +161,36 @@ func (c *Conn) Close() {
 	})
 }
 
+// CloseSend signals that no more messages will be sent on this connection.
+// Unlike Close, it does not close the write channel immediately.
+// The write pump drains pending writes and then closes the WebSocket.
+// The read side remains open, allowing the caller to still receive messages.
+func (c *Conn) CloseSend() {
+	select {
+	case <-c.sendDone:
+		// already closed
+	default:
+		close(c.sendDone)
+	}
+}
+
 func (c *Conn) writePump(ctx context.Context) {
-	for msg := range c.writeCh {
-		writeCtx, cancel := context.WithTimeout(ctx, c.cfg.WriteTimeout)
+	for {
+		// Wait for next message or cancellation.
+		var msg []byte
+		var ok bool
+		select {
+		case msg, ok = <-c.writeCh:
+			if !ok {
+				return
+			}
+		case <-ctx.Done():
+			return
+		}
+
+		// Write using an independent timeout context so that cancelling ctx
+		// does not abort an in-flight write.
+		writeCtx, cancel := context.WithTimeout(context.Background(), c.cfg.WriteTimeout)
 		err := c.ws.Write(writeCtx, websocket.MessageText, msg)
 		cancel()
 		if err != nil {
@@ -136,7 +209,7 @@ func (c *Conn) pingLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			pingCtx, cancel := context.WithTimeout(ctx, c.cfg.WriteTimeout)
+			pingCtx, cancel := context.WithTimeout(context.Background(), c.cfg.WriteTimeout)
 			err := c.ws.Ping(pingCtx)
 			cancel()
 			if err != nil {
