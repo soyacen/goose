@@ -15,19 +15,19 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-type StreamServiceClient interface {
+type StreamServiceStreamClient interface {
 	ClientStream(ctx context.Context) (ws.ClientStreamingClient[*Request, *Response], error)
 	ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[*Response], error)
 	BidStream(ctx context.Context) (ws.BidiStreamingClient[*Request, *Response], error)
 }
 
-type StreamServiceServer interface {
+type StreamServiceStreamServer interface {
 	ClientStream(ws.ClientStreamingServer[*Request, *Response]) error
 	ServerStream(*Request, ws.ServerStreamingServer[*Response]) error
 	BidStream(ws.BidiStreamingServer[*Request, *Response]) error
 }
 
-func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServiceServer, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *http.ServeMux {
+func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServiceStreamServer, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *http.ServeMux {
 	if router == nil {
 		router = http.NewServeMux()
 	}
@@ -45,7 +45,7 @@ func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServ
 }
 
 type streamServiceHandler struct {
-	service          StreamServiceServer
+	service          StreamServiceStreamServer
 	cfg              ws.ConnConfig
 	logger           *slog.Logger
 	middleware       server.Middleware
@@ -180,7 +180,7 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 // ---------------------------------------------------------------------------
 
 // Compile-time check: streamServiceClient implements StreamServiceClient.
-var _ StreamServiceClient = (*streamServiceClient)(nil)
+var _ StreamServiceStreamClient = (*streamServiceClient)(nil)
 
 // streamServiceClient implements the StreamServiceClient interface by creating
 // WebSocket connections for each RPC call. This is what protoc-gen-goose
@@ -197,7 +197,7 @@ type streamServiceClient struct {
 // NewStreamServiceClient creates a client that implements StreamServiceClient.
 // url is the WebSocket endpoint (e.g., "ws://localhost:8080/ws/bidi-stream").
 // Each method call dials a new connection for the corresponding streaming RPC.
-func NewStreamServiceClient(url string, logger *slog.Logger, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) StreamServiceClient {
+func NewStreamServiceClient(url string, logger *slog.Logger, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) StreamServiceStreamClient {
 	if logger == nil {
 		logger = slog.Default()
 	}

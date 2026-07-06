@@ -18,7 +18,7 @@ import (
 // ---------------------------------------------------------------------------
 
 // Compile-time check: streamServiceImpl implements StreamServiceServer.
-var _ StreamServiceServer = (*streamServiceImpl)(nil)
+var _ StreamServiceStreamServer = (*streamServiceImpl)(nil)
 
 // streamServiceImpl is the user-defined service implementation.
 type streamServiceImpl struct {
@@ -26,7 +26,7 @@ type streamServiceImpl struct {
 }
 
 // NewStreamServiceImpl creates a new service implementation.
-func NewStreamServiceImpl(logger *slog.Logger) StreamServiceServer {
+func NewStreamServiceImpl(logger *slog.Logger) StreamServiceStreamServer {
 	return &streamServiceImpl{logger: logger}
 }
 
