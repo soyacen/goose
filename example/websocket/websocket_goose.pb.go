@@ -27,15 +27,17 @@ type StreamServiceServer interface {
 	BidStream(ws.BidiStreamingServer[*Request, *Response]) error
 }
 
-func AppendStreamServiceHttpRoute(router *http.ServeMux, service StreamServiceServer, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64) *http.ServeMux {
+func AppendStreamServiceHttpRoute(router *http.ServeMux, service StreamServiceServer, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *http.ServeMux {
 	if router == nil {
 		router = http.NewServeMux()
 	}
 	handler := &streamServiceHandler{
-		service: service,
-		cfg:     cfg,
-		logger:  logger,
-		maxConn: maxConn,
+		service:          service,
+		cfg:              cfg,
+		logger:           logger,
+		maxConn:          maxConn,
+		marshalOptions:   marshalOpts,
+		unmarshalOptions: unmarshalOpts,
 	}
 	router.Handle("POST /ws/client-stream", http.HandlerFunc(handler.ClientStream))
 	router.Handle("POST /ws/server-stream", http.HandlerFunc(handler.ServerStream))
@@ -44,14 +46,16 @@ func AppendStreamServiceHttpRoute(router *http.ServeMux, service StreamServiceSe
 }
 
 type streamServiceHandler struct {
-	service      StreamServiceServer
-	cfg          ws.ConnConfig
-	logger       *slog.Logger
-	maxConn      int64
-	clientActive atomic.Int64
-	serverActive atomic.Int64
-	bidiActive   atomic.Int64
-	middleware   server.Middleware
+	service          StreamServiceServer
+	cfg              ws.ConnConfig
+	logger           *slog.Logger
+	maxConn          int64
+	clientActive     atomic.Int64
+	serverActive     atomic.Int64
+	bidiActive       atomic.Int64
+	middleware       server.Middleware
+	marshalOptions   protojson.MarshalOptions
+	unmarshalOptions protojson.UnmarshalOptions
 }
 
 // ------------------------------------------------------------------
@@ -83,7 +87,7 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 		h.logger.Info("client-stream connected", slog.String("remote", request.RemoteAddr))
 		defer h.logger.Info("client-stream disconnected", slog.String("remote", request.RemoteAddr))
 
-		ss := ws.NewServerStream(ctx, conn)
+		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("client-stream error", slog.String("error", err.Error()))
@@ -130,12 +134,12 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 			}
 			return
 		}
-		if err := protojson.Unmarshal(data, &req); err != nil {
+		if err := h.unmarshalOptions.Unmarshal(data, &req); err != nil {
 			h.logger.Error("server-stream unmarshal error", slog.String("error", err.Error()))
 			return
 		}
 
-		ss := ws.NewServerStream(ctx, conn)
+		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("server-stream error", slog.String("error", err.Error()))
@@ -173,7 +177,7 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 		h.logger.Info("bidi-stream connected", slog.String("remote", request.RemoteAddr))
 		defer h.logger.Info("bidi-stream disconnected", slog.String("remote", request.RemoteAddr))
 
-		ss := ws.NewServerStream(ctx, conn)
+		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
@@ -217,23 +221,27 @@ var _ StreamServiceClient = (*streamServiceClient)(nil)
 // WebSocket connections for each RPC call. This is what protoc-gen-goose
 // would generate as the client stub.
 type streamServiceClient struct {
-	url      string
-	dialOpts *websocket.DialOptions
-	connCfg  ws.ConnConfig
-	logger   *slog.Logger
+	url              string
+	dialOpts         *websocket.DialOptions
+	connCfg          ws.ConnConfig
+	logger           *slog.Logger
+	marshalOptions   protojson.MarshalOptions
+	unmarshalOptions protojson.UnmarshalOptions
 }
 
 // NewStreamServiceClient creates a client that implements StreamServiceClient.
 // url is the WebSocket endpoint (e.g., "ws://localhost:8080/ws/bidi-stream").
 // Each method call dials a new connection for the corresponding streaming RPC.
-func NewStreamServiceClient(url string, logger *slog.Logger) StreamServiceClient {
+func NewStreamServiceClient(url string, logger *slog.Logger, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) StreamServiceClient {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	return &streamServiceClient{
-		url:     url,
-		logger:  logger,
-		connCfg: ws.DefaultConnConfig(),
+		url:              url,
+		logger:           logger,
+		connCfg:          ws.DefaultConnConfig(),
+		marshalOptions:   marshalOpts,
+		unmarshalOptions: unmarshalOpts,
 		dialOpts: &websocket.DialOptions{
 			CompressionMode: websocket.CompressionContextTakeover,
 		},
@@ -252,7 +260,7 @@ func (c *streamServiceClient) dialAndConnect(ctx context.Context) (ws.ClientStre
 	conn := ws.NewConn(wsConn, c.connCfg, c.logger)
 	go conn.Start(ctx)
 
-	return ws.NewClientStream(ctx, conn), nil
+	return ws.NewClientStream(ctx, conn, c.marshalOptions, c.unmarshalOptions), nil
 }
 
 // ClientStream opens a client-streaming RPC.

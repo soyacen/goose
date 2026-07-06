@@ -77,25 +77,29 @@ var _ ClientStream = (*clientStream)(nil)
 // clientStream is the base struct for all client-side stream stubs.
 // It wraps a *Conn and uses protojson for SendMsg/RecvMsg.
 type clientStream struct {
-	conn    *Conn
-	ctx     context.Context
-	cancel  context.CancelFunc
-	header  http.Header
-	trailer http.Header
+	conn              *Conn
+	ctx               context.Context
+	cancel            context.CancelFunc
+	header            http.Header
+	trailer           http.Header
+	marshalOptions    protojson.MarshalOptions
+	unmarshalOptions  protojson.UnmarshalOptions
 }
 
 // NewClientStream creates a base client stream wrapping an established Conn.
 // The caller is responsible for dialing the WebSocket and calling conn.Start()
 // before passing the Conn here. The cancel function is called when CloseSend
 // is invoked or the stream is otherwise torn down.
-func NewClientStream(ctx context.Context, conn *Conn) *clientStream {
+func NewClientStream(ctx context.Context, conn *Conn, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *clientStream {
 	streamCtx, cancel := context.WithCancel(ctx)
 	return &clientStream{
-		conn:    conn,
-		ctx:     streamCtx,
-		cancel:  cancel,
-		header:  make(http.Header),
-		trailer: make(http.Header),
+		conn:             conn,
+		ctx:              streamCtx,
+		cancel:           cancel,
+		header:           make(http.Header),
+		trailer:          make(http.Header),
+		marshalOptions:   marshalOpts,
+		unmarshalOptions: unmarshalOpts,
 	}
 }
 
@@ -122,7 +126,7 @@ func (s *clientStream) Context() context.Context {
 
 // SendMsg serializes m and enqueues it for sending.
 func (s *clientStream) SendMsg(m proto.Message) error {
-	data, err := protojson.Marshal(m)
+	data, err := s.marshalOptions.Marshal(m)
 	if err != nil {
 		return err
 	}
@@ -149,7 +153,7 @@ func (s *clientStream) RecvMsg(m proto.Message) error {
 		}
 		return err
 	}
-	return protojson.Unmarshal(data, m)
+	return s.unmarshalOptions.Unmarshal(data, m)
 }
 
 // close tears down the stream.
@@ -222,19 +226,23 @@ var _ ServerStream = (*serverStream)(nil)
 // defined in stream_interfaces.go. It wraps a *Conn and uses protojson for
 // SendMsg/RecvMsg.
 type serverStream struct {
-	conn    *Conn
-	ctx     context.Context
-	header  http.Header
-	trailer http.Header
+	conn              *Conn
+	ctx               context.Context
+	header            http.Header
+	trailer           http.Header
+	marshalOptions    protojson.MarshalOptions
+	unmarshalOptions  protojson.UnmarshalOptions
 }
 
 // newServerStream creates a base server stream wrapping conn.
-func NewServerStream(ctx context.Context, conn *Conn) *serverStream {
+func NewServerStream(ctx context.Context, conn *Conn, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *serverStream {
 	return &serverStream{
-		conn:    conn,
-		ctx:     ctx,
-		header:  make(http.Header),
-		trailer: make(http.Header),
+		conn:             conn,
+		ctx:              ctx,
+		header:           make(http.Header),
+		trailer:          make(http.Header),
+		marshalOptions:   marshalOpts,
+		unmarshalOptions: unmarshalOpts,
 	}
 }
 
@@ -274,7 +282,7 @@ func (s *serverStream) CloseSend() error {
 
 // SendMsg serializes m using protojson and enqueues it for writing via Conn.
 func (s *serverStream) SendMsg(m proto.Message) error {
-	data, err := protojson.Marshal(m)
+	data, err := s.marshalOptions.Marshal(m)
 	if err != nil {
 		return err
 	}
@@ -303,7 +311,7 @@ func (s *serverStream) RecvMsg(m proto.Message) error {
 		}
 		return err
 	}
-	return protojson.Unmarshal(data, m)
+	return s.unmarshalOptions.Unmarshal(data, m)
 }
 
 // ClientStreamingClient represents the client side of a client-streaming (many
