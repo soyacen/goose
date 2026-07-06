@@ -2,28 +2,23 @@
 
 <cite>
 **本文引用的文件**
-- [main.go](file://example/websocket/main.go)
+- [main.go](file://example/websocket/server/main.go)
+- [client_main.go](file://example/websocket/client/main.go)
 - [service_impl.go](file://example/websocket/service_impl.go)
-- [handler.go](file://example/websocket/handler.go)
-- [client_stub.go](file://example/websocket/client_stub.go)
+- [websocket_goose.pb.go](file://example/websocket/websocket_goose.pb.go)
 - [websocket.proto](file://example/websocket/websocket.proto)
-- [client_stream.go](file://ws/client_stream.go)
-- [server_stream.go](file://ws/server_stream.go)
-- [stream_interfaces.go](file://ws/stream_interfaces.go)
-- [codec.go](file://ws/codec.go)
 - [conn.go](file://ws/conn.go)
-- [client.go](file://ws/client.go)
+- [stream.go](file://ws/stream.go)
 - [util.go](file://ws/util.go)
 </cite>
 
 ## 更新摘要
 **变更内容**
-- 完成WebSocket系统重大架构重构，核心组件迁移到独立的ws包
-- 引入新的Protocol Buffers定义和gRPC风格接口设计
-- 更新文件路径引用从example/stream/到ws/目录
-- 改进客户端桩代码实现，采用通用流接口替代专用实现
-- 使用正确的命名约定（ClientStream、ServerStream、BidStream替代原来的ClientStrean、ServerStrean、Bid）
-- 移除旧的example/stream/client_stub.go文件，使用新的ws/client_stream.go实现
+- 完成WebSocket系统重大架构重构，移除了独立的客户端实现文件(ws/client.go)
+- 将核心功能整合到简化的三文件结构中：conn.go、stream.go、util.go
+- 增强了连接管理和EOS（End of Stream）处理机制
+- 简化了流式API，采用统一的泛型接口设计
+- 改进了错误处理和连接生命周期管理
 
 ## 目录
 1. [简介](#简介)
@@ -40,144 +35,128 @@
 
 WebSocket流式系统是Goose项目中的一个核心功能模块，提供了三种不同类型的WebSocket流式通信模式：客户端单向流、服务器单向流和双向流。该系统专为生产环境设计，具备自动重连、连接池管理、优雅关闭等高级特性。
 
-**更新** 系统现已完成重大架构重构，核心组件迁移到独立的ws包中，采用gRPC风格的通用接口设计，通过StreamService和StreamServiceServer接口提供类型安全的流式通信能力，支持客户端流、服务器流和双向流的完整生命周期管理。
+**更新** 系统现已完成重大架构重构，移除了独立的客户端实现文件，将核心功能整合到简化的三文件结构中。新的架构采用增强的连接管理和EOS处理机制，通过统一的泛型接口提供类型安全的流式通信能力，支持客户端流、服务器流和双向流的完整生命周期管理。
 
-系统基于Go标准库的net/http包和coder/websocket库构建，支持Kubernetes部署场景下的健康检查和优雅停机。通过统一的连接管理器和处理器架构，实现了高效、可靠的实时通信能力。
+系统基于Go标准库的net/http包和coder/websocket库构建，支持Kubernetes部署场景下的健康检查和优雅停机。通过简化的连接管理器和服务委托架构，实现了高效、可靠的实时通信能力。
 
 ## 项目结构
 
-WebSocket流式系统采用模块化架构设计，核心组件位于ws包中，示例实现位于example/websocket目录中：
+WebSocket流式系统采用精简的模块化架构设计，核心组件位于ws包中，示例实现位于example/websocket目录中：
 
 ```mermaid
 graph TB
 subgraph "ws包 - 核心基础设施"
-Codec[codec.go<br/>编解码器接口]
 Conn[conn.go<br/>连接管理器]
-ClientStream[client_stream.go<br/>客户端流实现]
-ServerStream[server_stream.go<br/>服务器流实现]
-Interfaces[stream_interfaces.go<br/>通用流接口]
-Client[client.go<br/>客户端实现]
+Stream[stream.go<br/>流式接口和实现]
 Util[util.go<br/>工具函数]
 end
 subgraph "示例实现层"
 Proto[websocket.proto<br/>服务定义]
 ServiceImpl[service_impl.go<br/>服务实现]
-Handler[handler.go<br/>HTTP处理器]
-ClientStub[client_stub.go<br/>客户端桩代码]
-Main[main.go<br/>服务器入口点]
+ClientMain[client/main.go<br/>客户端示例]
+ServerMain[server/main.go<br/>服务器示例]
+Generated[websocket_goose.pb.go<br/>生成代码]
 end
 subgraph "外部依赖"
 WS[coder/websocket<br/>WebSocket库]
 HTTP[net/http<br/>HTTP服务器]
 SLog[log/slog<br/>结构化日志]
+Protobuf[google.golang.org/protobuf<br/>Protocol Buffers]
 end
-Codec --> ServerStream
-Codec --> ClientStream
-Conn --> ServerStream
-Conn --> ClientStream
-Interfaces --> ServerStream
-Interfaces --> ClientStream
-Handler --> ServiceImpl
-Handler --> Codec
-Handler --> Conn
-ClientStub --> Client
-Client --> Conn
-ServerStream --> Conn
-ClientStream --> Conn
-Main --> Handler
-Main --> ClientStub
+Conn --> Stream
+Util --> Conn
+Util --> Stream
+Proto --> Generated
+Proto --> ServiceImpl
+Generated --> ClientMain
+Generated --> ServerMain
+Generated --> ServiceImpl
+ClientMain --> Stream
+ServerMain --> Conn
+ServerMain --> Util
 ```
 
 **图表来源**
-- [codec.go:1-30](file://ws/codec.go#L1-L30)
-- [conn.go:1-164](file://ws/conn.go#L1-L164)
-- [client_stream.go:1-100](file://ws/client_stream.go#L1-L100)
-- [server_stream.go:1-97](file://ws/server_stream.go#L1-L97)
-- [stream_interfaces.go:1-340](file://ws/stream_interfaces.go#L1-L340)
-- [client.go:1-363](file://ws/client.go#L1-L363)
+- [conn.go:1-252](file://ws/conn.go#L1-L252)
+- [stream.go:1-526](file://ws/stream.go#L1-L526)
 - [util.go:1-27](file://ws/util.go#L1-L27)
 - [websocket.proto:1-30](file://example/websocket/websocket.proto#L1-L30)
 - [service_impl.go:1-126](file://example/websocket/service_impl.go#L1-L126)
-- [handler.go:1-226](file://example/websocket/handler.go#L1-L226)
-- [client_stub.go:1-99](file://example/websocket/client_stub.go#L1-L99)
-- [main.go:1-180](file://example/websocket/main.go#L1-L180)
+- [client_main.go:1-207](file://example/websocket/client/main.go#L1-L207)
+- [server_main.go:1-168](file://example/websocket/server/main.go#L1-L168)
+- [websocket_goose.pb.go:1-293](file://example/websocket/websocket_goose.pb.go#L1-L293)
 
 ## 核心组件
 
-### gRPC风格流服务接口架构
+### 简化的流式接口架构
 
-系统采用gRPC风格的通用接口设计，提供类型安全的流式通信能力：
+系统采用简化的泛型接口设计，提供类型安全的流式通信能力：
 
 ```mermaid
 classDiagram
-class StreamServiceClient {
-+ClientStream(ctx) ClientStreamingClient
-+ServerStream(ctx, in) ServerStreamingClient
-+BidiStream(ctx) BidiStreamingClient
-}
-class StreamServiceServer {
-+ClientStream(stream) error
-+ServerStream(req, stream) error
-+BidiStream(stream) error
-}
-class GenericClientStream~Req, Res~ {
-+Send(*Req) error
-+Recv() (*Res, error)
-+CloseAndRecv() (*Res, error)
-+ClientStream
-}
-class GenericServerStream~Req, Res~ {
-+Send(*Res) error
-+Recv() (*Req, error)
-+SendAndClose(*Res) error
-+ServerStream
-}
 class ClientStreamingClient~Req, Res~ {
-+Send(*Req) error
-+CloseAndRecv() (*Res, error)
-+ClientStream
++Send(Req) error
++CloseAndRecv() (Res, error)
++Context() context.Context
++CloseSend() error
 }
 class ServerStreamingClient~Res~ {
-+Recv() (*Res, error)
-+ClientStream
++Recv() (Res, error)
++Context() context.Context
++CloseSend() error
 }
 class BidiStreamingClient~Req, Res~ {
-+Send(*Req) error
-+Recv() (*Res, error)
-+ClientStream
++Send(Req) error
++Recv() (Res, error)
++Context() context.Context
++CloseSend() error
 }
 class ClientStreamingServer~Req, Res~ {
-+Recv() (*Req, error)
-+SendAndClose(*Res) error
-+ServerStream
++Recv() (Req, error)
++SendAndClose(Res) error
++Context() context.Context
++CloseSend() error
 }
 class ServerStreamingServer~Res~ {
-+Send(*Res) error
-+ServerStream
++Send(Res) error
++Context() context.Context
++CloseSend() error
 }
 class BidiStreamingServer~Req, Res~ {
-+Recv() (*Req, error)
-+Send(*Res) error
-+ServerStream
++Recv() (Req, error)
++Send(Res) error
++Context() context.Context
++CloseSend() error
 }
-StreamServiceClient <.. GenericClientStream
-StreamServiceServer <.. GenericServerStream
-GenericClientStream <.. ClientStreamingClient
-GenericClientStream <.. ServerStreamingClient
-GenericClientStream <.. BidiStreamingClient
-GenericServerStream <.. ClientStreamingServer
-GenericServerStream <.. ServerStreamingServer
-GenericServerStream <.. BidiStreamingServer
+class GenericClientStream~Req, Res~ {
++Send(Req) error
++Recv() (Res, error)
++CloseAndRecv() (Res, error)
++Context() context.Context
++CloseSend() error
+}
+class GenericServerStream~Req, Res~ {
++Send(Res) error
++Recv() (Req, error)
++SendAndClose(Res) error
++Context() context.Context
++CloseSend() error
+}
+ClientStreamingClient <|-- GenericClientStream
+ServerStreamingClient <|-- GenericClientStream
+BidiStreamingClient <|-- GenericClientStream
+ClientStreamingServer <|-- GenericServerStream
+ServerStreamingServer <|-- GenericServerStream
+BidiStreamingServer <|-- GenericServerStream
 ```
 
 **图表来源**
-- [client_stub.go:65-98](file://example/websocket/client_stub.go#L65-L98)
-- [stream_interfaces.go:150-229](file://ws/stream_interfaces.go#L150-L229)
-- [stream_interfaces.go:8-148](file://ws/stream_interfaces.go#L8-L148)
+- [stream.go:273-413](file://ws/stream.go#L273-L413)
+- [stream.go:427-526](file://ws/stream.go#L427-L526)
 
-### 连接配置系统
+### 增强的连接管理系统
 
-连接配置系统提供了生产级别的默认设置和灵活的自定义选项：
+连接管理系统提供了生产级别的WebSocket连接抽象和EOS处理：
 
 ```mermaid
 classDiagram
@@ -188,86 +167,74 @@ class ConnConfig {
 +time.Duration WriteTimeout
 +DefaultConnConfig() ConnConfig
 }
-class RetryConfig {
-+int MaxRetries
-+time.Duration InitialBackoff
-+time.Duration MaxBackoff
-+float64 Multiplier
-+float64 JitterFraction
-+time.Duration DialTimeout
-+DefaultRetryConfig() RetryConfig
+class Conn {
+-*websocket.Conn ws
+-ConnConfig cfg
+-*slog.Logger logger
+-chan []byte writeCh
+-sync.Once closeOnce
+-error closeErr
+-chan sendDone
+-chan startDone
++Start(ctx)
++Send(data) bool
++Read(ctx) ([]byte, error)
++Close()
++CloseSend()
++DrainAndClose()
 }
-class ClientOptions {
-+string URL
-+http.Header Headers
-+RetryConfig Retry
-+ConnConfig ConnConfig
-+*slog.Logger Logger
-+StateChangeFunc OnStateChange
-+MessageHandler OnMessage
-+chan []byte OutgoingMessages
+class clientStream {
+-*Conn conn
+-context.Context ctx
+-context.CancelFunc cancel
++NewClientStream(ctx, conn, marshalOpts, unmarshalOpts)
++SendMsg(m) error
++RecvMsg(m) error
++CloseSend() error
++Context() context.Context
 }
-ConnConfig <|-- ClientOptions
-RetryConfig <|-- ClientOptions
+class serverStream {
+-*Conn conn
+-context.Context ctx
++NewServerStream(ctx, conn, marshalOpts, unmarshalOpts)
++SendMsg(m) error
++RecvMsg(m) error
++CloseSend() error
++Context() context.Context
+}
+ConnConfig <|-- Conn
+Conn --> clientStream : 使用
+Conn --> serverStream : 使用
 ```
 
 **图表来源**
-- [conn.go:12-32](file://ws/conn.go#L12-L32)
-- [client.go:15-42](file://ws/client.go#L15-L42)
-- [client.go:78-98](file://ws/client.go#L78-L98)
+- [conn.go:12-50](file://ws/conn.go#L12-L50)
+- [stream.go:67-94](file://ws/stream.go#L67-L94)
+- [stream.go:200-218](file://ws/stream.go#L200-L218)
 
-### 可插拔编解码器架构
+### 简化工具函数
 
-系统引入了可插拔的编解码器架构，支持多种消息格式：
+系统提供了简化的工具函数用于WebSocket操作：
 
 ```mermaid
 classDiagram
-class Codec {
-<<interface>>
-+Marshal(v any) []byte
-+Unmarshal(data []byte, v any) error
+class WSUtils {
+<<package>>
++AcceptOptions() *websocket.AcceptOptions
++IsNormalClose(err) bool
 }
-class JSONCodec {
-+Marshal(v any) []byte
-+Unmarshal(data []byte, v any) error
+class AcceptOptions {
++bool InsecureSkipVerify
 }
-class serverStream {
-+*Conn conn
-+context.Context ctx
-+Codec codec
-+Header() http.Header
-+SetHeader(http.Header)
-+Trailer() http.Header
-+SetTrailer(http.Header)
-+Context() context.Context
-+SendMsg(m any) error
-+RecvMsg(m any) error
-}
-class clientStream {
-+*Conn conn
-+context.Context ctx
-+cancel context.CancelFunc
-+Codec codec
-+Header() http.Header
-+Trailer() http.Header
-+CloseSend() error
-+Context() context.Context
-+SendMsg(m any) error
-+RecvMsg(m any) error
-}
-Codec <|.. JSONCodec
-serverStream --> Codec : 使用
-clientStream --> Codec : 使用
+WSUtils --> AcceptOptions : 返回
 ```
 
 **图表来源**
-- [codec.go:11-29](file://ws/codec.go#L11-L29)
-- [server_stream.go:18-24](file://ws/server_stream.go#L18-L24)
-- [client_stream.go:17-24](file://ws/client_stream.go#L17-L24)
+- [util.go:10-27](file://ws/util.go#L10-L27)
 
 ## 架构概览
 
-WebSocket流式系统采用分层架构设计，确保了高可用性和可扩展性：
+WebSocket流式系统采用精简的分层架构设计，确保了高可用性和可扩展性：
 
 ```mermaid
 graph TB
@@ -277,15 +244,12 @@ Server[WebSocket服务器]
 Service[流服务实现]
 end
 subgraph "接口层"
-StreamServiceClient[StreamServiceClient接口]
-StreamServiceServer[StreamServiceServer接口]
 GenericClientStream[GenericClientStream泛型接口]
 GenericServerStream[GenericServerStream泛型接口]
 end
 subgraph "传输层"
 HTTP[HTTP服务器]
 WS[WebSocket连接]
-Codec[编解码器]
 Conn[连接管理器]
 end
 subgraph "基础设施"
@@ -293,12 +257,11 @@ K8s[Kubernetes]
 LB[负载均衡器]
 Log[日志系统]
 end
-Client --> StreamServiceClient
-Server --> StreamServiceServer
-StreamServiceClient --> HTTP
-StreamServiceServer --> HTTP
+Client --> GenericClientStream
+Server --> GenericServerStream
+GenericClientStream --> HTTP
+GenericServerStream --> HTTP
 HTTP --> WS
-WS --> Codec
 WS --> Conn
 Server --> K8s
 K8s --> LB
@@ -306,9 +269,9 @@ Server --> Log
 ```
 
 **图表来源**
-- [client_stub.go:65-98](file://example/websocket/client_stub.go#L65-L98)
-- [main.go:54-180](file://example/websocket/main.go#L54-L180)
-- [handler.go:42-226](file://example/websocket/handler.go#L42-L226)
+- [websocket_goose.pb.go:18-28](file://example/websocket/websocket_goose.pb.go#L18-L28)
+- [server_main.go:57-168](file://example/websocket/server/main.go#L57-L168)
+- [client_main.go:18-207](file://example/websocket/client/main.go#L18-L207)
 
 系统的关键特性包括：
 
@@ -316,9 +279,9 @@ Server --> Log
 2. **类型安全**：通过泛型接口提供编译时类型检查
 3. **连接池管理**：限制每个端点的最大并发连接数
 4. **优雅关闭**：支持Kubernetes环境下的平滑停机
-5. **自动重连**：客户端具备指数退避重连机制
+5. **EOS处理**：增强的End of Stream标记机制
 6. **健康检查**：提供liveness和readiness探针
-7. **可插拔编解码**：支持JSON、Protobuf等多种消息格式
+7. **简化API**：统一的泛型接口降低使用复杂度
 
 ## 详细组件分析
 
@@ -342,7 +305,7 @@ Server->>Client : 返回聚合响应
 ```
 
 **图表来源**
-- [client_stub.go:65-72](file://example/websocket/client_stub.go#L65-L72)
+- [websocket_goose.pb.go:235-242](file://example/websocket/websocket_goose.pb.go#L235-L242)
 - [service_impl.go:38-59](file://example/websocket/service_impl.go#L38-L59)
 
 #### 客户端单向流（Client-Stream）
@@ -354,7 +317,7 @@ sequenceDiagram
 participant Client as 客户端
 participant Service as StreamServiceClient
 participant Server as StreamServiceServer
-participant Stream as GenericServerStream
+participant Stream as GenericClientStream
 Client->>Service : ClientStream(ctx)
 Service->>Client : GenericClientStream
 loop 循环发送请求
@@ -368,7 +331,7 @@ Server->>Client : 返回最终响应
 ```
 
 **图表来源**
-- [client_stub.go:65-72](file://example/websocket/client_stub.go#L65-L72)
+- [websocket_goose.pb.go:235-242](file://example/websocket/websocket_goose.pb.go#L235-L242)
 - [service_impl.go:38-59](file://example/websocket/service_impl.go#L38-L59)
 
 #### 服务器单向流（Server-Stream）
@@ -380,7 +343,7 @@ sequenceDiagram
 participant Client as 客户端
 participant Service as StreamServiceClient
 participant Server as StreamServiceServer
-participant Stream as GenericServerStream
+participant Stream as GenericClientStream
 Client->>Service : ServerStream(ctx, request)
 Service->>Client : GenericClientStream
 loop 循环接收响应
@@ -393,7 +356,7 @@ Server->>Client : 发送响应流
 ```
 
 **图表来源**
-- [client_stub.go:74-89](file://example/websocket/client_stub.go#L74-L89)
+- [websocket_goose.pb.go:244-259](file://example/websocket/websocket_goose.pb.go#L244-L259)
 - [service_impl.go:66-93](file://example/websocket/service_impl.go#L66-L93)
 
 #### 双向流（Bidi-Stream）
@@ -405,8 +368,8 @@ sequenceDiagram
 participant Client as 客户端
 participant Service as StreamServiceClient
 participant Server as StreamServiceServer
-participant Stream as GenericServerStream
-Client->>Service : BidiStream(ctx)
+participant Stream as GenericClientStream
+Client->>Service : BidStream(ctx)
 Service->>Client : GenericClientStream
 loop 并发读写
 Client->>Client : Send(request)
@@ -420,48 +383,12 @@ Server->>Server : 遇到io.EOF结束
 ```
 
 **图表来源**
-- [client_stub.go:91-98](file://example/websocket/client_stub.go#L91-L98)
+- [websocket_goose.pb.go:261-268](file://example/websocket/websocket_goose.pb.go#L261-L268)
 - [service_impl.go:99-125](file://example/websocket/service_impl.go#L99-L125)
 
-### 客户端实现
+### 增强的连接管理器
 
-客户端组件提供了生产级别的WebSocket客户端功能：
-
-```mermaid
-sequenceDiagram
-participant Client as 客户端
-participant Retry as 重连机制
-participant WS as WebSocket连接
-participant Server as 服务器
-Client->>Retry : 启动连接
-Retry->>WS : 尝试建立连接
-WS-->>Retry : 连接成功/失败
-alt 连接成功
-Retry->>Client : 设置状态为已连接
-Client->>WS : 启动读写泵
-WS->>Server : 发送消息
-Server-->>WS : 接收消息
-WS-->>Client : 处理消息
-else 连接失败
-Retry->>Retry : 指数退避等待
-Retry->>WS : 重新尝试连接
-end
-```
-
-**图表来源**
-- [client.go:134-238](file://ws/client.go#L134-L238)
-- [client.go:247-317](file://ws/client.go#L247-L317)
-
-客户端的核心功能包括：
-
-1. **状态管理**：跟踪连接状态（断开、连接中、已连接、重连中）
-2. **自动重连**：指数退避算法，支持抖动避免雪崩效应
-3. **消息循环**：根据流类型选择合适的读写泵组合
-4. **优雅关闭**：支持立即关闭和延迟关闭两种模式
-
-### 连接管理器
-
-连接管理器提供了高性能的WebSocket连接抽象：
+连接管理器提供了高性能的WebSocket连接抽象和EOS处理：
 
 ```mermaid
 flowchart TD
@@ -473,46 +400,71 @@ StartPingLoop --> Monitor["监控连接状态"]
 Monitor --> ReadMsg{"读取消息"}
 Monitor --> WriteMsg{"写入消息"}
 Monitor --> Heartbeat{"心跳检测"}
+Monitor --> CloseSend{"收到CloseSend?"}
 ReadMsg --> ProcessRead["处理读取操作"]
 WriteMsg --> ProcessWrite["处理写入操作"]
 Heartbeat --> ProcessHeartbeat["处理心跳"]
+CloseSend --> DrainWrites["排空待发消息"]
+DrainWrites --> WriteEOS["写入EOS标记"]
 ProcessRead --> Monitor
 ProcessWrite --> Monitor
 ProcessHeartbeat --> Monitor
+WriteEOS --> End([连接结束])
 Monitor --> Close{"连接关闭?"}
 Close --> |否| Monitor
-Close --> |是| Drain["清空写入队列"]
-Drain --> GracefulClose["优雅关闭"]
-GracefulClose --> End([连接结束])
+Close --> |是| End
 ```
 
 **图表来源**
-- [conn.go:63-89](file://ws/conn.go#L63-L89)
-- [conn.go:118-149](file://ws/conn.go#L118-L149)
+- [conn.go:82-127](file://ws/conn.go#L82-L127)
+- [conn.go:129-147](file://ws/conn.go#L129-L147)
 
 连接管理器的关键特性：
 
 1. **异步写入**：非阻塞的消息队列，支持背压处理
 2. **心跳保持**：定期发送ping帧维持连接活跃
-3. **优雅关闭**：支持超时和队列清空机制
-4. **错误处理**：自动检测和处理各种连接异常
+3. **EOS处理**：增强的End of Stream标记机制
+4. **优雅关闭**：支持超时和队列清空机制
+5. **错误处理**：自动检测和处理各种连接异常
 
-### 服务委托模式处理器
+### 简化的流式API
 
-处理器层采用服务委托模式，将业务逻辑委托给StreamServiceServer实现：
-
-#### 客户端单向流处理器
-
-客户端单向流适用于日志收集、遥测上报等场景：
+系统采用简化的泛型接口设计，降低了使用复杂度：
 
 ```mermaid
 sequenceDiagram
 participant Client as 客户端
-participant Handler as ClientStreamHandler
-participant Service as StreamServiceServer
+participant Service as StreamServiceClient
+participant Stream as GenericClientStream
+participant Server as StreamServiceServer
+Client->>Service : NewStreamServiceClient(url, logger, opts)
+Service->>Client : 返回客户端实例
+Client->>Service : ClientStream(ctx)
+Service->>Client : GenericClientStream
+Client->>Stream : Send(request)
+Client->>Stream : CloseAndRecv()
+Stream->>Server : 发送请求并等待响应
+Server->>Stream : 返回聚合响应
+Stream->>Client : 返回结果
+```
+
+**图表来源**
+- [websocket_goose.pb.go:197-214](file://example/websocket/websocket_goose.pb.go#L197-L214)
+- [websocket_goose.pb.go:235-242](file://example/websocket/websocket_goose.pb.go#L235-L242)
+
+### 服务实现层
+
+服务实现层采用简洁的服务委托模式，将业务逻辑直接委托给流式接口：
+
+#### 客户端单向流服务实现
+
+```mermaid
+sequenceDiagram
+participant Client as 客户端
+participant Handler as 生成的处理器
+participant Service as streamServiceImpl
 participant Stream as GenericServerStream
 Client->>Handler : 建立WebSocket连接
-Handler->>Handler : 验证连接数限制
 Handler->>Handler : 接受WebSocket连接
 Handler->>Handler : 启动连接管理器
 Handler->>Service : 调用ClientStream方法
@@ -523,21 +475,18 @@ Stream->>Client : 返回最终结果
 ```
 
 **图表来源**
-- [handler.go:42-74](file://example/websocket/handler.go#L42-L74)
+- [websocket_goose.pb.go:60-90](file://example/websocket/websocket_goose.pb.go#L60-L90)
 - [service_impl.go:38-59](file://example/websocket/service_impl.go#L38-L59)
 
-#### 服务器单向流处理器
-
-服务器单向流适用于实时通知、直播推送等场景：
+#### 服务器单向流服务实现
 
 ```mermaid
 sequenceDiagram
 participant Client as 客户端
-participant Handler as ServerStreamHandler
-participant Service as StreamServiceServer
+participant Handler as 生成的处理器
+participant Service as streamServiceImpl
 participant Stream as GenericServerStream
 Client->>Handler : 建立WebSocket连接
-Handler->>Handler : 检查连接数限制
 Handler->>Handler : 接受WebSocket连接
 Handler->>Handler : 启动连接管理器
 Handler->>Service : 调用ServerStream方法
@@ -548,24 +497,21 @@ Stream->>Client : 推送数据流
 ```
 
 **图表来源**
-- [handler.go:108-154](file://example/websocket/handler.go#L108-L154)
+- [websocket_goose.pb.go:96-140](file://example/websocket/websocket_goose.pb.go#L96-L140)
 - [service_impl.go:66-93](file://example/websocket/service_impl.go#L66-L93)
 
-#### 双向流处理器
-
-双向流支持全双工通信，适用于聊天室、协作编辑等场景：
+#### 双向流服务实现
 
 ```mermaid
 sequenceDiagram
 participant Client as 客户端
-participant Handler as BidiStreamHandler
-participant Service as StreamServiceServer
+participant Handler as 生成的处理器
+participant Service as streamServiceImpl
 participant Stream as GenericServerStream
 Client->>Handler : 建立WebSocket连接
-Handler->>Handler : 检查连接数限制
 Handler->>Handler : 接受WebSocket连接
 Handler->>Handler : 启动连接管理器
-Handler->>Service : 调用BidiStream方法
+Handler->>Service : 调用BidStream方法
 Service->>Stream : 处理双向流
 Stream->>Service : 接收请求并发送响应
 Service->>Stream : 并发处理请求响应
@@ -573,7 +519,7 @@ Stream->>Client : 全双工通信
 ```
 
 **图表来源**
-- [handler.go:188-220](file://example/websocket/handler.go#L188-L220)
+- [websocket_goose.pb.go:146-176](file://example/websocket/websocket_goose.pb.go#L146-L176)
 - [service_impl.go:99-125](file://example/websocket/service_impl.go#L99-L125)
 
 ## 依赖关系分析
@@ -587,58 +533,46 @@ GoMod[go.mod<br/>模块依赖]
 WS[github.com/coder/websocket<br/>WebSocket库]
 NetHTTP[golang.org/x/net<br/>网络扩展]
 Sync[x/sync<br/>同步原语]
+Protobuf[google.golang.org/protobuf<br/>Protocol Buffers]
 end
 subgraph "ws包 - 核心基础设施"
-Codec[codec.go<br/>编解码器]
 Conn[conn.go<br/>连接管理]
-ClientStream[client_stream.go<br/>客户端流]
-ServerStream[server_stream.go<br/>服务器流]
-Interfaces[stream_interfaces.go<br/>流接口]
-Client[client.go<br/>客户端]
+Stream[stream.go<br/>流式接口]
 Util[util.go<br/>工具函数]
 end
 subgraph "示例实现层"
 Proto[websocket.proto<br/>服务定义]
 ServiceImpl[service_impl.go<br/>服务实现]
-Handler[handler.go<br/>流处理器]
-ClientStub[client_stub.go<br/>客户端桩]
-Main[main.go<br/>服务器入口]
+ClientMain[client/main.go<br/>客户端示例]
+ServerMain[server/main.go<br/>服务器示例]
+Generated[websocket_goose.pb.go<br/>生成代码]
 end
 GoMod --> WS
 GoMod --> NetHTTP
 GoMod --> Sync
-Codec --> ServerStream
-Codec --> ClientStream
-Conn --> ServerStream
-Conn --> ClientStream
-Interfaces --> ServerStream
-Interfaces --> ClientStream
-Proto --> ClientStub
+GoMod --> Protobuf
+Conn --> Stream
+Util --> Conn
+Util --> Stream
+Proto --> Generated
 Proto --> ServiceImpl
-Handler --> ServiceImpl
-Handler --> Codec
-Handler --> Conn
-ClientStub --> Client
-Client --> Conn
-ServerStream --> Conn
-ClientStream --> Conn
-Main --> Handler
-Main --> ClientStub
+Generated --> ClientMain
+Generated --> ServerMain
+Generated --> ServiceImpl
+ClientMain --> Stream
+ServerMain --> Conn
+ServerMain --> Util
 ```
 
 **图表来源**
-- [codec.go:1-30](file://ws/codec.go#L1-L30)
-- [conn.go:1-164](file://ws/conn.go#L1-L164)
-- [client_stream.go:1-100](file://ws/client_stream.go#L1-L100)
-- [server_stream.go:1-97](file://ws/server_stream.go#L1-L97)
-- [stream_interfaces.go:1-340](file://ws/stream_interfaces.go#L1-L340)
-- [client.go:1-363](file://ws/client.go#L1-L363)
+- [conn.go:1-252](file://ws/conn.go#L1-L252)
+- [stream.go:1-526](file://ws/stream.go#L1-L526)
 - [util.go:1-27](file://ws/util.go#L1-L27)
 - [websocket.proto:1-30](file://example/websocket/websocket.proto#L1-L30)
 - [service_impl.go:1-126](file://example/websocket/service_impl.go#L1-L126)
-- [handler.go:1-226](file://example/websocket/handler.go#L1-L226)
-- [client_stub.go:1-99](file://example/websocket/client_stub.go#L1-L99)
-- [main.go:1-180](file://example/websocket/main.go#L1-L180)
+- [client_main.go:1-207](file://example/websocket/client/main.go#L1-L207)
+- [server_main.go:1-168](file://example/websocket/server/main.go#L1-L168)
+- [websocket_goose.pb.go:1-293](file://example/websocket/websocket_goose.pb.go#L1-L293)
 
 ## 性能考虑
 
@@ -660,14 +594,14 @@ WebSocket流式系统在设计时充分考虑了性能和可扩展性：
 - 实现心跳机制维持连接活跃
 
 ### 并发模型
-- 使用errgroup管理并发任务
+- 使用goroutine管理并发任务
 - 支持上下文取消机制
 - 实现优雅的资源清理
 
-### 编解码优化
-- 可插拔的编解码器架构支持高性能序列化
-- 支持JSON、Protobuf等多种格式
-- 减少对象分配和垃圾回收压力
+### EOS处理优化
+- 增强的End of Stream标记机制
+- 避免不必要的连接关闭
+- 支持半关闭通信模式
 
 ## 故障排除指南
 
@@ -691,7 +625,7 @@ WebSocket流式系统在设计时充分考虑了性能和可扩展性：
 4. **流式通信问题**
    - 检查io.EOF错误处理
    - 验证流的生命周期管理
-   - 确认编解码器配置正确
+   - 确认EOS标记正确发送
 
 ### 日志分析
 
@@ -704,17 +638,17 @@ WebSocket流式系统在设计时充分考虑了性能和可扩展性：
 
 ## 结论
 
-WebSocket流式系统是一个功能完整、设计精良的实时通信解决方案。它通过模块化的架构设计、完善的错误处理机制和生产级别的性能优化，为各种实时应用场景提供了可靠的技术基础。
+WebSocket流式系统是一个功能完整、设计精良的实时通信解决方案。它通过精简的架构设计、完善的错误处理机制和生产级别的性能优化，为各种实时应用场景提供了可靠的技术基础。
 
-**更新** 系统现已完成重大架构重构，核心组件迁移到独立的ws包中，采用gRPC风格的通用接口设计，通过StreamService和StreamServiceServer接口提供类型安全的流式通信能力，支持客户端流、服务器流和双向流的完整生命周期管理。
+**更新** 系统现已完成重大架构重构，移除了独立的客户端实现文件，将核心功能整合到简化的三文件结构中。新的架构采用增强的连接管理和EOS处理机制，通过统一的泛型接口提供类型安全的流式通信能力，支持客户端流、服务器流和双向流的完整生命周期管理。
 
 系统的主要优势包括：
 
-1. **多模式支持**：覆盖从简单日志收集到复杂双向通信的各种需求
-2. **类型安全**：通过泛型接口提供编译时类型检查
-3. **高可用性**：自动重连、优雅关闭、健康检查等特性确保系统稳定运行
-4. **高性能**：异步处理、连接池管理、内存优化等技术提升整体性能
-5. **易用性**：清晰的API设计和丰富的配置选项降低使用门槛
-6. **可扩展性**：可插拔的编解码器架构支持多种消息格式
+1. **简化架构**：从复杂的文件结构简化为三个核心文件，提高可维护性
+2. **增强EOS处理**：改进的End of Stream标记机制确保可靠的流终止
+3. **统一接口**：通过泛型接口提供一致的编程体验
+4. **高可用性**：自动重连、优雅关闭、健康检查等特性确保系统稳定运行
+5. **高性能**：异步处理、连接池管理、内存优化等技术提升整体性能
+6. **易用性**：清晰的API设计和丰富的配置选项降低使用门槛
 
 该系统特别适合在Kubernetes环境中部署，能够很好地适应现代云原生应用的需求。通过合理的配置和监控，可以构建出高性能、可扩展的实时通信服务。
