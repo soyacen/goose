@@ -35,7 +35,7 @@ func NewStreamServiceImpl(logger *slog.Logger) StreamServiceServer {
 // aggregated response (e.g., batch upload, log ingestion).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) ClientStream(stream ws.ClientStreamingServer[Request, Response]) error {
+func (s *streamServiceImpl) ClientStream(stream ws.ClientStreamingServer[*Request, *Response]) error {
 	var count int
 
 	for {
@@ -63,7 +63,7 @@ func (s *streamServiceImpl) ClientStream(stream ws.ClientStreamingServer[Request
 // (e.g., real-time feed, paginated list push).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) ServerStream(req *Request, stream ws.ServerStreamingServer[Response]) error {
+func (s *streamServiceImpl) ServerStream(req *Request, stream ws.ServerStreamingServer[*Response]) error {
 	s.logger.Info("server-stream started", slog.String("name", req.Name))
 
 	// Simulate streaming 5 responses back to the client.
@@ -96,7 +96,7 @@ func (s *streamServiceImpl) ServerStream(req *Request, stream ws.ServerStreaming
 // BidStream: full-duplex bidirectional communication (e.g., chat, collab).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) BidStream(stream ws.BidiStreamingServer[Request, Response]) error {
+func (s *streamServiceImpl) BidStream(stream ws.BidiStreamingServer[*Request, *Response]) error {
 	s.logger.Info("bidi-stream started")
 
 	for {

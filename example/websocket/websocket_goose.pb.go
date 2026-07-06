@@ -15,15 +15,15 @@ import (
 )
 
 type StreamServiceClient interface {
-	ClientStream(ctx context.Context) (ws.ClientStreamingClient[Request, Response], error)
-	ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[Response], error)
-	BidStream(ctx context.Context) (ws.BidiStreamingClient[Request, Response], error)
+	ClientStream(ctx context.Context) (ws.ClientStreamingClient[*Request, *Response], error)
+	ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[*Response], error)
+	BidStream(ctx context.Context) (ws.BidiStreamingClient[*Request, *Response], error)
 }
 
 type StreamServiceServer interface {
-	ClientStream(ws.ClientStreamingServer[Request, Response]) error
-	ServerStream(*Request, ws.ServerStreamingServer[Response]) error
-	BidStream(ws.BidiStreamingServer[Request, Response]) error
+	ClientStream(ws.ClientStreamingServer[*Request, *Response]) error
+	ServerStream(*Request, ws.ServerStreamingServer[*Response]) error
+	BidStream(ws.BidiStreamingServer[*Request, *Response]) error
 }
 
 func AppendStreamServiceHttpRoute(router *http.ServeMux, service StreamServiceServer, codec ws.Codec, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64) *http.ServeMux {
@@ -85,7 +85,7 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 		defer h.logger.Info("client-stream disconnected", slog.String("remote", request.RemoteAddr))
 
 		ss := ws.NewServerStream(ctx, conn, h.codec)
-		stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
+		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("client-stream error", slog.String("error", err.Error()))
 		}
@@ -137,7 +137,7 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 		}
 
 		ss := ws.NewServerStream(ctx, conn, h.codec)
-		stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
+		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("server-stream error", slog.String("error", err.Error()))
 		}
@@ -175,7 +175,7 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 		defer h.logger.Info("bidi-stream disconnected", slog.String("remote", request.RemoteAddr))
 
 		ss := ws.NewServerStream(ctx, conn, h.codec)
-		stream := &ws.GenericServerStream[Request, Response]{ServerStream: ss}
+		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
 		}
@@ -262,17 +262,17 @@ func (c *streamServiceClient) dialAndConnect(ctx context.Context) (ws.ClientStre
 }
 
 // ClientStream opens a client-streaming RPC.
-func (c *streamServiceClient) ClientStream(ctx context.Context) (ws.ClientStreamingClient[Request, Response], error) {
+func (c *streamServiceClient) ClientStream(ctx context.Context) (ws.ClientStreamingClient[*Request, *Response], error) {
 	cs, err := c.dialAndConnect(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &ws.GenericClientStream[Request, Response]{ClientStream: cs}, nil
+	return ws.NewGenericClientStream[*Request, *Response](cs), nil
 }
 
 // ServerStream opens a server-streaming RPC. It sends the initial request
 // and returns a stream for receiving multiple responses.
-func (c *streamServiceClient) ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[Response], error) {
+func (c *streamServiceClient) ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[*Response], error) {
 	cs, err := c.dialAndConnect(ctx)
 	if err != nil {
 		return nil, err
@@ -284,14 +284,14 @@ func (c *streamServiceClient) ServerStream(ctx context.Context, in *Request) (ws
 		return nil, err
 	}
 
-	return &ws.GenericClientStream[Request, Response]{ClientStream: cs}, nil
+	return ws.NewGenericClientStream[*Request, *Response](cs), nil
 }
 
 // Bid opens a bidirectional-streaming RPC.
-func (c *streamServiceClient) BidStream(ctx context.Context) (ws.BidiStreamingClient[Request, Response], error) {
+func (c *streamServiceClient) BidStream(ctx context.Context) (ws.BidiStreamingClient[*Request, *Response], error) {
 	cs, err := c.dialAndConnect(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &ws.GenericClientStream[Request, Response]{ClientStream: cs}, nil
+	return ws.NewGenericClientStream[*Request, *Response](cs), nil
 }
