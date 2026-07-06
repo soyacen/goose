@@ -6,7 +6,6 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"sync/atomic"
 
 	"github.com/coder/websocket"
 	goose "github.com/soyacen/goose"
@@ -35,7 +34,6 @@ func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServ
 		service:          service,
 		cfg:              cfg,
 		logger:           logger,
-		maxConn:          maxConn,
 		marshalOptions:   marshalOpts,
 		unmarshalOptions: unmarshalOpts,
 	}
@@ -49,10 +47,6 @@ type streamServiceHandler struct {
 	service          StreamServiceServer
 	cfg              ws.ConnConfig
 	logger           *slog.Logger
-	maxConn          int64
-	clientActive     atomic.Int64
-	serverActive     atomic.Int64
-	bidiActive       atomic.Int64
 	middleware       server.Middleware
 	marshalOptions   protojson.MarshalOptions
 	unmarshalOptions protojson.UnmarshalOptions
@@ -64,19 +58,11 @@ type streamServiceHandler struct {
 
 func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
-		if h.maxConn > 0 && h.clientActive.Load() >= h.maxConn {
-			http.Error(response, "too many connections", http.StatusServiceUnavailable)
-			return
-		}
-
 		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
 		if err != nil {
 			h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
 			return
 		}
-
-		h.clientActive.Add(1)
-		defer h.clientActive.Add(-1)
 
 		conn := ws.NewConn(wsConn, h.cfg, h.logger)
 		ctx, cancel := context.WithCancel(request.Context())
@@ -108,19 +94,11 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 
 func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
-		if h.maxConn > 0 && h.serverActive.Load() >= h.maxConn {
-			http.Error(response, "too many connections", http.StatusServiceUnavailable)
-			return
-		}
-
 		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
 		if err != nil {
 			h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
 			return
 		}
-
-		h.serverActive.Add(1)
-		defer h.serverActive.Add(-1)
 
 		conn := ws.NewConn(wsConn, h.cfg, h.logger)
 		ctx, cancel := context.WithCancel(request.Context())
@@ -166,19 +144,11 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 
 func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
-		if h.maxConn > 0 && h.bidiActive.Load() >= h.maxConn {
-			http.Error(response, "too many connections", http.StatusServiceUnavailable)
-			return
-		}
-
 		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
 		if err != nil {
 			h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
 			return
 		}
-
-		h.bidiActive.Add(1)
-		defer h.bidiActive.Add(-1)
 
 		conn := ws.NewConn(wsConn, h.cfg, h.logger)
 		ctx, cancel := context.WithCancel(request.Context())
