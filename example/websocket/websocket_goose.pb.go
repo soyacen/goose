@@ -69,13 +69,7 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 		ctx, cancel := context.WithCancel(request.Context())
 		defer cancel()
 
-		// Use context.Background() so that Start() is not tied to the
-		// HTTP request lifecycle. The connection is closed explicitly by
-		// DrainAndClose (via stream.CloseSend) when the handler finishes.
 		go conn.Start(context.Background())
-
-		h.logger.Info("client-stream connected", slog.String("remote", request.RemoteAddr))
-		defer h.logger.Info("client-stream disconnected", slog.String("remote", request.RemoteAddr))
 
 		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
@@ -105,13 +99,7 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 		ctx, cancel := context.WithCancel(request.Context())
 		defer cancel()
 
-		// Use context.Background() so that Start() is not tied to the
-		// HTTP request lifecycle. The connection is closed explicitly by
-		// DrainAndClose (via stream.CloseSend) when the handler finishes.
 		go conn.Start(context.Background())
-
-		h.logger.Info("server-stream connected", slog.String("remote", request.RemoteAddr))
-		defer h.logger.Info("server-stream disconnected", slog.String("remote", request.RemoteAddr))
 
 		// Read the initial request from the client.
 		var req Request
@@ -155,13 +143,7 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 		ctx, cancel := context.WithCancel(request.Context())
 		defer cancel()
 
-		// Use context.Background() so that Start() is not tied to the
-		// HTTP request lifecycle. The connection is closed explicitly by
-		// DrainAndClose (via stream.CloseSend) when the handler finishes.
 		go conn.Start(context.Background())
-
-		h.logger.Info("bidi-stream connected", slog.String("remote", request.RemoteAddr))
-		defer h.logger.Info("bidi-stream disconnected", slog.String("remote", request.RemoteAddr))
 
 		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
