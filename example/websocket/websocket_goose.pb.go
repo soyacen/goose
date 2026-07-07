@@ -27,12 +27,13 @@ type StreamServiceStreamServer interface {
 	BidStream(ws.BidiStreamingServer[*Request, *Response]) error
 }
 
-func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServiceStreamServer, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *http.ServeMux {
+func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServiceStreamServer, errorEncoder goose.ErrorEncoder, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *http.ServeMux {
 	if router == nil {
 		router = http.NewServeMux()
 	}
 	handler := &streamServiceHandler{
 		service:          service,
+		errorEncoder:     errorEncoder,
 		cfg:              cfg,
 		logger:           logger,
 		marshalOptions:   marshalOpts,
@@ -46,6 +47,7 @@ func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServ
 
 type streamServiceHandler struct {
 	service          StreamServiceStreamServer
+	errorEncoder     goose.ErrorEncoder
 	cfg              ws.ConnConfig
 	logger           *slog.Logger
 	middleware       server.Middleware
@@ -59,14 +61,15 @@ type streamServiceHandler struct {
 
 func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
+		ctx := request.Context()
 		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
 		if err != nil {
-			h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
+			h.errorEncoder(ctx, err, response)
 			return
 		}
 
 		conn := ws.NewConn(wsConn, h.cfg, h.logger)
-		ctx, cancel := context.WithCancel(request.Context())
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		go conn.Start(context.Background())
@@ -74,7 +77,7 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
-			h.logger.Error("client-stream error", slog.String("error", err.Error()))
+			h.errorEncoder(ctx, err, response)
 		}
 		// Ensure pending writes are drained and the WebSocket is closed
 		// after the handler returns, even if it didn't call SendAndClose.
@@ -89,14 +92,15 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 
 func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
+		ctx := request.Context()
 		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
 		if err != nil {
-			h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
+			h.errorEncoder(ctx, err, response)
 			return
 		}
 
 		conn := ws.NewConn(wsConn, h.cfg, h.logger)
-		ctx, cancel := context.WithCancel(request.Context())
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		go conn.Start(context.Background())
@@ -106,19 +110,19 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 		data, err := conn.Read(ctx)
 		if err != nil {
 			if !ws.IsNormalClose(err) {
-				h.logger.Error("server-stream read request error", slog.String("error", err.Error()))
+				h.errorEncoder(ctx, err, response)
 			}
 			return
 		}
 		if err := h.unmarshalOptions.Unmarshal(data, &req); err != nil {
-			h.logger.Error("server-stream unmarshal error", slog.String("error", err.Error()))
+			h.errorEncoder(ctx, err, response)
 			return
 		}
 
 		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
-			h.logger.Error("server-stream error", slog.String("error", err.Error()))
+			h.errorEncoder(ctx, err, response)
 		}
 		// Ensure pending writes are drained and the WebSocket is closed
 		// after the handler returns, even if it didn't call CloseSend.
@@ -133,14 +137,15 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 
 func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
+		ctx := request.Context()
 		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
 		if err != nil {
-			h.logger.Error("websocket accept failed", slog.String("error", err.Error()))
+			h.errorEncoder(ctx, err, response)
 			return
 		}
 
 		conn := ws.NewConn(wsConn, h.cfg, h.logger)
-		ctx, cancel := context.WithCancel(request.Context())
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		go conn.Start(context.Background())
@@ -148,7 +153,7 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		stream := ws.NewGenericServerStream[*Request, *Response](ss)
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
-			h.logger.Error("bidi-stream error", slog.String("error", err.Error()))
+			h.errorEncoder(ctx, err, response)
 		}
 		// Ensure pending writes are drained and the WebSocket is closed
 		// after the handler returns, even if it didn't call CloseSend.
