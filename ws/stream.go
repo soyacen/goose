@@ -101,6 +101,11 @@ func (s *clientStream) Context() context.Context {
 // CloseSend closes the send direction of the stream.
 // The read side remains open so the caller can still receive messages
 // (e.g. the server's final response in client-streaming RPCs).
+//
+// Graceful shutdown: this delegates to Conn.CloseSend(), which triggers
+// Start() to drain pending writes and send an EOS marker to the peer.
+// Unlike serverStream.CloseSend, the WebSocket is NOT closed here —
+// the client keeps the read side open to receive the server's response.
 func (s *clientStream) CloseSend() error {
 	s.conn.CloseSend()
 	return nil

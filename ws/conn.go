@@ -69,14 +69,22 @@ func NewConn(ws *websocket.Conn, cfg ConnConfig, logger *slog.Logger) *Conn {
 // It blocks until the write pump exits and cleanup is complete.
 //
 // The write pump uses an internal context (independent of ctx) so that
-// cancelling ctx does not abort in-flight writes. The write pump exits when:
+// cancelling ctx does not abort in-flight writes. Start exits when:
 //   - ctx is cancelled,
 //   - Close() is called (writeCh closed), or
 //   - CloseSend() is called (send-side done).
 //
-// When CloseSend triggers the exit (sendDone path), remaining writes are
-// drained and an end-of-stream (EOS) marker — an empty text frame — is
-// written to signal the peer that no more messages will be sent.
+// On ctx cancellation or CloseSend, Start always performs the following
+// before returning:
+//  1. Cancels the internal writeCtx to stop writePump and pingLoop.
+//  2. Drains any remaining buffered writes using a fresh 2-second timeout.
+//  3. Writes an end-of-stream (EOS) marker — an empty text frame — to
+//     signal the peer that no more messages will be sent.
+//
+// On Close() (writeCh closed), the writePump exits naturally and Start
+// returns immediately without drain/EOS, since Close() implies the caller
+// has already finished enqueueing messages.
+//
 // The WebSocket itself is NOT closed here; the peer is expected to close
 // the connection after processing the EOS marker.
 func (c *Conn) Start(ctx context.Context) {
@@ -180,6 +188,13 @@ func (c *Conn) Close() {
 // Instead, it triggers the Start() goroutine to drain pending writes and
 // write an end-of-stream (EOS) marker (an empty text frame) to the peer.
 // The read side remains open, allowing the caller to still receive messages.
+//
+// Graceful shutdown: server-side handlers call stream.CloseSend() (which
+// delegates here) before returning, ensuring all buffered messages are
+// flushed and the EOS marker is written. The generated handler code uses
+// context.Background() for Start() precisely so that HTTP request context
+// cancellation (e.g. during server shutdown) does not abort the drain/EOS
+// sequence — the connection lifecycle is fully controlled by CloseSend.
 func (c *Conn) CloseSend() {
 	select {
 	case <-c.sendDone:
