@@ -27,17 +27,27 @@ type StreamServiceStreamServer interface {
 	BidStream(ws.BidiStreamingServer[*Request, *Response]) error
 }
 
-func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServiceStreamServer, errorEncoder goose.ErrorEncoder, cfg ws.ConnConfig, logger *slog.Logger, maxConn int64, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *http.ServeMux {
+func AppendStreamServiceWebsocketRoute(
+	router *http.ServeMux,
+	service StreamServiceStreamServer,
+	errorEncoder goose.ErrorEncoder,
+	middleware server.Middleware,
+	marshalOpts protojson.MarshalOptions,
+	unmarshalOpts protojson.UnmarshalOptions,
+	cfg ws.ConnConfig,
+	logger *slog.Logger,
+) *http.ServeMux {
 	if router == nil {
 		router = http.NewServeMux()
 	}
 	handler := &streamServiceHandler{
 		service:          service,
 		errorEncoder:     errorEncoder,
-		cfg:              cfg,
-		logger:           logger,
+		middleware:       middleware,
 		marshalOptions:   marshalOpts,
 		unmarshalOptions: unmarshalOpts,
+		cfg:              cfg,
+		logger:           logger,
 	}
 	router.Handle(_leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo.Pattern, http.HandlerFunc(handler.ClientStream))
 	router.Handle(_leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc.RouteInfo.Pattern, http.HandlerFunc(handler.ServerStream))
@@ -48,11 +58,11 @@ func AppendStreamServiceWebsocketRoute(router *http.ServeMux, service StreamServ
 type streamServiceHandler struct {
 	service          StreamServiceStreamServer
 	errorEncoder     goose.ErrorEncoder
-	cfg              ws.ConnConfig
-	logger           *slog.Logger
 	middleware       server.Middleware
 	marshalOptions   protojson.MarshalOptions
 	unmarshalOptions protojson.UnmarshalOptions
+	cfg              ws.ConnConfig
+	logger           *slog.Logger
 }
 
 // ------------------------------------------------------------------

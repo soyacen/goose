@@ -18,3 +18,4 @@
 /protoc-gen-goose
 .DS_Store
 /stream
+/example/websocket/server/server

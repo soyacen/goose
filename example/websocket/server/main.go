@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/soyacen/goose"
 	"github.com/soyacen/goose/example/websocket"
 	"github.com/soyacen/goose/ws"
 
@@ -109,7 +110,7 @@ func main() {
 	})
 
 	// Register WebSocket routes using generated code.
-	websocket.AppendStreamServiceWebsocketRoute(mux, svc, connCfg, logger, cfg.MaxConnsPerEndpoint, marshalOpts, unmarshalOpts)
+	websocket.AppendStreamServiceWebsocketRoute(mux, svc, goose.DefaultEncodeError, connCfg, logger, cfg.MaxConnsPerEndpoint, marshalOpts, unmarshalOpts)
 
 	srv := &http.Server{
 		Addr:         cfg.Addr,
