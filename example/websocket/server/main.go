@@ -13,6 +13,7 @@ import (
 
 	"github.com/soyacen/goose"
 	"github.com/soyacen/goose/example/websocket"
+	"github.com/soyacen/goose/server"
 	"github.com/soyacen/goose/ws"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -22,8 +23,6 @@ import (
 type ServerConfig struct {
 	// Addr is the listen address, e.g. ":8080".
 	Addr string
-	// MaxConnsPerEndpoint limits concurrent WebSocket connections per endpoint (0 = unlimited).
-	MaxConnsPerEndpoint int64
 	// ReadTimeout is the HTTP server read timeout.
 	ReadTimeout time.Duration
 	// WriteTimeout is the HTTP server write timeout.
@@ -44,14 +43,13 @@ type ServerConfig struct {
 // DefaultServerConfig returns a ServerConfig with production defaults.
 func DefaultServerConfig() ServerConfig {
 	return ServerConfig{
-		Addr:                ":8080",
-		MaxConnsPerEndpoint: 10000,
-		ReadTimeout:         60 * time.Second,
-		WriteTimeout:        60 * time.Second,
-		IdleTimeout:         120 * time.Second,
-		ShutdownTimeout:     30 * time.Second,
-		ServerPushInterval:  1 * time.Second,
-		PreStopDrainDelay:   5 * time.Second,
+		Addr:               ":8080",
+		ReadTimeout:        60 * time.Second,
+		WriteTimeout:       60 * time.Second,
+		IdleTimeout:        120 * time.Second,
+		ShutdownTimeout:    30 * time.Second,
+		ServerPushInterval: 1 * time.Second,
+		PreStopDrainDelay:  5 * time.Second,
 	}
 }
 
@@ -110,7 +108,7 @@ func main() {
 	})
 
 	// Register WebSocket routes using generated code.
-	websocket.AppendStreamServiceWebsocketRoute(mux, svc, goose.DefaultEncodeError, connCfg, logger, cfg.MaxConnsPerEndpoint, marshalOpts, unmarshalOpts)
+	websocket.AppendStreamServiceWebsocketRoute(mux, svc, goose.DefaultEncodeError, server.Chain(), marshalOpts, unmarshalOpts, connCfg, logger)
 
 	srv := &http.Server{
 		Addr:         cfg.Addr,
