@@ -150,7 +150,7 @@ func runServerStream(ctx context.Context, baseURL string, logger *slog.Logger, m
 // ---------------------------------------------------------------------------
 
 func runBidStream(ctx context.Context, baseURL string, logger *slog.Logger, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) {
-	client := websocket.NewStreamServiceClient(baseURL+"/ws/bidi-stream", logger, marshalOpts, unmarshalOpts)
+	client := websocket.NewStreamServiceClient(baseURL, logger, marshalOpts, unmarshalOpts)
 
 	stream, err := client.BidStream(ctx)
 	if err != nil {
