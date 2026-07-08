@@ -86,7 +86,7 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 		}
 		defer cancel()
 
-		stream := h.newStream(ctx, conn)
+		stream := ws.NewGenericServerStream[*Request, *Response](ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions))
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
@@ -122,7 +122,7 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 			return
 		}
 
-		stream := h.newStream(ctx, conn)
+		stream := ws.NewGenericServerStream[*Request, *Response](ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions))
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
@@ -144,7 +144,7 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 		}
 		defer cancel()
 
-		stream := h.newStream(ctx, conn)
+		stream := ws.NewGenericServerStream[*Request, *Response](ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions))
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
