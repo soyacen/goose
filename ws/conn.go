@@ -63,6 +63,19 @@ func AcceptConn(response http.ResponseWriter, request *http.Request, cfg ConnCon
 	return ctx, conn, cancel, nil
 }
 
+// dialAndConnect dials the WebSocket endpoint and returns a ClientStream ready
+// for use. The caller is responsible for the returned cancel function if the
+// stream is not fully consumed.
+func DialAndConnect(ctx context.Context, u string, dialOpts *websocket.DialOptions, cfg ConnConfig, logger *slog.Logger) (*Conn, error) {
+	wsConn, _, err := websocket.Dial(ctx, u, dialOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := NewConn(wsConn, cfg, logger)
+	return conn, nil
+}
+
 // NewConn wraps a raw websocket.Conn into a managed Conn.
 // The caller must call Start() to begin the write pump and ping loop.
 func NewConn(ws *websocket.Conn, cfg ConnConfig, logger *slog.Logger) *Conn {

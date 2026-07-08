@@ -488,9 +488,9 @@ type GenericServerStream[Req proto.Message, Res proto.Message] struct {
 	ServerStream
 }
 
-// NewGenericServerStream creates a new GenericServerStream wrapping the given
+// newGenericServerStream creates a new GenericServerStream wrapping the given
 // ServerStream.
-func NewGenericServerStream[Req proto.Message, Res proto.Message](ss ServerStream) *GenericServerStream[Req, Res] {
+func newGenericServerStream[Req proto.Message, Res proto.Message](ss ServerStream) *GenericServerStream[Req, Res] {
 	return &GenericServerStream[Req, Res]{ServerStream: ss}
 }
 
@@ -529,7 +529,22 @@ func (x *GenericServerStream[Req, Res]) Recv() (Req, error) {
 	return m, nil
 }
 
-func NewServerStreamV1[Req proto.Message, Res proto.Message](ctx context.Context, conn *Conn, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *GenericServerStream[Req, Res] {
+func NewServerStream[Req proto.Message, Res proto.Message](
+	ctx context.Context,
+	conn *Conn,
+	marshalOpts protojson.MarshalOptions,
+	unmarshalOpts protojson.UnmarshalOptions,
+) *GenericServerStream[Req, Res] {
 	ss := newServerStream(ctx, conn, marshalOpts, unmarshalOpts)
-	return NewGenericServerStream[Req, Res](ss)
+	return newGenericServerStream[Req, Res](ss)
+}
+
+func NewClientStreamV2[Req proto.Message, Res proto.Message](
+	ctx context.Context,
+	conn *Conn,
+	marshalOpts protojson.MarshalOptions,
+	unmarshalOpts protojson.UnmarshalOptions,
+) *GenericClientStream[Req, Res] {
+	cs := NewClientStream(ctx, conn, marshalOpts, unmarshalOpts)
+	return NewGenericClientStream[Req, Res](cs)
 }

@@ -78,7 +78,7 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 		}
 		defer cancel()
 
-		stream := ws.NewServerStreamV1[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
+		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
@@ -114,7 +114,7 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 			return
 		}
 
-		stream := ws.NewServerStreamV1[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
+		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
@@ -136,7 +136,7 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 		}
 		defer cancel()
 
-		stream := ws.NewServerStreamV1[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
+		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
@@ -191,50 +191,57 @@ func (c *streamServiceClient) dialAndConnect(ctx context.Context, path string) (
 	if err != nil {
 		return nil, err
 	}
-
-	wsConn, _, err := websocket.Dial(ctx, u, c.dialOpts)
+	conn, err := ws.DialAndConnect(ctx, u, c.dialOpts, c.connCfg, c.logger)
 	if err != nil {
 		return nil, err
 	}
-
-	conn := ws.NewConn(wsConn, c.connCfg, c.logger)
 	// NewClientStream starts conn.Start internally.
 	return ws.NewClientStream(ctx, conn, c.marshalOptions, c.unmarshalOptions), nil
 }
 
 // ClientStream opens a client-streaming RPC.
 func (c *streamServiceClient) ClientStream(ctx context.Context) (ws.ClientStreamingClient[*Request, *Response], error) {
-	cs, err := c.dialAndConnect(ctx, _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo.Pattern)
+	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo.Pattern)
 	if err != nil {
 		return nil, err
 	}
-	return ws.NewGenericClientStream[*Request, *Response](cs), nil
+	conn, err := ws.DialAndConnect(ctx, u, c.dialOpts, c.connCfg, c.logger)
+	if err != nil {
+		return nil, err
+	}
+	return ws.NewClientStreamV2[*Request, *Response](ctx, conn, c.marshalOptions, c.unmarshalOptions), nil
 }
 
 // ServerStream opens a server-streaming RPC. It sends the initial request
 // and returns a stream for receiving multiple responses.
 func (c *streamServiceClient) ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[*Response], error) {
-	cs, err := c.dialAndConnect(ctx, _leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc.RouteInfo.Pattern)
+	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo.Pattern)
 	if err != nil {
 		return nil, err
 	}
-
-	// Send the initial request.
+	conn, err := ws.DialAndConnect(ctx, u, c.dialOpts, c.connCfg, c.logger)
+	if err != nil {
+		return nil, err
+	}
+	cs := ws.NewClientStreamV2[*Request, *Response](ctx, conn, c.marshalOptions, c.unmarshalOptions)
 	if err := cs.SendMsg(in); err != nil {
 		_ = cs.CloseSend()
 		return nil, err
 	}
-
-	return ws.NewGenericClientStream[*Request, *Response](cs), nil
+	return cs, nil
 }
 
 // Bid opens a bidirectional-streaming RPC.
 func (c *streamServiceClient) BidStream(ctx context.Context) (ws.BidiStreamingClient[*Request, *Response], error) {
-	cs, err := c.dialAndConnect(ctx, _leo_goose_example_websocket_v1_ResponseBody_BidStream_Desc.RouteInfo.Pattern)
+	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_ResponseBody_BidStream_Desc.RouteInfo.Pattern)
 	if err != nil {
 		return nil, err
 	}
-	return ws.NewGenericClientStream[*Request, *Response](cs), nil
+	conn, err := ws.DialAndConnect(ctx, u, c.dialOpts, c.connCfg, c.logger)
+	if err != nil {
+		return nil, err
+	}
+	return ws.NewClientStreamV2[*Request, *Response](ctx, conn, c.marshalOptions, c.unmarshalOptions), nil
 }
 
 var _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc = &goose.Desc{
