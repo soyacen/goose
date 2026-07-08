@@ -213,7 +213,7 @@ type serverStream struct {
 }
 
 // newServerStream creates a base server stream wrapping conn.
-func NewServerStream(ctx context.Context, conn *Conn, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *serverStream {
+func newServerStream(ctx context.Context, conn *Conn, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *serverStream {
 	return &serverStream{
 		conn:             conn,
 		ctx:              ctx,
@@ -527,4 +527,9 @@ func (x *GenericServerStream[Req, Res]) Recv() (Req, error) {
 		return zero, err
 	}
 	return m, nil
+}
+
+func NewServerStreamV1[Req proto.Message, Res proto.Message](ctx context.Context, conn *Conn, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) *GenericServerStream[Req, Res] {
+	ss := newServerStream(ctx, conn, marshalOpts, unmarshalOpts)
+	return NewGenericServerStream[Req, Res](ss)
 }

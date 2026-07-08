@@ -65,14 +65,6 @@ type streamServiceHandler struct {
 	logger           *slog.Logger
 }
 
-// newStream creates a typed server stream wrapping the given connection.
-func (h *streamServiceHandler) newStream(
-	ctx context.Context, conn *ws.Conn,
-) *ws.GenericServerStream[*Request, *Response] {
-	ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
-	return ws.NewGenericServerStream[*Request, *Response](ss)
-}
-
 // ------------------------------------------------------------------
 // 1. Client-Stream: client sends, server only receives
 // ------------------------------------------------------------------
@@ -86,7 +78,7 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 		}
 		defer cancel()
 
-		stream := ws.NewGenericServerStream[*Request, *Response](ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions))
+		stream := ws.NewServerStreamV1[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
@@ -122,7 +114,7 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 			return
 		}
 
-		stream := ws.NewGenericServerStream[*Request, *Response](ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions))
+		stream := ws.NewServerStreamV1[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
@@ -144,7 +136,7 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 		}
 		defer cancel()
 
-		stream := ws.NewGenericServerStream[*Request, *Response](ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions))
+		stream := ws.NewServerStreamV1[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
