@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"sync"
 	"time"
 
@@ -38,15 +39,28 @@ func DefaultConnConfig() ConnConfig {
 //   - Context-based lifecycle
 //   - Separate send-side close (CloseSend) for client-streaming scenarios
 type Conn struct {
-	ws        *websocket.Conn
-	cfg       ConnConfig
-	logger    *slog.Logger
+	ws     *websocket.Conn
+	cfg    ConnConfig
+	logger *slog.Logger
 
 	writeCh   chan []byte
 	closeOnce sync.Once
 	closeErr  error
 	sendDone  chan struct{} // closed by CloseSend to signal send-side is done
 	startDone chan struct{} // closed when Start() returns
+}
+
+// AcceptConn upgrades the HTTP connection to WebSocket and starts the read loop.
+func AcceptConn(response http.ResponseWriter, request *http.Request, cfg ConnConfig, logger *slog.Logger) (ctx context.Context, conn *Conn, cancel context.CancelFunc, err error) {
+	ctx = request.Context()
+	wsConn, err := websocket.Accept(response, request, AcceptOptions())
+	if err != nil {
+		return ctx, nil, func() {}, err
+	}
+	conn = NewConn(wsConn, cfg, logger)
+	ctx, cancel = context.WithCancel(ctx)
+	go conn.Start(context.Background())
+	return ctx, conn, cancel, nil
 }
 
 // NewConn wraps a raw websocket.Conn into a managed Conn.

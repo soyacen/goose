@@ -65,32 +65,31 @@ type streamServiceHandler struct {
 	logger           *slog.Logger
 }
 
+// newStream creates a typed server stream wrapping the given connection.
+func (h *streamServiceHandler) newStream(
+	ctx context.Context, conn *ws.Conn,
+) *ws.GenericServerStream[*Request, *Response] {
+	ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
+	return ws.NewGenericServerStream[*Request, *Response](ss)
+}
+
 // ------------------------------------------------------------------
 // 1. Client-Stream: client sends, server only receives
 // ------------------------------------------------------------------
 
 func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
-		ctx := request.Context()
-		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
+		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.cfg, h.logger)
 		if err != nil {
 			h.errorEncoder(ctx, err, response)
 			return
 		}
-
-		conn := ws.NewConn(wsConn, h.cfg, h.logger)
-		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
-		go conn.Start(context.Background())
-
-		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
-		stream := ws.NewGenericServerStream[*Request, *Response](ss)
+		stream := h.newStream(ctx, conn)
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
-		// Ensure pending writes are drained and the WebSocket is closed
-		// after the handler returns, even if it didn't call SendAndClose.
 		_ = stream.CloseSend()
 	}
 	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo)
@@ -102,20 +101,14 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 
 func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
-		ctx := request.Context()
-		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
+		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.cfg, h.logger)
 		if err != nil {
 			h.errorEncoder(ctx, err, response)
 			return
 		}
-
-		conn := ws.NewConn(wsConn, h.cfg, h.logger)
-		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
-		go conn.Start(context.Background())
-
-		// Read the initial request from the client.
+		// Read the initial request from the client (ServerStream 独有).
 		var req Request
 		data, err := conn.Read(ctx)
 		if err != nil {
@@ -129,13 +122,10 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 			return
 		}
 
-		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
-		stream := ws.NewGenericServerStream[*Request, *Response](ss)
+		stream := h.newStream(ctx, conn)
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
-		// Ensure pending writes are drained and the WebSocket is closed
-		// after the handler returns, even if it didn't call CloseSend.
 		_ = stream.CloseSend()
 	}
 	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc.RouteInfo)
@@ -147,26 +137,17 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 
 func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
-		ctx := request.Context()
-		wsConn, err := websocket.Accept(response, request, ws.AcceptOptions())
+		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.cfg, h.logger)
 		if err != nil {
 			h.errorEncoder(ctx, err, response)
 			return
 		}
-
-		conn := ws.NewConn(wsConn, h.cfg, h.logger)
-		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
-		go conn.Start(context.Background())
-
-		ss := ws.NewServerStream(ctx, conn, h.marshalOptions, h.unmarshalOptions)
-		stream := ws.NewGenericServerStream[*Request, *Response](ss)
+		stream := h.newStream(ctx, conn)
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.errorEncoder(ctx, err, response)
 		}
-		// Ensure pending writes are drained and the WebSocket is closed
-		// after the handler returns, even if it didn't call CloseSend.
 		_ = stream.CloseSend()
 	}
 	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_BidStream_Desc.RouteInfo)
