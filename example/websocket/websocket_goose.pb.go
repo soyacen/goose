@@ -166,7 +166,12 @@ type streamServiceClient struct {
 // NewStreamServiceClient creates a client that implements StreamServiceClient.
 // url is the WebSocket endpoint (e.g., "ws://localhost:8080/ws/bidi-stream").
 // Each method call dials a new connection for the corresponding streaming RPC.
-func NewStreamServiceClient(url string, logger *slog.Logger, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions, dialOpts *websocket.DialOptions) StreamServiceStreamClient {
+func NewStreamServiceClient(url string,
+	logger *slog.Logger,
+	marshalOpts protojson.MarshalOptions,
+	unmarshalOpts protojson.UnmarshalOptions,
+	dialOpts *websocket.DialOptions,
+) StreamServiceStreamClient {
 	if logger == nil {
 		logger = slog.Default()
 	}

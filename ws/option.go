@@ -5,6 +5,24 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+/*
+	unmarshalOptions protojson.UnmarshalOptions
+	marshalOptions   protojson.MarshalOptions
+	middleware       server.Middleware
+	acptOpts         *websocket.AcceptOptions
+	cfg              *ws.ConnConfig
+	logger           *slog.Logger
+*/
+
+/*
+client
+	unmarshalOptions protojson.UnmarshalOptions
+	marshalOptions   protojson.MarshalOptions
+	dialOpts         *websocket.DialOptions
+	connCfg          *ws.ConnConfig
+	logger           *slog.Logger
+*/
+
 // Options interface defines methods to access all configurable options for the server
 type Options interface {
 	// UnmarshalOptions returns the protojson unmarshal options used for decoding requests
