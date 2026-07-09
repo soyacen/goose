@@ -215,7 +215,7 @@ func (c *streamServiceClient) ClientStream(ctx context.Context) (ws.ClientStream
 // ServerStream opens a server-streaming RPC. It sends the initial request
 // and returns a stream for receiving multiple responses.
 func (c *streamServiceClient) ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[*Response], error) {
-	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo.Pattern)
+	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc.RouteInfo.Pattern)
 	if err != nil {
 		return nil, err
 	}
