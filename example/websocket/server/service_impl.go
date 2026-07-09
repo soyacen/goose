@@ -1,4 +1,4 @@
-package websocket
+package main
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/soyacen/goose/example/websocket"
 	"github.com/soyacen/goose/ws"
 )
 
@@ -18,7 +19,7 @@ import (
 // ---------------------------------------------------------------------------
 
 // Compile-time check: streamServiceImpl implements StreamServiceServer.
-var _ StreamServiceStreamServer = (*streamServiceImpl)(nil)
+var _ websocket.StreamServiceStreamServer = (*streamServiceImpl)(nil)
 
 // streamServiceImpl is the user-defined service implementation.
 type streamServiceImpl struct {
@@ -26,7 +27,7 @@ type streamServiceImpl struct {
 }
 
 // NewStreamServiceImpl creates a new service implementation.
-func NewStreamServiceImpl(logger *slog.Logger) StreamServiceStreamServer {
+func NewStreamServiceImpl(logger *slog.Logger) websocket.StreamServiceStreamServer {
 	return &streamServiceImpl{logger: logger}
 }
 
@@ -35,7 +36,7 @@ func NewStreamServiceImpl(logger *slog.Logger) StreamServiceStreamServer {
 // aggregated response (e.g., batch upload, log ingestion).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) ClientStream(stream ws.ClientStreamingServer[*Request, *Response]) error {
+func (s *streamServiceImpl) ClientStream(stream ws.ClientStreamingServer[*websocket.Request, *websocket.Response]) error {
 	var count int
 
 	for {
@@ -43,7 +44,7 @@ func (s *streamServiceImpl) ClientStream(stream ws.ClientStreamingServer[*Reques
 		if err == io.EOF {
 			// Client has finished sending. Send the aggregated response.
 			s.logger.Info("client-stream complete", slog.Int("count", count))
-			return stream.SendAndClose(&Response{
+			return stream.SendAndClose(&websocket.Response{
 				Message: fmt.Sprintf("received %d messages", count),
 			})
 		}
@@ -63,7 +64,7 @@ func (s *streamServiceImpl) ClientStream(stream ws.ClientStreamingServer[*Reques
 // (e.g., real-time feed, paginated list push).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) ServerStream(req *Request, stream ws.ServerStreamingServer[*Response]) error {
+func (s *streamServiceImpl) ServerStream(req *websocket.Request, stream ws.ServerStreamingServer[*websocket.Response]) error {
 	s.logger.Info("server-stream started", slog.String("name", req.Name))
 
 	// Simulate streaming 5 responses back to the client.
@@ -74,7 +75,7 @@ func (s *streamServiceImpl) ServerStream(req *Request, stream ws.ServerStreaming
 		default:
 		}
 
-		resp := &Response{
+		resp := &websocket.Response{
 			Message: fmt.Sprintf("hello %s, message #%d", req.Name, i),
 		}
 
@@ -96,7 +97,7 @@ func (s *streamServiceImpl) ServerStream(req *Request, stream ws.ServerStreaming
 // BidStream: full-duplex bidirectional communication (e.g., chat, collab).
 // ---------------------------------------------------------------------------
 
-func (s *streamServiceImpl) BidStream(stream ws.BidiStreamingServer[*Request, *Response]) error {
+func (s *streamServiceImpl) BidStream(stream ws.BidiStreamingServer[*websocket.Request, *websocket.Response]) error {
 	s.logger.Info("bidi-stream started")
 
 	for {
@@ -114,7 +115,7 @@ func (s *streamServiceImpl) BidStream(stream ws.BidiStreamingServer[*Request, *R
 		)
 
 		// Echo back an acknowledgement.
-		resp := &Response{
+		resp := &websocket.Response{
 			Message: fmt.Sprintf("ack: %s", req.Name),
 		}
 
