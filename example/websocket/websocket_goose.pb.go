@@ -34,7 +34,7 @@ func AppendStreamServiceWebsocketRoute(
 	middleware server.Middleware,
 	marshalOpts protojson.MarshalOptions,
 	unmarshalOpts protojson.UnmarshalOptions,
-	cfg ws.ConnConfig,
+	cfg *ws.ConnConfig,
 	logger *slog.Logger,
 ) *http.ServeMux {
 	if router == nil {
@@ -61,7 +61,7 @@ type streamServiceHandler struct {
 	middleware       server.Middleware
 	marshalOptions   protojson.MarshalOptions
 	unmarshalOptions protojson.UnmarshalOptions
-	cfg              ws.ConnConfig
+	cfg              *ws.ConnConfig
 	logger           *slog.Logger
 }
 
@@ -158,7 +158,7 @@ var _ StreamServiceStreamClient = (*streamServiceClient)(nil)
 type streamServiceClient struct {
 	url              string
 	dialOpts         *websocket.DialOptions
-	connCfg          ws.ConnConfig
+	connCfg          *ws.ConnConfig
 	logger           *slog.Logger
 	marshalOptions   protojson.MarshalOptions
 	unmarshalOptions protojson.UnmarshalOptions
