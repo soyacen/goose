@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	goose "github.com/soyacen/goose"
 	"github.com/soyacen/goose/server"
 	"github.com/soyacen/goose/ws"
 
@@ -88,7 +87,7 @@ func startServer(t *testing.T, port int) *http.Server {
 	svc := &mockStreamService{logger: logger}
 
 	mux := http.NewServeMux()
-	AppendStreamServiceWebsocketRoute(mux, svc, goose.DefaultEncodeError, server.Chain(), marshalOpts, unmarshalOpts, connCfg, logger)
+	AppendStreamServiceWebsocketRoute(mux, svc, server.Chain(), marshalOpts, unmarshalOpts, ws.AcceptOptions(), connCfg, logger)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
@@ -110,7 +109,7 @@ func newTestClient(t *testing.T, port int) StreamServiceStreamClient {
 	logger := slog.Default()
 	marshalOpts := protojson.MarshalOptions{}
 	unmarshalOpts := protojson.UnmarshalOptions{}
-	return NewStreamServiceClient(fmt.Sprintf("ws://localhost:%d", port), logger, marshalOpts, unmarshalOpts)
+	return NewStreamServiceClient(fmt.Sprintf("ws://localhost:%d", port), logger, marshalOpts, unmarshalOpts, ws.DialOptions())
 }
 
 func TestClientStream(t *testing.T) {

@@ -30,10 +30,10 @@ type StreamServiceStreamServer interface {
 func AppendStreamServiceWebsocketRoute(
 	router *http.ServeMux,
 	service StreamServiceStreamServer,
-	errorEncoder goose.ErrorEncoder,
 	middleware server.Middleware,
 	marshalOpts protojson.MarshalOptions,
 	unmarshalOpts protojson.UnmarshalOptions,
+	acptOpts *websocket.AcceptOptions,
 	cfg *ws.ConnConfig,
 	logger *slog.Logger,
 ) *http.ServeMux {
@@ -42,10 +42,10 @@ func AppendStreamServiceWebsocketRoute(
 	}
 	handler := &streamServiceHandler{
 		service:          service,
-		errorEncoder:     errorEncoder,
 		middleware:       middleware,
 		marshalOptions:   marshalOpts,
 		unmarshalOptions: unmarshalOpts,
+		acptOpts:         acptOpts,
 		cfg:              cfg,
 		logger:           logger,
 	}
@@ -57,10 +57,10 @@ func AppendStreamServiceWebsocketRoute(
 
 type streamServiceHandler struct {
 	service          StreamServiceStreamServer
-	errorEncoder     goose.ErrorEncoder
 	middleware       server.Middleware
 	marshalOptions   protojson.MarshalOptions
 	unmarshalOptions protojson.UnmarshalOptions
+	acptOpts         *websocket.AcceptOptions
 	cfg              *ws.ConnConfig
 	logger           *slog.Logger
 }
@@ -71,16 +71,16 @@ type streamServiceHandler struct {
 
 func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
-		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.cfg, h.logger)
+		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.acptOpts, h.cfg, h.logger)
 		if err != nil {
-			h.errorEncoder(ctx, err, response)
+			h.logger.Error("accept websocket connection failed", "error", err)
 			return
 		}
 		defer cancel()
 
 		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
-			h.errorEncoder(ctx, err, response)
+			h.logger.Error("client stream error", "error", err)
 		}
 		_ = stream.CloseSend()
 	}
@@ -93,30 +93,29 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 
 func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
-		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.cfg, h.logger)
+		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.acptOpts, h.cfg, h.logger)
 		if err != nil {
-			h.errorEncoder(ctx, err, response)
+			h.logger.Error("accept websocket connection failed", "error", err)
 			return
 		}
 		defer cancel()
 
-		// Read the initial request from the client (ServerStream 独有).
 		var req Request
 		data, err := conn.Read(ctx)
 		if err != nil {
 			if !ws.IsNormalClose(err) {
-				h.errorEncoder(ctx, err, response)
+				h.logger.Error("read request error", "error", err)
 			}
 			return
 		}
 		if err := h.unmarshalOptions.Unmarshal(data, &req); err != nil {
-			h.errorEncoder(ctx, err, response)
+			h.logger.Error("unmarshal request error", "error", err)
 			return
 		}
 
 		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
-			h.errorEncoder(ctx, err, response)
+			h.logger.Error("server stream error", "error", err)
 		}
 		_ = stream.CloseSend()
 	}
@@ -129,16 +128,16 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 
 func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
-		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.cfg, h.logger)
+		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.acptOpts, h.cfg, h.logger)
 		if err != nil {
-			h.errorEncoder(ctx, err, response)
+			h.logger.Error("accept websocket connection failed", "error", err)
 			return
 		}
 		defer cancel()
 
 		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
-			h.errorEncoder(ctx, err, response)
+			h.logger.Error("bid stream error", "error", err)
 		}
 		_ = stream.CloseSend()
 	}
@@ -167,7 +166,7 @@ type streamServiceClient struct {
 // NewStreamServiceClient creates a client that implements StreamServiceClient.
 // url is the WebSocket endpoint (e.g., "ws://localhost:8080/ws/bidi-stream").
 // Each method call dials a new connection for the corresponding streaming RPC.
-func NewStreamServiceClient(url string, logger *slog.Logger, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions) StreamServiceStreamClient {
+func NewStreamServiceClient(url string, logger *slog.Logger, marshalOpts protojson.MarshalOptions, unmarshalOpts protojson.UnmarshalOptions, dialOpts *websocket.DialOptions) StreamServiceStreamClient {
 	if logger == nil {
 		logger = slog.Default()
 	}
@@ -177,9 +176,7 @@ func NewStreamServiceClient(url string, logger *slog.Logger, marshalOpts protojs
 		connCfg:          ws.DefaultConnConfig(),
 		marshalOptions:   marshalOpts,
 		unmarshalOptions: unmarshalOpts,
-		dialOpts: &websocket.DialOptions{
-			CompressionMode: websocket.CompressionContextTakeover,
-		},
+		dialOpts:         dialOpts,
 	}
 }
 

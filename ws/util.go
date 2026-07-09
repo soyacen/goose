@@ -16,6 +16,12 @@ func AcceptOptions() *websocket.AcceptOptions {
 	}
 }
 
+func DialOptions() *websocket.DialOptions {
+	return &websocket.DialOptions{
+		CompressionMode: websocket.CompressionContextTakeover,
+	}
+}
+
 // IsNormalClose returns true if the error represents a normal WebSocket close.
 // This includes StatusNormalClosure, StatusGoingAway, and context.Canceled.
 func IsNormalClose(err error) bool {

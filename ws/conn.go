@@ -51,9 +51,9 @@ type Conn struct {
 }
 
 // AcceptConn upgrades the HTTP connection to WebSocket and starts the read loop.
-func AcceptConn(response http.ResponseWriter, request *http.Request, cfg *ConnConfig, logger *slog.Logger) (ctx context.Context, conn *Conn, cancel context.CancelFunc, err error) {
+func AcceptConn(response http.ResponseWriter, request *http.Request, acptOpts *websocket.AcceptOptions, cfg *ConnConfig, logger *slog.Logger) (ctx context.Context, conn *Conn, cancel context.CancelFunc, err error) {
 	ctx = request.Context()
-	wsConn, err := websocket.Accept(response, request, AcceptOptions())
+	wsConn, err := websocket.Accept(response, request, acptOpts)
 	if err != nil {
 		return ctx, nil, func() {}, err
 	}
