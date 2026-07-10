@@ -20,7 +20,7 @@ type mockStreamService struct {
 	logger *slog.Logger
 }
 
-var _ ResponseBodyStreamServer = (*mockStreamService)(nil)
+var _ WebsocketStreamServer = (*mockStreamService)(nil)
 
 func (s *mockStreamService) ClientStream(stream ws.ClientStreamingServer[*Request, *Response]) error {
 	var count int
@@ -87,7 +87,7 @@ func startServer(t *testing.T, port int) *http.Server {
 	svc := &mockStreamService{logger: logger}
 
 	mux := http.NewServeMux()
-	AppendResponseBodyWebsocketRoute(mux, svc, server.Chain(), marshalOpts, unmarshalOpts, ws.AcceptOptions(), connCfg, logger)
+	AppendWebsocketWebsocketRoute(mux, svc, server.Chain(), marshalOpts, unmarshalOpts, ws.AcceptOptions(), connCfg, logger)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
@@ -104,12 +104,12 @@ func startServer(t *testing.T, port int) *http.Server {
 	return srv
 }
 
-func newTestClient(t *testing.T, port int) ResponseBodyStreamClient {
+func newTestClient(t *testing.T, port int) WebsocketStreamClient {
 	t.Helper()
 	logger := slog.Default()
 	marshalOpts := protojson.MarshalOptions{}
 	unmarshalOpts := protojson.UnmarshalOptions{}
-	return NewResponseBodyStreamClient(fmt.Sprintf("ws://localhost:%d", port), logger, marshalOpts, unmarshalOpts, ws.DialOptions())
+	return NewWebsocketStreamClient(fmt.Sprintf("ws://localhost:%d", port), logger, marshalOpts, unmarshalOpts, ws.DialOptions())
 }
 
 func TestClientStream(t *testing.T) {
