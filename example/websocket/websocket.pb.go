@@ -118,8 +118,8 @@ const file_example_websocket_websocket_proto_rawDesc = "" +
 	"\aRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"$\n" +
 	"\bResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2\x8b\x03\n" +
-	"\fResponseBody\x12~\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage2\x88\x03\n" +
+	"\tWebsocket\x12~\n" +
 	"\fClientStream\x12'.leo.goose.example.websocket.v1.Request\x1a(.leo.goose.example.websocket.v1.Response\"\x19\x82\xd3\xe4\x93\x02\x13\"\x11/ws/client-stream(\x01\x12~\n" +
 	"\fServerStream\x12'.leo.goose.example.websocket.v1.Request\x1a(.leo.goose.example.websocket.v1.Response\"\x19\x82\xd3\xe4\x93\x02\x13\"\x11/ws/server-stream0\x01\x12{\n" +
 	"\tBidStream\x12'.leo.goose.example.websocket.v1.Request\x1a(.leo.goose.example.websocket.v1.Response\"\x17\x82\xd3\xe4\x93\x02\x11\"\x0f/ws/bidi-stream(\x010\x01B9Z7github.com/soyacen/goose/example/websocket/v1;websocketb\x06proto3"
@@ -142,12 +142,12 @@ var file_example_websocket_websocket_proto_goTypes = []any{
 	(*Response)(nil), // 1: leo.goose.example.websocket.v1.Response
 }
 var file_example_websocket_websocket_proto_depIdxs = []int32{
-	0, // 0: leo.goose.example.websocket.v1.ResponseBody.ClientStream:input_type -> leo.goose.example.websocket.v1.Request
-	0, // 1: leo.goose.example.websocket.v1.ResponseBody.ServerStream:input_type -> leo.goose.example.websocket.v1.Request
-	0, // 2: leo.goose.example.websocket.v1.ResponseBody.BidStream:input_type -> leo.goose.example.websocket.v1.Request
-	1, // 3: leo.goose.example.websocket.v1.ResponseBody.ClientStream:output_type -> leo.goose.example.websocket.v1.Response
-	1, // 4: leo.goose.example.websocket.v1.ResponseBody.ServerStream:output_type -> leo.goose.example.websocket.v1.Response
-	1, // 5: leo.goose.example.websocket.v1.ResponseBody.BidStream:output_type -> leo.goose.example.websocket.v1.Response
+	0, // 0: leo.goose.example.websocket.v1.Websocket.ClientStream:input_type -> leo.goose.example.websocket.v1.Request
+	0, // 1: leo.goose.example.websocket.v1.Websocket.ServerStream:input_type -> leo.goose.example.websocket.v1.Request
+	0, // 2: leo.goose.example.websocket.v1.Websocket.BidStream:input_type -> leo.goose.example.websocket.v1.Request
+	1, // 3: leo.goose.example.websocket.v1.Websocket.ClientStream:output_type -> leo.goose.example.websocket.v1.Response
+	1, // 4: leo.goose.example.websocket.v1.Websocket.ServerStream:output_type -> leo.goose.example.websocket.v1.Response
+	1, // 5: leo.goose.example.websocket.v1.Websocket.BidStream:output_type -> leo.goose.example.websocket.v1.Response
 	3, // [3:6] is the sub-list for method output_type
 	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

@@ -3,33 +3,32 @@
 package websocket
 
 import (
-	"context"
-	"log/slog"
-	"net/http"
-	"net/url"
-
-	"github.com/coder/websocket"
+	context "context"
+	websocket "github.com/coder/websocket"
 	goose "github.com/soyacen/goose"
-	"github.com/soyacen/goose/server"
-	"github.com/soyacen/goose/ws"
-	"google.golang.org/protobuf/encoding/protojson"
+	server "github.com/soyacen/goose/server"
+	ws "github.com/soyacen/goose/ws"
+	protojson "google.golang.org/protobuf/encoding/protojson"
+	slog "log/slog"
+	http "net/http"
+	url "net/url"
 )
 
-type StreamServiceStreamClient interface {
-	ClientStream(ctx context.Context) (ws.ClientStreamingClient[*Request, *Response], error)
-	ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[*Response], error)
-	BidStream(ctx context.Context) (ws.BidiStreamingClient[*Request, *Response], error)
-}
-
-type StreamServiceStreamServer interface {
+type WebsocketStreamServer interface {
 	ClientStream(ws.ClientStreamingServer[*Request, *Response]) error
 	ServerStream(*Request, ws.ServerStreamingServer[*Response]) error
 	BidStream(ws.BidiStreamingServer[*Request, *Response]) error
 }
 
-func AppendStreamServiceWebsocketRoute(
+type WebsocketStreamClient interface {
+	ClientStream(ctx context.Context) (ws.ClientStreamingClient[*Request, *Response], error)
+	ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[*Response], error)
+	BidStream(ctx context.Context) (ws.BidiStreamingClient[*Request, *Response], error)
+}
+
+func AppendWebsocketWebsocketRoute(
 	router *http.ServeMux,
-	service StreamServiceStreamServer,
+	service WebsocketStreamServer,
 	middleware server.Middleware,
 	marshalOpts protojson.MarshalOptions,
 	unmarshalOpts protojson.UnmarshalOptions,
@@ -40,7 +39,7 @@ func AppendStreamServiceWebsocketRoute(
 	if router == nil {
 		router = http.NewServeMux()
 	}
-	handler := &streamServiceHandler{
+	handler := &websocketStreamHandler{
 		service:          service,
 		middleware:       middleware,
 		marshalOptions:   marshalOpts,
@@ -49,14 +48,14 @@ func AppendStreamServiceWebsocketRoute(
 		cfg:              cfg,
 		logger:           logger,
 	}
-	router.Handle(_leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo.Pattern, http.HandlerFunc(handler.ClientStream))
-	router.Handle(_leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc.RouteInfo.Pattern, http.HandlerFunc(handler.ServerStream))
-	router.Handle(_leo_goose_example_websocket_v1_ResponseBody_BidStream_Desc.RouteInfo.Pattern, http.HandlerFunc(handler.BidStream))
+	router.Handle(_leo_goose_example_websocket_v1_Websocket_ClientStream_Desc.RouteInfo.Pattern, http.HandlerFunc(handler.ClientStream))
+	router.Handle(_leo_goose_example_websocket_v1_Websocket_ServerStream_Desc.RouteInfo.Pattern, http.HandlerFunc(handler.ServerStream))
+	router.Handle(_leo_goose_example_websocket_v1_Websocket_BidStream_Desc.RouteInfo.Pattern, http.HandlerFunc(handler.BidStream))
 	return router
 }
 
-type streamServiceHandler struct {
-	service          StreamServiceStreamServer
+type websocketStreamHandler struct {
+	service          WebsocketStreamServer
 	middleware       server.Middleware
 	marshalOptions   protojson.MarshalOptions
 	unmarshalOptions protojson.UnmarshalOptions
@@ -65,113 +64,89 @@ type streamServiceHandler struct {
 	logger           *slog.Logger
 }
 
-// ------------------------------------------------------------------
-// 1. Client-Stream: client sends, server only receives
-// ------------------------------------------------------------------
-
-func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, request *http.Request) {
+func (h websocketStreamHandler) ClientStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.acptOpts, h.cfg, h.logger)
 		if err != nil {
 			h.logger.Error("failed to accept websocket connection",
-				"service", "ResponseBody", "method", "ClientStream", "error", err)
+				"service", "Websocket", "method", "ClientStream", "error", err)
 			return
 		}
 		defer cancel()
-
 		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("failed to handle client stream",
-				"service", "ResponseBody", "method", "ClientStream", "error", err)
+				"service", "Websocket", "method", "ClientStream", "error", err)
 		}
 		if err := stream.CloseSend(); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("failed to close send stream",
-				"service", "ResponseBody", "method", "ClientStream", "error", err)
+				"service", "Websocket", "method", "ClientStream", "error", err)
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_Websocket_ClientStream_Desc.RouteInfo)
 }
 
-// ------------------------------------------------------------------
-// 2. Server-Stream: server sends, client only receives
-// ------------------------------------------------------------------
-
-func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, request *http.Request) {
+func (h websocketStreamHandler) ServerStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.acptOpts, h.cfg, h.logger)
 		if err != nil {
 			h.logger.Error("failed to accept websocket connection",
-				"service", "ResponseBody", "method", "ServerStream", "error", err)
+				"service", "Websocket", "method", "ServerStream", "error", err)
 			return
 		}
 		defer cancel()
-
 		var req Request
 		data, err := conn.Read(ctx)
 		if err != nil {
 			if !ws.IsNormalClose(err) {
 				h.logger.Error("failed to read request",
-					"service", "ResponseBody", "method", "ServerStream", "error", err)
+					"service", "Websocket", "method", "ServerStream", "error", err)
 			}
 			return
 		}
 		if err := h.unmarshalOptions.Unmarshal(data, &req); err != nil {
 			h.logger.Error("failed to unmarshal request",
-				"service", "ResponseBody", "method", "ServerStream", "error", err)
+				"service", "Websocket", "method", "ServerStream", "error", err)
 			return
 		}
-
 		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("failed to handle server stream",
-				"service", "ResponseBody", "method", "ServerStream", "error", err)
+				"service", "Websocket", "method", "ServerStream", "error", err)
 		}
 		if err := stream.CloseSend(); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("failed to close send stream",
-				"service", "ResponseBody", "method", "ServerStream", "error", err)
+				"service", "Websocket", "method", "ServerStream", "error", err)
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc.RouteInfo)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_Websocket_ServerStream_Desc.RouteInfo)
 }
 
-// ------------------------------------------------------------------
-// 3. Bidirectional-Stream: both sides send messages
-// ------------------------------------------------------------------
-
-func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *http.Request) {
+func (h websocketStreamHandler) BidStream(response http.ResponseWriter, request *http.Request) {
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.acptOpts, h.cfg, h.logger)
 		if err != nil {
 			h.logger.Error("failed to accept websocket connection",
-				"service", "ResponseBody", "method", "BidStream", "error", err)
+				"service", "Websocket", "method", "BidStream", "error", err)
 			return
 		}
 		defer cancel()
-
 		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("failed to handle bidi stream",
-				"service", "ResponseBody", "method", "BidStream", "error", err)
+				"service", "Websocket", "method", "BidStream", "error", err)
 		}
 		if err := stream.CloseSend(); err != nil && !ws.IsNormalClose(err) {
 			h.logger.Error("failed to close send stream",
-				"service", "ResponseBody", "method", "BidStream", "error", err)
+				"service", "Websocket", "method", "BidStream", "error", err)
 		}
 	}
-	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_BidStream_Desc.RouteInfo)
+	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_Websocket_BidStream_Desc.RouteInfo)
 }
 
-// ---------------------------------------------------------------------------
-// streamServiceClient — implements StreamServiceClient
-// ---------------------------------------------------------------------------
+var _ WebsocketStreamClient = (*websocketStreamClient)(nil)
 
-// Compile-time check: streamServiceClient implements StreamServiceClient.
-var _ StreamServiceStreamClient = (*streamServiceClient)(nil)
-
-// streamServiceClient implements the StreamServiceClient interface by creating
-// WebSocket connections for each RPC call. This is what protoc-gen-goose
-// would generate as the client stub.
-type streamServiceClient struct {
+type websocketStreamClient struct {
 	url              string
 	dialOpts         *websocket.DialOptions
 	connCfg          *ws.ConnConfig
@@ -180,19 +155,16 @@ type streamServiceClient struct {
 	unmarshalOptions protojson.UnmarshalOptions
 }
 
-// NewStreamServiceClient creates a client that implements StreamServiceClient.
-// url is the WebSocket endpoint (e.g., "ws://localhost:8080/ws/bidi-stream").
-// Each method call dials a new connection for the corresponding streaming RPC.
-func NewStreamServiceClient(url string,
+func NewWebsocketStreamClient(url string,
 	logger *slog.Logger,
 	marshalOpts protojson.MarshalOptions,
 	unmarshalOpts protojson.UnmarshalOptions,
 	dialOpts *websocket.DialOptions,
-) StreamServiceStreamClient {
+) WebsocketStreamClient {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &streamServiceClient{
+	return &websocketStreamClient{
 		url:              url,
 		logger:           logger,
 		connCfg:          ws.DefaultConnConfig(),
@@ -202,25 +174,8 @@ func NewStreamServiceClient(url string,
 	}
 }
 
-// dialAndConnect dials the WebSocket endpoint and returns a ClientStream ready
-// for use. The caller is responsible for the returned cancel function if the
-// stream is not fully consumed.
-func (c *streamServiceClient) dialAndConnect(ctx context.Context, path string) (ws.ClientStream, error) {
-	u, err := url.JoinPath(c.url, path)
-	if err != nil {
-		return nil, err
-	}
-	conn, err := ws.DialAndConnect(ctx, u, c.dialOpts, c.connCfg, c.logger)
-	if err != nil {
-		return nil, err
-	}
-	// NewClientStream starts conn.Start internally.
-	return ws.NewClientStream(ctx, conn, c.marshalOptions, c.unmarshalOptions), nil
-}
-
-// ClientStream opens a client-streaming RPC.
-func (c *streamServiceClient) ClientStream(ctx context.Context) (ws.ClientStreamingClient[*Request, *Response], error) {
-	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo.Pattern)
+func (c *websocketStreamClient) ClientStream(ctx context.Context) (ws.ClientStreamingClient[*Request, *Response], error) {
+	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_Websocket_ClientStream_Desc.RouteInfo.Pattern)
 	if err != nil {
 		return nil, err
 	}
@@ -231,10 +186,8 @@ func (c *streamServiceClient) ClientStream(ctx context.Context) (ws.ClientStream
 	return ws.NewClientStreamV2[*Request, *Response](ctx, conn, c.marshalOptions, c.unmarshalOptions), nil
 }
 
-// ServerStream opens a server-streaming RPC. It sends the initial request
-// and returns a stream for receiving multiple responses.
-func (c *streamServiceClient) ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[*Response], error) {
-	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc.RouteInfo.Pattern)
+func (c *websocketStreamClient) ServerStream(ctx context.Context, in *Request) (ws.ServerStreamingClient[*Response], error) {
+	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_Websocket_ServerStream_Desc.RouteInfo.Pattern)
 	if err != nil {
 		return nil, err
 	}
@@ -250,9 +203,8 @@ func (c *streamServiceClient) ServerStream(ctx context.Context, in *Request) (ws
 	return cs, nil
 }
 
-// Bid opens a bidirectional-streaming RPC.
-func (c *streamServiceClient) BidStream(ctx context.Context) (ws.BidiStreamingClient[*Request, *Response], error) {
-	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_ResponseBody_BidStream_Desc.RouteInfo.Pattern)
+func (c *websocketStreamClient) BidStream(ctx context.Context) (ws.BidiStreamingClient[*Request, *Response], error) {
+	u, err := url.JoinPath(c.url, _leo_goose_example_websocket_v1_Websocket_BidStream_Desc.RouteInfo.Pattern)
 	if err != nil {
 		return nil, err
 	}
@@ -263,26 +215,26 @@ func (c *streamServiceClient) BidStream(ctx context.Context) (ws.BidiStreamingCl
 	return ws.NewClientStreamV2[*Request, *Response](ctx, conn, c.marshalOptions, c.unmarshalOptions), nil
 }
 
-var _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc = &goose.Desc{
+var _leo_goose_example_websocket_v1_Websocket_ClientStream_Desc = &goose.Desc{
 	RouteInfo: &goose.RouteInfo{
 		HttpMethod: "POST",
 		Pattern:    "/ws/client-stream",
-		FullMethod: "/leo.goose.example.websocket.v1.ResponseBody/ClientStream",
+		FullMethod: "/leo.goose.example.websocket.v1.Websocket/ClientStream",
 	},
 }
 
-var _leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc = &goose.Desc{
+var _leo_goose_example_websocket_v1_Websocket_ServerStream_Desc = &goose.Desc{
 	RouteInfo: &goose.RouteInfo{
 		HttpMethod: "POST",
 		Pattern:    "/ws/server-stream",
-		FullMethod: "/leo.goose.example.websocket.v1.ResponseBody/ServerStream",
+		FullMethod: "/leo.goose.example.websocket.v1.Websocket/ServerStream",
 	},
 }
 
-var _leo_goose_example_websocket_v1_ResponseBody_BidStream_Desc = &goose.Desc{
+var _leo_goose_example_websocket_v1_Websocket_BidStream_Desc = &goose.Desc{
 	RouteInfo: &goose.RouteInfo{
 		HttpMethod: "POST",
 		Pattern:    "/ws/bidi-stream",
-		FullMethod: "/leo.goose.example.websocket.v1.ResponseBody/BidStream",
+		FullMethod: "/leo.goose.example.websocket.v1.Websocket/BidStream",
 	},
 }

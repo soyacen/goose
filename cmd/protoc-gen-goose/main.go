@@ -12,6 +12,7 @@ import (
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/openapi"
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/parser"
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/server"
+	"github.com/soyacen/goose/cmd/protoc-gen-goose/stream"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 )
@@ -55,36 +56,64 @@ func generate(plugin *protogen.Plugin) error {
 		g.P()
 
 		for _, service := range services {
-			if err := GenerateServices(service, g); err != nil {
-				return err
-			}
+			if service.IsStreamingService() {
+				streamGen := new(stream.Generator)
+				if err := streamGen.GenerateStreamServerInterface(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamClientInterface(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateAppendStreamRouteFunc(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamHandlerStruct(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamHandlerMethods(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamClientStruct(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateNewStreamClientFunc(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamClientMethods(service, g); err != nil {
+					return err
+				}
+			} else {
+				if err := GenerateServices(service, g); err != nil {
+					return err
+				}
 
-			srvGen := new(server.Generator)
-			if err := srvGen.GenerateAppendServerFunc(service, g); err != nil {
-				return err
-			}
-			if err := srvGen.GenerateHandlers(service, g); err != nil {
-				return err
-			}
-			if err := srvGen.GenerateDecodeRequest(service, g); err != nil {
-				return err
-			}
-			if err := srvGen.GenerateEncodeResponse(service, g); err != nil {
-				return err
-			}
+				srvGen := new(server.Generator)
+				if err := srvGen.GenerateAppendServerFunc(service, g); err != nil {
+					return err
+				}
+				if err := srvGen.GenerateHandlers(service, g); err != nil {
+					return err
+				}
+				if err := srvGen.GenerateDecodeRequest(service, g); err != nil {
+					return err
+				}
+				if err := srvGen.GenerateEncodeResponse(service, g); err != nil {
+					return err
+				}
 
-			cliGen := new(client.Generator)
-			if err := cliGen.GenerateNewClient(service, g); err != nil {
-				return err
-			}
-			if err := cliGen.GenerateClient(service, g); err != nil {
-				return err
-			}
-			if err := cliGen.GenerateRequestEncoder(service, g); err != nil {
-				return err
-			}
-			if err := cliGen.GenerateResponseDecoder(service, g); err != nil {
-				return err
+				cliGen := new(client.Generator)
+				if err := cliGen.GenerateNewClient(service, g); err != nil {
+					return err
+				}
+				if err := cliGen.GenerateClient(service, g); err != nil {
+					return err
+				}
+				if err := cliGen.GenerateRequestEncoder(service, g); err != nil {
+					return err
+				}
+				if err := cliGen.GenerateResponseDecoder(service, g); err != nil {
+					return err
+				}
 			}
 
 			if err := GenerateDescs(service, g); err != nil {

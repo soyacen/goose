@@ -4,7 +4,7 @@ option go_package = "github.com/soyacen/goose/example/websocket/v1;websocket";
 
 import "google/api/annotations.proto";
 
-service ResponseBody {
+service Websocket {
   rpc ClientStream(stream Request) returns (Response) {
     option (google.api.http) = {
       post: "/ws/client-stream"

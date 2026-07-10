@@ -200,3 +200,34 @@ var (
 	WrapperspbPackage     = protogen.GoImportPath("google.golang.org/protobuf/types/known/wrapperspb")
 	WrapperspbStringIdent = WrapperspbPackage.Ident("String")
 )
+
+var (
+	WebsocketPackage = protogen.GoImportPath("github.com/coder/websocket")
+	WebsocketAcceptOptionsIdent = WebsocketPackage.Ident("AcceptOptions")
+	WebsocketDialOptionsIdent   = WebsocketPackage.Ident("DialOptions")
+)
+
+var (
+	WsPackage                      = protogen.GoImportPath("github.com/soyacen/goose/ws")
+	WsAcceptConnIdent              = WsPackage.Ident("AcceptConn")
+	WsDialAndConnectIdent          = WsPackage.Ident("DialAndConnect")
+	WsNewServerStreamIdent         = WsPackage.Ident("NewServerStream")
+	WsNewClientStreamV2Ident       = WsPackage.Ident("NewClientStreamV2")
+	WsIsNormalCloseIdent           = WsPackage.Ident("IsNormalClose")
+	WsDefaultConnConfigIdent       = WsPackage.Ident("DefaultConnConfig")
+	WsClientStreamingClientIdent   = WsPackage.Ident("ClientStreamingClient")
+	WsClientStreamingServerIdent   = WsPackage.Ident("ClientStreamingServer")
+	WsServerStreamingClientIdent   = WsPackage.Ident("ServerStreamingClient")
+	WsServerStreamingServerIdent   = WsPackage.Ident("ServerStreamingServer")
+	WsBidiStreamingClientIdent     = WsPackage.Ident("BidiStreamingClient")
+	WsBidiStreamingServerIdent     = WsPackage.Ident("BidiStreamingServer")
+	WsConnConfigIdent              = WsPackage.Ident("ConnConfig")
+	WsAcceptOptionsIdent           = WsPackage.Ident("AcceptOptions")
+	WsDialOptionsIdent             = WsPackage.Ident("DialOptions")
+)
+
+var (
+	SlogPackage       = protogen.GoImportPath("log/slog")
+	SlogLoggerIdent   = SlogPackage.Ident("Logger")
+	SlogDefaultIdent  = SlogPackage.Ident("Default")
+)
