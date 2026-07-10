@@ -73,16 +73,21 @@ func (h *streamServiceHandler) ClientStream(response http.ResponseWriter, reques
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.acptOpts, h.cfg, h.logger)
 		if err != nil {
-			h.logger.Error("accept websocket connection failed", "error", err)
+			h.logger.Error("failed to accept websocket connection",
+				"service", "ResponseBody", "method", "ClientStream", "error", err)
 			return
 		}
 		defer cancel()
 
 		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.ClientStream(stream); err != nil && !ws.IsNormalClose(err) {
-			h.logger.Error("client stream error", "error", err)
+			h.logger.Error("failed to handle client stream",
+				"service", "ResponseBody", "method", "ClientStream", "error", err)
 		}
-		_ = stream.CloseSend()
+		if err := stream.CloseSend(); err != nil && !ws.IsNormalClose(err) {
+			h.logger.Error("failed to close send stream",
+				"service", "ResponseBody", "method", "ClientStream", "error", err)
+		}
 	}
 	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_ClientStream_Desc.RouteInfo)
 }
@@ -95,7 +100,8 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.acptOpts, h.cfg, h.logger)
 		if err != nil {
-			h.logger.Error("accept websocket connection failed", "error", err)
+			h.logger.Error("failed to accept websocket connection",
+				"service", "ResponseBody", "method", "ServerStream", "error", err)
 			return
 		}
 		defer cancel()
@@ -104,20 +110,26 @@ func (h *streamServiceHandler) ServerStream(response http.ResponseWriter, reques
 		data, err := conn.Read(ctx)
 		if err != nil {
 			if !ws.IsNormalClose(err) {
-				h.logger.Error("read request error", "error", err)
+				h.logger.Error("failed to read request",
+					"service", "ResponseBody", "method", "ServerStream", "error", err)
 			}
 			return
 		}
 		if err := h.unmarshalOptions.Unmarshal(data, &req); err != nil {
-			h.logger.Error("unmarshal request error", "error", err)
+			h.logger.Error("failed to unmarshal request",
+				"service", "ResponseBody", "method", "ServerStream", "error", err)
 			return
 		}
 
 		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.ServerStream(&req, stream); err != nil && !ws.IsNormalClose(err) {
-			h.logger.Error("server stream error", "error", err)
+			h.logger.Error("failed to handle server stream",
+				"service", "ResponseBody", "method", "ServerStream", "error", err)
 		}
-		_ = stream.CloseSend()
+		if err := stream.CloseSend(); err != nil && !ws.IsNormalClose(err) {
+			h.logger.Error("failed to close send stream",
+				"service", "ResponseBody", "method", "ServerStream", "error", err)
+		}
 	}
 	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_ServerStream_Desc.RouteInfo)
 }
@@ -130,16 +142,21 @@ func (h *streamServiceHandler) BidStream(response http.ResponseWriter, request *
 	invoke := func(response http.ResponseWriter, request *http.Request) {
 		ctx, conn, cancel, err := ws.AcceptConn(response, request, h.acptOpts, h.cfg, h.logger)
 		if err != nil {
-			h.logger.Error("accept websocket connection failed", "error", err)
+			h.logger.Error("failed to accept websocket connection",
+				"service", "ResponseBody", "method", "BidStream", "error", err)
 			return
 		}
 		defer cancel()
 
 		stream := ws.NewServerStream[*Request, *Response](ctx, conn, h.marshalOptions, h.unmarshalOptions)
 		if err := h.service.BidStream(stream); err != nil && !ws.IsNormalClose(err) {
-			h.logger.Error("bid stream error", "error", err)
+			h.logger.Error("failed to handle bidi stream",
+				"service", "ResponseBody", "method", "BidStream", "error", err)
 		}
-		_ = stream.CloseSend()
+		if err := stream.CloseSend(); err != nil && !ws.IsNormalClose(err) {
+			h.logger.Error("failed to close send stream",
+				"service", "ResponseBody", "method", "BidStream", "error", err)
+		}
 	}
 	server.Invoke(h.middleware, response, request, invoke, _leo_goose_example_websocket_v1_ResponseBody_BidStream_Desc.RouteInfo)
 }
