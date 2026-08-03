@@ -16,6 +16,9 @@ func (f *Generator) GenerateRequestEncoder(service *parser.Service, g *protogen.
 	g.P("resolver ", constant.ResolverIdent)
 	g.P("}")
 	for _, endpoint := range service.Endpoints {
+		if endpoint.IsStreaming() {
+			continue
+		}
 		g.P("func (encoder *", service.Unexported(service.RequestEncoderName()), ") ", endpoint.Name(), "(ctx ", constant.ContextIdent, ", req *", endpoint.InputGoIdent(), ") (*", constant.RequestIdent, ", error){")
 		g.P("if req == nil {")
 		g.P("return nil, ", constant.NewErrorIdent, "(", strconv.Quote("request is nil"), ")")

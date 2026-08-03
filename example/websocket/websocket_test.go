@@ -20,7 +20,7 @@ type mockStreamService struct {
 	logger *slog.Logger
 }
 
-var _ WebsocketStreamServer = (*mockStreamService)(nil)
+var _ WebsocketService = (*mockStreamService)(nil)
 
 func (s *mockStreamService) ClientStream(stream ws.ClientStreamingServer[*Request, *Response]) error {
 	var count int

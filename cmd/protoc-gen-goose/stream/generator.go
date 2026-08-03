@@ -8,25 +8,9 @@ import (
 
 type Generator struct{}
 
-func (gen *Generator) GenerateStreamServerInterface(service *parser.Service, g *protogen.GeneratedFile) error {
-	g.P("type ", service.StreamServerName(), " interface {")
-	for _, endpoint := range service.Endpoints {
-		if endpoint.IsClientStreaming() {
-			g.P(endpoint.Name(), "(", constant.WsClientStreamingServerIdent, "[*", endpoint.InputGoIdent(), ", *", endpoint.OutputGoIdent(), "]) error")
-		} else if endpoint.IsServerStreaming() {
-			g.P(endpoint.Name(), "(*", endpoint.InputGoIdent(), ", ", constant.WsServerStreamingServerIdent, "[*", endpoint.OutputGoIdent(), "]) error")
-		} else if endpoint.IsBidiStreaming() {
-			g.P(endpoint.Name(), "(", constant.WsBidiStreamingServerIdent, "[*", endpoint.InputGoIdent(), ", *", endpoint.OutputGoIdent(), "]) error")
-		}
-	}
-	g.P("}")
-	g.P()
-	return nil
-}
-
 func (gen *Generator) GenerateStreamClientInterface(service *parser.Service, g *protogen.GeneratedFile) error {
 	g.P("type ", service.StreamClientName(), " interface {")
-	for _, endpoint := range service.Endpoints {
+	for _, endpoint := range service.StreamingEndpoints() {
 		if endpoint.IsClientStreaming() {
 			g.P(endpoint.Name(), "(ctx ", constant.ContextIdent, ") (", constant.WsClientStreamingClientIdent, "[*", endpoint.InputGoIdent(), ", *", endpoint.OutputGoIdent(), "], error)")
 		} else if endpoint.IsServerStreaming() {
@@ -43,7 +27,7 @@ func (gen *Generator) GenerateStreamClientInterface(service *parser.Service, g *
 func (gen *Generator) GenerateAppendStreamRouteFunc(service *parser.Service, g *protogen.GeneratedFile) error {
 	g.P("func ", service.AppendStreamRouteName(), "(")
 	g.P("router *", constant.RouterIdent, ",")
-	g.P("service ", service.StreamServerName(), ",")
+	g.P("service ", service.ServiceName(), ",")
 	g.P("middleware ", constant.ServerMiddlewareIdent, ",")
 	g.P("marshalOpts ", constant.ProtoJsonMarshalOptionsIdent, ",")
 	g.P("unmarshalOpts ", constant.ProtoJsonUnmarshalOptionsIdent, ",")
@@ -63,7 +47,7 @@ func (gen *Generator) GenerateAppendStreamRouteFunc(service *parser.Service, g *
 	g.P("cfg: cfg,")
 	g.P("logger: logger,")
 	g.P("}")
-	for _, endpoint := range service.Endpoints {
+	for _, endpoint := range service.StreamingEndpoints() {
 		g.P("router.Handle(", endpoint.DescName(), ".RouteInfo.Pattern, ", constant.HttpHandlerFuncIdent, "(handler.", endpoint.Name(), "))")
 	}
 	g.P("return router")
@@ -74,7 +58,7 @@ func (gen *Generator) GenerateAppendStreamRouteFunc(service *parser.Service, g *
 
 func (gen *Generator) GenerateStreamHandlerStruct(service *parser.Service, g *protogen.GeneratedFile) error {
 	g.P("type ", service.StreamHandlerName(), " struct {")
-	g.P("service ", service.StreamServerName())
+	g.P("service ", service.ServiceName())
 	g.P("middleware ", constant.ServerMiddlewareIdent)
 	g.P("marshalOptions ", constant.ProtoJsonMarshalOptionsIdent)
 	g.P("unmarshalOptions ", constant.ProtoJsonUnmarshalOptionsIdent)
@@ -88,7 +72,7 @@ func (gen *Generator) GenerateStreamHandlerStruct(service *parser.Service, g *pr
 
 func (gen *Generator) GenerateStreamHandlerMethods(service *parser.Service, g *protogen.GeneratedFile) error {
 	serviceName := service.Name()
-	for _, endpoint := range service.Endpoints {
+	for _, endpoint := range service.StreamingEndpoints() {
 		g.P("func (h ", service.StreamHandlerName(), ") ", endpoint.Name(), "(response ", constant.ResponseWriterIdent, ", request *", constant.RequestIdent, ") {")
 		g.P("invoke := func(response ", constant.ResponseWriterIdent, ", request *", constant.RequestIdent, ") {")
 		g.P("ctx, conn, cancel, err := ", constant.WsAcceptConnIdent, "(response, request, h.acptOpts, h.cfg, h.logger)")
@@ -187,7 +171,7 @@ func (gen *Generator) GenerateNewStreamClientFunc(service *parser.Service, g *pr
 }
 
 func (gen *Generator) GenerateStreamClientMethods(service *parser.Service, g *protogen.GeneratedFile) error {
-	for _, endpoint := range service.Endpoints {
+	for _, endpoint := range service.StreamingEndpoints() {
 		if endpoint.IsClientStreaming() {
 			gen.generateClientStreamingMethod(service, endpoint, g)
 		} else if endpoint.IsServerStreaming() {

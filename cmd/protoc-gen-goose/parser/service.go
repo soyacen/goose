@@ -69,6 +69,35 @@ func (s *Service) IsStreamingService() bool {
 	return false
 }
 
+func (s *Service) HasNonStreamingEndpoints() bool {
+	for _, endpoint := range s.Endpoints {
+		if !endpoint.IsStreaming() {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) NonStreamingEndpoints() []*Endpoint {
+	var endpoints []*Endpoint
+	for _, endpoint := range s.Endpoints {
+		if !endpoint.IsStreaming() {
+			endpoints = append(endpoints, endpoint)
+		}
+	}
+	return endpoints
+}
+
+func (s *Service) StreamingEndpoints() []*Endpoint {
+	var endpoints []*Endpoint
+	for _, endpoint := range s.Endpoints {
+		if endpoint.IsStreaming() {
+			endpoints = append(endpoints, endpoint)
+		}
+	}
+	return endpoints
+}
+
 func (s *Service) StreamServerName() string {
 	return s.Name() + "StreamServer"
 }
@@ -78,7 +107,7 @@ func (s *Service) StreamClientName() string {
 }
 
 func (s *Service) AppendStreamRouteName() string {
-	return "Append" + s.Name() + "WebsocketRoute"
+	return "Append" + s.Name() + "StreamRoute"
 }
 
 func (s *Service) StreamHandlerName() string {

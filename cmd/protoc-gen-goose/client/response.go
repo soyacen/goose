@@ -16,6 +16,9 @@ func (f *Generator) GenerateResponseDecoder(service *parser.Service, g *protogen
 	g.P("errorFactory ", constant.ErrorFactoryIdent)
 	g.P("}")
 	for _, endpoint := range service.Endpoints {
+		if endpoint.IsStreaming() {
+			continue
+		}
 		g.P("func (decoder *", service.Unexported(service.ResponseDecoderName()), ") ", endpoint.Name(), "(ctx ", constant.ContextIdent, ", response *", constant.ResponseIdent, ") (*", endpoint.OutputGoIdent(), ", error){")
 		g.P("if respErr, ok := decoder.errorDecoder(ctx, response, decoder.errorFactory); ok {")
 		g.P("return nil, respErr")

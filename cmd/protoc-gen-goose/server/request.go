@@ -15,6 +15,9 @@ func (generator *Generator) GenerateDecodeRequest(service *parser.Service, g *pr
 	g.P("unmarshalOptions ", constant.ProtoJsonUnmarshalOptionsIdent)
 	g.P("}")
 	for _, endpoint := range service.Endpoints {
+		if endpoint.IsStreaming() {
+			continue
+		}
 		g.P("func (decoder ", service.Unexported(service.RequestDecoderName()), ")", endpoint.Name(), "(ctx ", constant.ContextIdent, ", request *", constant.RequestIdent, ") (*", endpoint.InputGoIdent(), ", error){")
 		g.P("req := &", endpoint.InputGoIdent(), "{}")
 		g.P("ok, err := ", constant.CustomDecodeRequestIdent, "(ctx, request, req)")

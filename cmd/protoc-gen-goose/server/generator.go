@@ -31,6 +31,9 @@ func (generator *Generator) GenerateAppendServerFunc(service *parser.Service, g 
 	g.P("middleware: ", constant.ServerChainIdent, "(options.Middlewares()...),")
 	g.P("}")
 	for _, endpoint := range service.Endpoints {
+		if endpoint.IsStreaming() {
+			continue
+		}
 		g.P("router.Handle(", strconv.Quote(endpoint.Method()+" "+endpoint.Path()), ", ", constant.HttpHandlerFuncIdent, "(handler.", endpoint.Name(), "))")
 	}
 	g.P("return router")
@@ -51,6 +54,9 @@ func (generator *Generator) GenerateHandlers(service *parser.Service, g *protoge
 	g.P("}")
 	g.P()
 	for _, endpoint := range service.Endpoints {
+		if endpoint.IsStreaming() {
+			continue
+		}
 		g.P("func (h ", service.Unexported(service.HandlerName()), ")", endpoint.Name(), "(response ", constant.ResponseWriterIdent, ", request *", constant.RequestIdent, ") {")
 		g.P("invoke := func(response ", constant.ResponseWriterIdent, ", request *", constant.RequestIdent, ") {")
 		g.P("ctx := request.Context()")

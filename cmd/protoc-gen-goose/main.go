@@ -56,37 +56,11 @@ func generate(plugin *protogen.Plugin) error {
 		g.P()
 
 		for _, service := range services {
-			if service.IsStreamingService() {
-				streamGen := new(stream.Generator)
-				if err := streamGen.GenerateStreamServerInterface(service, g); err != nil {
-					return err
-				}
-				if err := streamGen.GenerateStreamClientInterface(service, g); err != nil {
-					return err
-				}
-				if err := streamGen.GenerateAppendStreamRouteFunc(service, g); err != nil {
-					return err
-				}
-				if err := streamGen.GenerateStreamHandlerStruct(service, g); err != nil {
-					return err
-				}
-				if err := streamGen.GenerateStreamHandlerMethods(service, g); err != nil {
-					return err
-				}
-				if err := streamGen.GenerateStreamClientStruct(service, g); err != nil {
-					return err
-				}
-				if err := streamGen.GenerateNewStreamClientFunc(service, g); err != nil {
-					return err
-				}
-				if err := streamGen.GenerateStreamClientMethods(service, g); err != nil {
-					return err
-				}
-			} else {
-				if err := GenerateServices(service, g); err != nil {
-					return err
-				}
+			if err := GenerateServices(service, g); err != nil {
+				return err
+			}
 
+			if service.HasNonStreamingEndpoints() {
 				srvGen := new(server.Generator)
 				if err := srvGen.GenerateAppendServerFunc(service, g); err != nil {
 					return err
@@ -116,6 +90,31 @@ func generate(plugin *protogen.Plugin) error {
 				}
 			}
 
+			if service.IsStreamingService() {
+				streamGen := new(stream.Generator)
+				if err := streamGen.GenerateStreamClientInterface(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateAppendStreamRouteFunc(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamHandlerStruct(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamHandlerMethods(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamClientStruct(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateNewStreamClientFunc(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamClientMethods(service, g); err != nil {
+					return err
+				}
+			}
+
 			if err := GenerateDescs(service, g); err != nil {
 				return err
 			}
@@ -132,7 +131,15 @@ func generate(plugin *protogen.Plugin) error {
 func GenerateServices(service *parser.Service, g *protogen.GeneratedFile) error {
 	g.P("type ", service.ServiceName(), " interface {")
 	for _, endpoint := range service.Endpoints {
-		g.P(endpoint.Name(), "(ctx ", constant.ContextIdent, ", req *", endpoint.InputGoIdent(), ") (*", endpoint.OutputGoIdent(), ", error)")
+		if endpoint.IsClientStreaming() {
+			g.P(endpoint.Name(), "(", constant.WsClientStreamingServerIdent, "[*", endpoint.InputGoIdent(), ", *", endpoint.OutputGoIdent(), "]) error")
+		} else if endpoint.IsServerStreaming() {
+			g.P(endpoint.Name(), "(*", endpoint.InputGoIdent(), ", ", constant.WsServerStreamingServerIdent, "[*", endpoint.OutputGoIdent(), "]) error")
+		} else if endpoint.IsBidiStreaming() {
+			g.P(endpoint.Name(), "(", constant.WsBidiStreamingServerIdent, "[*", endpoint.InputGoIdent(), ", *", endpoint.OutputGoIdent(), "]) error")
+		} else {
+			g.P(endpoint.Name(), "(ctx ", constant.ContextIdent, ", req *", endpoint.InputGoIdent(), ") (*", endpoint.OutputGoIdent(), ", error)")
+		}
 	}
 	g.P("}")
 	g.P()

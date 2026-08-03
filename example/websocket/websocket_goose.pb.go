@@ -14,7 +14,7 @@ import (
 	url "net/url"
 )
 
-type WebsocketStreamServer interface {
+type WebsocketService interface {
 	ClientStream(ws.ClientStreamingServer[*Request, *Response]) error
 	ServerStream(*Request, ws.ServerStreamingServer[*Response]) error
 	BidStream(ws.BidiStreamingServer[*Request, *Response]) error
@@ -28,7 +28,7 @@ type WebsocketStreamClient interface {
 
 func AppendWebsocketWebsocketRoute(
 	router *http.ServeMux,
-	service WebsocketStreamServer,
+	service WebsocketService,
 	middleware server.Middleware,
 	marshalOpts protojson.MarshalOptions,
 	unmarshalOpts protojson.UnmarshalOptions,
@@ -55,7 +55,7 @@ func AppendWebsocketWebsocketRoute(
 }
 
 type websocketStreamHandler struct {
-	service          WebsocketStreamServer
+	service          WebsocketService
 	middleware       server.Middleware
 	marshalOptions   protojson.MarshalOptions
 	unmarshalOptions protojson.UnmarshalOptions
