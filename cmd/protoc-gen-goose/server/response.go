@@ -15,6 +15,9 @@ func (generator *Generator) GenerateEncodeResponse(service *parser.Service, g *p
 	g.P("unmarshalOptions ", constant.ProtoJsonUnmarshalOptionsIdent)
 	g.P("}")
 	for _, endpoint := range service.Endpoints {
+		if endpoint.IsStreaming() {
+			continue
+		}
 		g.P("func (encoder ", service.Unexported(service.ResponseEncoderName()), ")", endpoint.Name(), "(ctx ", constant.ContextIdent, ", w ", constant.ResponseWriterIdent, ", resp *", endpoint.OutputGoIdent(), ") error {")
 		bodyParameter := endpoint.ResponseBody()
 		switch bodyParameter {

@@ -75,6 +75,7 @@ func getInvoker(interceptors []Middleware, curr int, finalInvoker http.HandlerFu
 //	routeInfo - *goose.RouteInfo representing the route information
 func Invoke(middleware Middleware, response http.ResponseWriter, request *http.Request, invoke http.HandlerFunc, routeInfo *goose.RouteInfo) {
 	request = request.WithContext(goose.InjectRouteInfo(request.Context(), routeInfo))
+	request = request.WithContext(goose.InjectHeader(request.Context(), request.Header))
 	if middleware == nil {
 		invoke(response, request)
 		return

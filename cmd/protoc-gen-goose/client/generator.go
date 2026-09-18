@@ -44,6 +44,9 @@ func (f *Generator) GenerateClient(service *parser.Service, g *protogen.Generate
 	g.P("}")
 	g.P()
 	for _, endpoint := range service.Endpoints {
+		if endpoint.IsStreaming() {
+			continue
+		}
 		g.P("func (c *", service.Unexported(service.ClientName()), ") ", endpoint.Name(), "(ctx ", constant.ContextIdent, ", req *", endpoint.InputGoIdent(), ") (*", endpoint.OutputGoIdent(), ", error){")
 		g.P("if err := ", constant.ValidateRequestIdent, "(ctx, req, c.shouldFailFast, c.onValidationErrCallback); err != nil {")
 		g.P("return nil, err")

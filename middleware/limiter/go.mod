@@ -1,4 +1,4 @@
-module github.com/soyacen/goose/middleware/bbr
+module github.com/soyacen/goose/middleware/limiter
 
 go 1.23.0
 
@@ -6,9 +6,8 @@ replace github.com/soyacen/goose => ../../
 
 require (
 	github.com/shirou/gopsutil/v4 v4.25.9
-	github.com/soyacen/goose v1.7.12
+	github.com/soyacen/goose v1.8.3
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/grpc v1.71.0
 )
 
 require (

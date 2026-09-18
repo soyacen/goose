@@ -39,6 +39,18 @@ func (e *Endpoint) IsStreaming() bool {
 	return e.protoMethod.Desc.IsStreamingServer() || e.protoMethod.Desc.IsStreamingClient()
 }
 
+func (e *Endpoint) IsClientStreaming() bool {
+	return e.protoMethod.Desc.IsStreamingClient() && !e.protoMethod.Desc.IsStreamingServer()
+}
+
+func (e *Endpoint) IsServerStreaming() bool {
+	return e.protoMethod.Desc.IsStreamingServer() && !e.protoMethod.Desc.IsStreamingClient()
+}
+
+func (e *Endpoint) IsBidiStreaming() bool {
+	return e.protoMethod.Desc.IsStreamingClient() && e.protoMethod.Desc.IsStreamingServer()
+}
+
 func (e *Endpoint) Input() *protogen.Message {
 	return e.protoMethod.Input
 }

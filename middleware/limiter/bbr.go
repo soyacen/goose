@@ -1,18 +1,16 @@
-package bbr
+package limiter
 
 import (
+	"errors"
 	"math"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // ErrLimitExceeded 当限流触发时返回的错误
 // 表示请求被限流器拒绝
-var ErrLimitExceeded = status.Error(codes.ResourceExhausted, "ratelimitgrpc: rate limit exceeded")
+var ErrLimitExceeded = errors.New("ratelimitgrpc: rate limit exceeded")
 
 // options 限流器配置选项结构体
 // 用于配置BBR限流算法的各项参数

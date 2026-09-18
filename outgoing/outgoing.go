@@ -118,7 +118,7 @@ type (
 	}
 )
 
-func Middlewares(middlewares ...client.Middleware) MethodOption {
+func Middleware(middlewares ...client.Middleware) MethodOption {
 	return func(o MethodOptions) {
 		o.Middleware(middlewares...)
 	}
@@ -228,6 +228,7 @@ type (
 	}
 	QueryOption func(QueryOptions)
 	QuerySetter interface {
+		HeaderSetter
 		Query(opts ...QueryOption) HeaderSetter
 	}
 )
@@ -367,6 +368,7 @@ type (
 
 	HeaderOption func(HeaderOptions)
 	HeaderSetter interface {
+		BodySetter
 		Header(opts ...HeaderOption) BodySetter
 	}
 )
@@ -671,6 +673,7 @@ type (
 	}
 	BodyOption func(BodyOptions)
 	BodySetter interface {
+		Sender
 		Body(opts ...BodyOption) Sender
 	}
 )

@@ -9,15 +9,20 @@ import (
 
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/client"
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/constant"
+	"github.com/soyacen/goose/cmd/protoc-gen-goose/openapi"
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/parser"
 	"github.com/soyacen/goose/cmd/protoc-gen-goose/server"
+	"github.com/soyacen/goose/cmd/protoc-gen-goose/stream"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
 var flags flag.FlagSet
 
-var Version = "v1.7.12"
+var (
+	Version = "v1.7.18"
+	openapiFlag = flags.Bool("openapi", false, "generate OpenAPI documentation")
+)
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
@@ -55,39 +60,70 @@ func generate(plugin *protogen.Plugin) error {
 				return err
 			}
 
-			srvGen := new(server.Generator)
-			if err := srvGen.GenerateAppendServerFunc(service, g); err != nil {
-				return err
-			}
-			if err := srvGen.GenerateHandlers(service, g); err != nil {
-				return err
-			}
-			if err := srvGen.GenerateDecodeRequest(service, g); err != nil {
-				return err
-			}
-			if err := srvGen.GenerateEncodeResponse(service, g); err != nil {
-				return err
+			if service.HasNonStreamingEndpoints() {
+				srvGen := new(server.Generator)
+				if err := srvGen.GenerateAppendServerFunc(service, g); err != nil {
+					return err
+				}
+				if err := srvGen.GenerateHandlers(service, g); err != nil {
+					return err
+				}
+				if err := srvGen.GenerateDecodeRequest(service, g); err != nil {
+					return err
+				}
+				if err := srvGen.GenerateEncodeResponse(service, g); err != nil {
+					return err
+				}
+
+				cliGen := new(client.Generator)
+				if err := cliGen.GenerateNewClient(service, g); err != nil {
+					return err
+				}
+				if err := cliGen.GenerateClient(service, g); err != nil {
+					return err
+				}
+				if err := cliGen.GenerateRequestEncoder(service, g); err != nil {
+					return err
+				}
+				if err := cliGen.GenerateResponseDecoder(service, g); err != nil {
+					return err
+				}
 			}
 
-			cliGen := new(client.Generator)
-			if err := cliGen.GenerateNewClient(service, g); err != nil {
-				return err
-			}
-			if err := cliGen.GenerateClient(service, g); err != nil {
-				return err
-			}
-			if err := cliGen.GenerateRequestEncoder(service, g); err != nil {
-				return err
-			}
-			if err := cliGen.GenerateResponseDecoder(service, g); err != nil {
-				return err
+			if service.IsStreamingService() {
+				streamGen := new(stream.Generator)
+				if err := streamGen.GenerateStreamClientInterface(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateAppendStreamRouteFunc(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamHandlerStruct(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamHandlerMethods(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamClientStruct(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateNewStreamClientFunc(service, g); err != nil {
+					return err
+				}
+				if err := streamGen.GenerateStreamClientMethods(service, g); err != nil {
+					return err
+				}
 			}
 
 			if err := GenerateDescs(service, g); err != nil {
 				return err
 			}
 		}
-
+		if *openapiFlag {
+			if err := openapi.Generate(plugin, file, services); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -95,7 +131,15 @@ func generate(plugin *protogen.Plugin) error {
 func GenerateServices(service *parser.Service, g *protogen.GeneratedFile) error {
 	g.P("type ", service.ServiceName(), " interface {")
 	for _, endpoint := range service.Endpoints {
-		g.P(endpoint.Name(), "(ctx ", constant.ContextIdent, ", req *", endpoint.InputGoIdent(), ") (*", endpoint.OutputGoIdent(), ", error)")
+		if endpoint.IsClientStreaming() {
+			g.P(endpoint.Name(), "(", constant.WsClientStreamingServerIdent, "[*", endpoint.InputGoIdent(), ", *", endpoint.OutputGoIdent(), "]) error")
+		} else if endpoint.IsServerStreaming() {
+			g.P(endpoint.Name(), "(*", endpoint.InputGoIdent(), ", ", constant.WsServerStreamingServerIdent, "[*", endpoint.OutputGoIdent(), "]) error")
+		} else if endpoint.IsBidiStreaming() {
+			g.P(endpoint.Name(), "(", constant.WsBidiStreamingServerIdent, "[*", endpoint.InputGoIdent(), ", *", endpoint.OutputGoIdent(), "]) error")
+		} else {
+			g.P(endpoint.Name(), "(ctx ", constant.ContextIdent, ", req *", endpoint.InputGoIdent(), ") (*", endpoint.OutputGoIdent(), ", error)")
+		}
 	}
 	g.P("}")
 	g.P()

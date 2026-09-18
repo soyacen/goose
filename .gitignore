@@ -10,7 +10,15 @@
 *.out
 # Dependency directories (remove the comment below to include it)
 # vendor/
-.idea
-.vscode
-.bin
-bin
+/.idea
+/.vscode
+/.qoder
+/.bin
+/bin
+/protoc-gen-goose
+.DS_Store
+/stream
+/example/websocket/server/server
+/.codeartsdoer
+/.agents
+/CLAUDE.md

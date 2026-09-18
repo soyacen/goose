@@ -1,0 +1,29 @@
+syntax = "proto3";
+package leo.goose.example.websocket.v1;
+option go_package = "github.com/soyacen/goose/example/websocket/v1;websocket";
+
+import "google/api/annotations.proto";
+
+service Websocket {
+  rpc ClientStream(stream Request) returns (Response) {
+    option (google.api.http) = {
+      post: "/ws/client-stream"
+    };
+  }
+
+  rpc ServerStream(Request) returns (stream Response) {
+    option (google.api.http) = {
+      post: "/ws/server-stream"
+    };
+  }
+
+  rpc BidStream(stream Request) returns (stream Response) {
+    option (google.api.http) = {
+      post: "/ws/bidi-stream"
+    };
+  }
+}
+
+message Request { string name = 1; }
+
+message Response { string message = 1; }

@@ -60,6 +60,68 @@ func (s *Service) ResponseDecoderName() string {
 	return s.Name() + "ResponseDecoder"
 }
 
+func (s *Service) IsStreamingService() bool {
+	for _, endpoint := range s.Endpoints {
+		if endpoint.IsStreaming() {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) HasNonStreamingEndpoints() bool {
+	for _, endpoint := range s.Endpoints {
+		if !endpoint.IsStreaming() {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) NonStreamingEndpoints() []*Endpoint {
+	var endpoints []*Endpoint
+	for _, endpoint := range s.Endpoints {
+		if !endpoint.IsStreaming() {
+			endpoints = append(endpoints, endpoint)
+		}
+	}
+	return endpoints
+}
+
+func (s *Service) StreamingEndpoints() []*Endpoint {
+	var endpoints []*Endpoint
+	for _, endpoint := range s.Endpoints {
+		if endpoint.IsStreaming() {
+			endpoints = append(endpoints, endpoint)
+		}
+	}
+	return endpoints
+}
+
+func (s *Service) StreamServerName() string {
+	return s.Name() + "StreamServer"
+}
+
+func (s *Service) StreamClientName() string {
+	return s.Name() + "StreamClient"
+}
+
+func (s *Service) AppendStreamRouteName() string {
+	return "Append" + s.Name() + "StreamRoute"
+}
+
+func (s *Service) StreamHandlerName() string {
+	return s.Unexported(s.Name()) + "StreamHandler"
+}
+
+func (s *Service) StreamClientStructName() string {
+	return s.Unexported(s.Name()) + "StreamClient"
+}
+
+func (s *Service) NewStreamClientName() string {
+	return "New" + s.Name() + "StreamClient"
+}
+
 func NewServices(file *protogen.File) ([]*Service, error) {
 	var services []*Service
 	for _, pbService := range file.Services {
@@ -70,9 +132,6 @@ func NewServices(file *protogen.File) ([]*Service, error) {
 		for _, pbMethod := range pbService.Methods {
 			endpoint := &Endpoint{
 				protoMethod: pbMethod,
-			}
-			if endpoint.IsStreaming() {
-				return nil, fmt.Errorf("goose: unsupport stream method, %s", endpoint.FullName())
 			}
 			endpoint.SetHttpRule()
 			pattern, err := ParsePattern(endpoint.Path())

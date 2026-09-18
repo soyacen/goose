@@ -1,4 +1,4 @@
-package bbr
+package limiter
 
 import (
 	"net/http"
